@@ -6,6 +6,66 @@ import (
 	"testing"
 )
 
+// TestSortAscending sorts a slice of integers in ascending order.
+func TestSortAscending(t *testing.T) {
+	// Test case 1: Unsorted slice.
+	numbers1 := []int{3, 5, 1, 9, 2}
+	Sort(numbers1)
+	expected1 := []int{1, 2, 3, 5, 9}
+	if !reflect.DeepEqual(numbers1, expected1) {
+		t.Errorf("Sort ascending: expected %v, but got %v",
+			expected1, numbers1)
+	}
+
+	// Test case 2: Sorted slice.
+	numbers2 := []int{1, 2, 3, 4, 5}
+	Sort(numbers2)
+	expected2 := []int{1, 2, 3, 4, 5}
+	if !reflect.DeepEqual(numbers2, expected2) {
+		t.Errorf("Sort ascending: expected %v, but got %v",
+			expected2, numbers2)
+	}
+
+	// Test case 3: Empty slice.
+	numbers3 := []int{}
+	Sort(numbers3)
+	expected3 := []int{}
+	if !reflect.DeepEqual(numbers3, expected3) {
+		t.Errorf("Sort ascending: expected %v, but got %v",
+			expected3, numbers3)
+	}
+}
+
+// TestSortDescending sorts a slice of integers in descending order.
+func TestSortDescending(t *testing.T) {
+	// Test case 1: Unsorted slice.
+	numbers1 := []int{3, 5, 1, 9, 2}
+	Sort(numbers1, true)
+	expected1 := []int{9, 5, 3, 2, 1}
+	if !reflect.DeepEqual(numbers1, expected1) {
+		t.Errorf("Sort descending: expected %v, but got %v",
+			expected1, numbers1)
+	}
+
+	// Test case 2: Sorted slice.
+	numbers2 := []int{5, 4, 3, 2, 1}
+	Sort(numbers2, true)
+	expected2 := []int{5, 4, 3, 2, 1}
+	if !reflect.DeepEqual(numbers2, expected2) {
+		t.Errorf("Sort descending: expected %v, but got %v",
+			expected2, numbers2)
+	}
+
+	// Test case 3: Empty slice.
+	numbers3 := []int{}
+	Sort(numbers3, true)
+	expected3 := []int{}
+	if !reflect.DeepEqual(numbers3, expected3) {
+		t.Errorf("Sort descending: expected %v, but got %v",
+			expected3, numbers3)
+	}
+}
+
 // TestIsEmpty tests the IsEmpty function.
 func TestIsEmpty(t *testing.T) {
 	tests := []struct {
@@ -82,7 +142,7 @@ func TestAny(t *testing.T) {
 		{"Empty input", []interface{}{}, false},
 	}
 
-	// Iterate over each test case
+	// Iterate over each test case.
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Convert slice of interfaces to slice of empty interfaces.
@@ -101,7 +161,7 @@ func TestAny(t *testing.T) {
 
 // TestValue tests the Value function.
 func TestValue(t *testing.T) {
-	// Define test cases
+	// Define test cases.
 	tests := []struct {
 		name string
 		v    []interface{}
@@ -113,7 +173,7 @@ func TestValue(t *testing.T) {
 		{"All zero values", []interface{}{0, 0, 0}, 0},
 	}
 
-	// Iterate over each test case
+	// Iterate over each test case.
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Convert slice of interfaces to slice of empty interfaces.
@@ -191,6 +251,55 @@ func TestMin(t *testing.T) {
 	}
 }
 
+// TestMinList tests the MinList function.
+func TestMinList(t *testing.T) {
+	// Define test cases.
+	tests := []struct {
+		name     string
+		list     []int
+		defaults []int
+		want     int
+	}{
+		{
+			name:     "Non-empty list, no defaults",
+			list:     []int{3, 5, 7, 1, 9, 2},
+			defaults: nil,
+			want:     1,
+		},
+		{
+			name:     "Empty list, no defaults",
+			list:     []int{},
+			defaults: nil,
+			want:     0,
+		},
+		{
+			name:     "Empty list, with defaults",
+			list:     []int{},
+			defaults: []int{20, 10},
+			want:     10,
+		},
+		{
+			name:     "Non-empty list with defaults",
+			list:     []int{3, 5, 7, 1, 9, 2},
+			defaults: []int{20, 10},
+			want:     1,
+		},
+	}
+
+	// Iterate over each test case.
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Call the MinList function.
+			got := MinList(tt.list, tt.defaults...)
+
+			// Check if the result matches the expected value.
+			if got != tt.want {
+				t.Errorf("MinList() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 // TestMax tests the Max function.
 func TestMax(t *testing.T) {
 	tests := []struct {
@@ -228,9 +337,58 @@ func TestMax(t *testing.T) {
 	}
 }
 
+// TestMaxList tests the MaxList function.
+func TestMaxList(t *testing.T) {
+	// Define test cases.
+	tests := []struct {
+		name     string
+		list     []int
+		defaults []int
+		want     int
+	}{
+		{
+			name:     "Non-empty list, no defaults",
+			list:     []int{3, 5, 7, 1, 9, 2},
+			defaults: nil,
+			want:     9,
+		},
+		{
+			name:     "Empty list, no defaults",
+			list:     []int{},
+			defaults: nil,
+			want:     0,
+		},
+		{
+			name:     "Empty list, with defaults",
+			list:     []int{},
+			defaults: []int{20, 10},
+			want:     20,
+		},
+		{
+			name:     "Non-empty list with defaults",
+			list:     []int{3, 5, 7, 1, 9, 2},
+			defaults: []int{20, 10},
+			want:     9,
+		},
+	}
+
+	// Iterate over each test case.
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Call the MaxList function.
+			got := MaxList(tt.list, tt.defaults...)
+
+			// Check if the result matches the expected value.
+			if got != tt.want {
+				t.Errorf("MaxList() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 // TestSum tests the Sum function.
 func TestSum(t *testing.T) {
-	// Define test cases
+	// Define test cases.
 	tests := []struct {
 		name string
 		v    []int
@@ -242,7 +400,7 @@ func TestSum(t *testing.T) {
 		{"All zeros", []int{0, 0, 0}, 0},
 	}
 
-	// Iterate over each test case
+	// Iterate over each test case.
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Check if output is as expected.
@@ -276,6 +434,36 @@ func TestAverage(t *testing.T) {
 				t.Errorf("Average() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+// TestMedian calculates the median of a list of integers.
+func TestMedian(t *testing.T) {
+	// Test case 1: Odd number of values.
+	numbers1 := []int{3, 5, 7, 1, 9, 2}
+	median1 := Median(numbers1...)
+	expected1 := 4.0
+	if median1 != expected1 {
+		t.Errorf("Median of %v: expected %f, but got %f",
+			numbers1, expected1, median1)
+	}
+
+	// Test case 2: Even number of values.
+	numbers2 := []int{4, 6, 2, 8}
+	median2 := Median(numbers2...)
+	expected2 := 5.0
+	if median2 != expected2 {
+		t.Errorf("Median of %v: expected %f, but got %f",
+			numbers2, expected2, median2)
+	}
+
+	// Test case 3: Empty slice.
+	var numbers3 []int
+	median3 := Median(numbers3...)
+	expected3 := 0.0
+	if median3 != expected3 {
+		t.Errorf("Median of %v: expected %f, but got %f",
+			numbers3, expected3, median3)
 	}
 }
 
@@ -314,7 +502,7 @@ func TestMap(t *testing.T) {
 		},
 	}
 
-	// Iterate over each test case
+	// Iterate over each test case.
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Check if output is as expected.
@@ -360,7 +548,7 @@ func TestFilter(t *testing.T) {
 		},
 	}
 
-	// Iterate over each test case
+	// Iterate over each test case.
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Check if output is as expected.
@@ -423,7 +611,7 @@ func TestReduce(t *testing.T) {
 		},
 	}
 
-	// Iterate over each test case
+	// Iterate over each test case.
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Check if output is as expected.
@@ -436,7 +624,7 @@ func TestReduce(t *testing.T) {
 
 // TestContains tests the Contains function.
 func TestContains(t *testing.T) {
-	// Define test cases
+	// Define test cases.
 	tests := []struct {
 		name string
 		v    []int
@@ -448,7 +636,7 @@ func TestContains(t *testing.T) {
 		{"Empty array", []int{}, 1, false},
 	}
 
-	// Iterate over each test case
+	// Iterate over each test case.
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Check if output is as expected.
@@ -461,7 +649,7 @@ func TestContains(t *testing.T) {
 
 // TestIndex tests the Index function.
 func TestIndex(t *testing.T) {
-	// Define test cases
+	// Define test cases.
 	tests := []struct {
 		name string
 		v    []int
@@ -486,7 +674,7 @@ func TestIndex(t *testing.T) {
 
 // TestZip tests the Zip function.
 func TestZip(t *testing.T) {
-	// Define test cases
+	// Define test cases.
 	tests := []struct {
 		name string
 		a    []int
@@ -519,7 +707,7 @@ func TestZip(t *testing.T) {
 		},
 	}
 
-	// Iterate over each test case
+	// Iterate over each test case.
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Check if output is as expected.
@@ -527,5 +715,431 @@ func TestZip(t *testing.T) {
 				t.Errorf("Zip() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+// TestAbs tests the Abs function.
+func TestAbs(t *testing.T) {
+	// Test positive integer.
+	n1 := 5
+	expected1 := 5
+	result1 := Abs(n1)
+	if result1 != expected1 {
+		t.Errorf("Abs of positive integer: expected %v, but got %v",
+			expected1, result1)
+	}
+
+	// Test negative integer.
+	n2 := -8
+	expected2 := 8
+	result2 := Abs(n2)
+	if result2 != expected2 {
+		t.Errorf("Abs of negative integer: expected %v, but got %v",
+			expected2, result2)
+	}
+
+	// Test positive floating-point number.
+	n3 := 3.14
+	expected3 := 3.14
+	result3 := Abs(n3)
+	if result3 != expected3 {
+		t.Errorf("Psitive floating-point number: expected %v, but got %v",
+			expected3, result3)
+	}
+
+	// Test negative floating-point number.
+	n4 := -2.718
+	expected4 := 2.718
+	result4 := Abs(n4)
+	if result4 != expected4 {
+		t.Errorf("Negative floating-point number: expected %v, but got %v",
+			expected4, result4)
+	}
+
+	// Test zero value.
+	n5 := 0
+	expected5 := 0
+	result5 := Abs(n5)
+	if result5 != expected5 {
+		t.Errorf("Abs of zero value: expected %v, but got %v",
+			expected5, result5)
+	}
+}
+
+func TestAbs_Generic(t *testing.T) {
+	// Test positive integer.
+	n1 := 5
+	expected1 := 5
+	result1 := Abs(n1)
+	if !reflect.DeepEqual(result1, expected1) {
+		t.Errorf("Abs of positive integer (G): expected %v, but got %v",
+			expected1, result1)
+	}
+
+	// Test negative integer.
+	n2 := -8
+	expected2 := 8
+	result2 := Abs(n2)
+	if !reflect.DeepEqual(result2, expected2) {
+		t.Errorf("Abs of negative integer (G): expected %v, but got %v",
+			expected2, result2)
+	}
+
+	// Test positive floating-point number.
+	n3 := 3.14
+	expected3 := 3.14
+	result3 := Abs(n3)
+	if !reflect.DeepEqual(result3, expected3) {
+		t.Errorf("Positive floating-point number (G): expected %v, but got %v",
+			expected3, result3)
+	}
+
+	// Test negative floating-point number.
+	n4 := -2.718
+	expected4 := 2.718
+	result4 := Abs(n4)
+	if !reflect.DeepEqual(result4, expected4) {
+		t.Errorf("Negative floating-point number (G): expected %v, but got %v",
+			expected4, result4)
+	}
+
+	// Test zero value.
+	n5 := 0
+	expected5 := 0
+	result5 := Abs(n5)
+	if !reflect.DeepEqual(result5, expected5) {
+		t.Errorf("Abs of zero value (G): expected %v, but got %v",
+			expected5, result5)
+	}
+}
+
+func TestIsEven(t *testing.T) {
+	// Test cases for integer values.
+	// Expected results: true if the value is even, false otherwise.
+	tests := []struct {
+		value    float64
+		expected bool
+	}{
+		{4, true},
+		{3, false},
+		{-6, true},
+		{-5, false},
+	}
+
+	for _, test := range tests {
+		result := IsEven(test.value)
+		if result != test.expected {
+			t.Errorf("IsEven(%v): expected %v, but got %v",
+				test.value, test.expected, result)
+		}
+	}
+
+	// Test cases for floating-point values.
+	// Expected results: true if the integer part is even, false otherwise.
+	testsFloat := []struct {
+		value    float64
+		expected bool
+		f        []bool
+	}{
+		{4.2, false, []bool{}},
+		{4.2, true, []bool{true}},
+		{3.8, false, []bool{true, false}},
+		{-5.5, false, []bool{}},
+		{-6.5, true, []bool{true}},
+	}
+
+	for _, test := range testsFloat {
+		result := IsEven(test.value, test.f...)
+		if result != test.expected {
+			t.Errorf("IsEven(%v): expected %v, but got %v",
+				test.value, test.expected, result)
+		}
+	}
+}
+
+func TestIsOdd(t *testing.T) {
+	// Test cases for integer values.
+	// Expected results: true if the value is odd, false otherwise.
+	tests := []struct {
+		value    int
+		expected bool
+	}{
+		{4, false},   // even number
+		{3, true},    // odd number
+		{-6, false},  // negative even number
+		{-5, true},   // negative odd number
+		{-10, false}, // negative even number
+	}
+
+	for _, test := range tests {
+		result := IsOdd(test.value)
+		if result != test.expected {
+			t.Errorf("IsOdd(%v): expected %v, but got %v",
+				test.value, test.expected, result)
+		}
+	}
+
+	// Test cases for floating-point values.
+	// Expected results: true if the integer part is odd, false otherwise.
+	testsFloat := []struct {
+		value    float64
+		expected bool
+		f        []bool
+	}{
+		{3.2, false, []bool{}},
+		{3.2, true, []bool{true}},
+		{3.0, true, []bool{}},
+		{-5.5, true, []bool{true}},
+		{-6.5, false, []bool{true, false}},
+		{-11.0, true, []bool{false}},
+	}
+
+	for _, test := range testsFloat {
+		result := IsOdd(test.value, test.f...)
+		if result != test.expected {
+			t.Errorf("IsOdd(%v): expected %v, but got %v",
+				test.value, test.expected, result)
+		}
+	}
+}
+
+func TestIsWhole(t *testing.T) {
+	// Test cases for integer values
+	// Expected results: true if the value has no fractional part,
+	// false otherwise
+	tests := []struct {
+		value    int
+		expected bool
+	}{
+		{4, true},
+		{3, true},
+		{-6, true},
+		{-5, true},
+		{-10, true},
+		{0, true},
+		{100, true},
+		{5, true},
+		{5, true},
+		{-2, true},
+	}
+
+	for _, test := range tests {
+		result := IsWhole(test.value)
+		if result != test.expected {
+			t.Errorf("IsWhole(%v): expected %v, but got %v",
+				test.value, test.expected, result)
+		}
+	}
+
+	// Test cases for floating-point values
+	// Expected results: true if the value has no fractional part,
+	// false otherwise
+	testsFloat := []struct {
+		value    float64
+		expected bool
+	}{
+		{4.2, false},
+		{3.8, false},
+		{-5.5, false},
+		{-11.0, true},
+		{0.0, true},
+		{100.0, true},
+		{5.0, true},
+		{-2.0, true},
+		{-2.1, false},
+	}
+
+	for _, test := range testsFloat {
+		result := IsWhole(test.value)
+		if result != test.expected {
+			t.Errorf("IsWhole(%v): expected %v, but got %v",
+				test.value, test.expected, result)
+		}
+	}
+}
+
+// TestRank tests the Rank function.
+func TestRank(t *testing.T) {
+	// Test case 1: Ascending order, value found
+	rank := Rank(7, []int{1, 5, 2, 3, 7, 8})
+	if rank != 5 {
+		t.Errorf("Expected rank 5, but got %d", rank)
+	}
+
+	// Test case 2: Ascending order, value not found
+	rank = Rank(9, []int{1, 5, 2, 3, 7, 8})
+	if rank != 0 {
+		t.Errorf("Expected rank 0, but got %d", rank)
+	}
+
+	// Test case 3: Descending order, value found
+	rank = Rank(7, []int{1, 5, 2, 3, 7, 8}, true)
+	if rank != 2 {
+		t.Errorf("Expected rank 2, but got %d", rank)
+	}
+
+	// Test case 4: Descending order, value not found
+	rank = Rank(9, []int{1, 5, 2, 3, 7, 8}, true)
+	if rank != 0 {
+		t.Errorf("Expected rank 0, but got %d", rank)
+	}
+
+	// Test case 5: Ascending order, float values
+	rank = Rank(4.5, []float64{1.2, 3.1, 4.5, 2.8, 4.5, 6.7})
+	if rank != 3 {
+		t.Errorf("Expected rank 3, but got %d", rank)
+	}
+
+	// Test case 6: Descending order, float values
+	rank = Rank(4.5, []float64{1.2, 3.1, 4.5, 2.8, 4.5, 6.7}, true)
+	if rank != 2 {
+		t.Errorf("Expected rank 2, but got %d", rank)
+	}
+}
+
+// TestIsNumber tests the IsNumber function.
+func TestIsNumber(t *testing.T) {
+	// Numeric values
+	num := 10
+	if !IsNumber(num) {
+		t.Errorf("%v should be a number", num)
+	}
+
+	floatNum := 3.14
+	if !IsNumber(floatNum) {
+		t.Errorf("%v should be a number", floatNum)
+	}
+
+	// Non-numeric values
+	str := "hello"
+	if IsNumber(str) {
+		t.Errorf("%v should not be a number", str)
+	}
+
+	boolean := true
+	if IsNumber(boolean) {
+		t.Errorf("%v should not be a number", boolean)
+	}
+
+	slice := []int{1}
+	if IsNumber(slice) {
+		t.Errorf("%v should not be a number", slice)
+	}
+}
+
+// TestIsPointer tests the IsPointer function.
+func TestIsPointer(t *testing.T) {
+	str := "hello"
+	ptr := &str
+	if !IsPointer(ptr) {
+		t.Errorf("%v should be a pointer", ptr)
+	}
+
+	if IsPointer(str) {
+		t.Errorf("%v should not be a pointer", str)
+	}
+
+	num := 10
+	if IsPointer(num) {
+		t.Errorf("%v should not be a pointer", num)
+	}
+
+	var nilPtr *string
+	if !IsPointer(nilPtr) {
+		t.Errorf("%v should be a pointer", nilPtr)
+	}
+}
+
+// TestHLookup tests the HLookup function.
+func TestHLookup(t *testing.T) {
+	lookup := []string{"A", "B", "C"}
+	result := []int{1, 2, 3}
+
+	// Test case 1: Lookup value exists in the table.
+	val := HLookup("B", lookup, result, -1)
+	expected := 2
+	if val != expected {
+		t.Errorf("HLookup test case 1 failed: expected %d, got %d",
+			expected, val)
+	}
+
+	// Test case 2: Lookup value does not exist in the table.
+	val = HLookup("D", lookup, result, -1)
+	expected = -1
+	if val != expected {
+		t.Errorf("HLookup test case 2 failed: expected %d, got %d",
+			expected, val)
+	}
+
+	// Test case 3: Lookup value is the first element in the table.
+	val = HLookup("A", lookup, result, -1)
+	expected = 1
+	if val != expected {
+		t.Errorf("HLookup test case 3 failed: expected %d, got %d",
+			expected, val)
+	}
+
+	// Test case 4: Lookup value is the last element in the table.
+	val = HLookup("C", lookup, result, -1)
+	expected = 3
+	if val != expected {
+		t.Errorf("HLookup test case 4 failed: expected %d, got %d",
+			expected, val)
+	}
+
+	// Test case 5: Lookup value is not found,
+	// with a non-default default value.
+	val = HLookup("E", lookup, result, 0)
+	expected = 0
+	if val != expected {
+		t.Errorf("HLookup test case 5 failed: expected %d, got %d",
+			expected, val)
+	}
+}
+
+// TestVLookup tests the VLookup function.
+func TestVLookup(t *testing.T) {
+	lookup := []string{"A", "B", "C"}
+	result := []int{1, 2, 3}
+
+	// Test case 1: Lookup value exists in the table.
+	val := VLookup("B", lookup, result, -1)
+	expected := 2
+	if val != expected {
+		t.Errorf("VLookup test case 1 failed: expected %d, got %d",
+			expected, val)
+	}
+
+	// Test case 2: Lookup value does not exist in the table.
+	val = VLookup("D", lookup, result, -1)
+	expected = -1
+	if val != expected {
+		t.Errorf("VLookup test case 2 failed: expected %d, got %d",
+			expected, val)
+	}
+
+	// Test case 3: Lookup value is the first element in the table.
+	val = VLookup("A", lookup, result, -1)
+	expected = 1
+	if val != expected {
+		t.Errorf("VLookup test case 3 failed: expected %d, got %d",
+			expected, val)
+	}
+
+	// Test case 4: Lookup value is the last element in the table.
+	val = VLookup("C", lookup, result, -1)
+	expected = 3
+	if val != expected {
+		t.Errorf("VLookup test case 4 failed: expected %d, got %d",
+			expected, val)
+	}
+
+	// Test case 5: Lookup value is not found,
+	// with a non-default default value.
+	val = VLookup("E", lookup, result, 0)
+	expected = 0
+	if val != expected {
+		t.Errorf("VLookup test case 5 failed: expected %d, got %d",
+			expected, val)
 	}
 }

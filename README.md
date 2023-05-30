@@ -17,11 +17,11 @@ Some of the key features of **do** package are:
 
  - **Zero-Value Checks**: Includes `IsEmpty`, `All`, `Any`, and `Value` functions that perform checks for zero-values in various contexts.
 
- - **Numeric Operations**: The package provides flexible and efficient functions like `Min`, `Max`, `Sum`, `Average` that work on all numeric types.
+ - **Numeric Operations**: The package provides flexible and efficient functions like `Min`, `Max`, `Sum`, `Average`, `Median` that work on all numeric types.
 
- - **Functional Programming**: It also offers functional programming helpers like `Map`, `Filter`, `Reduce` that apply functions to slices and return new slices.
+ - **Functional Programming**: It also offers functional programming helpers like `Sort`, `Map`, `Filter`, `Reduce` that apply functions to slices and return new slices.
 
- - **Element Operations**: Contains and Index functions to check if a slice contains a certain element and to get the index of an element.
+ - **Element Operations**: The `Contains` and `Index` functions to check if a slice contains a certain element and to get the index of an element.
 
  - **Pairing**: A `Zip` function is provided that pairs elements from two slices together into a slice of Pair structures.
 
