@@ -26,7 +26,7 @@ Please note that usage of the do package requires **Go 1.20** or later, due to i
 
 ## Functions
 
-Here is the detail list of functions provided in Go package do:
+It is the detail list of functions provided in Go package do:
 
 - **If**[T any](e bool, t, f T) T
 
