@@ -8,8 +8,8 @@ import "reflect"
 // In languages like C/C++ and Python, you can use a ternary
 // operator for a concise conditional expression:
 //
-// C/C++:  int max = (a > b) ? a : b;
-// Python: max = a if a > b else b
+//	C/C++:  int max = (a > b) ? a : b;
+//	Python: max = a if a > b else b
 //
 // It takes three parameters: a boolean expression e, and two
 // values of any type T (t and f). If the expression e is true,
