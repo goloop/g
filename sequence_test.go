@@ -275,26 +275,26 @@ func TestValue(t *testing.T) {
 	// Define test cases.
 	tests := []struct {
 		name string
-		v    []interface{}
-		want interface{}
+		v    []int
+		want int
 	}{
-		{"Non-zero value is 0 in slice", []interface{}{1, 0, 0}, 1},
-		{"Non-zero value is in the 1 of the slice", []interface{}{0, 2, 0}, 2},
-		{"Non-zero value is at the 2 of the slice", []interface{}{0, 0, 3}, 3},
-		{"All zero values", []interface{}{0, 0, 0}, 0},
+		{"Non-zero value is 0 in slice", []int{1, 0, 0}, 1},
+		{"Non-zero value is in the 1 of the slice", []int{0, 2, 0}, 2},
+		{"Non-zero value is at the 2 of the slice", []int{0, 0, 3}, 3},
+		{"All zero values", []int{0, 0, 0}, 0},
 	}
 
 	// Iterate over each test case.
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Convert slice of interfaces to slice of empty interfaces.
-			input := make([]interface{}, len(tt.v))
+			input := make([]int, len(tt.v))
 			for i, val := range tt.v {
 				input[i] = val
 			}
 
 			// Check if output is as expected.
-			if got := Value(input[0], input[1:]...); got != tt.want {
+			if got := Value(input...); got != tt.want {
 				t.Errorf("Value() = %v, want %v", got, tt.want)
 			}
 		})
@@ -485,20 +485,30 @@ func TestProduct(t *testing.T) {
 
 // TestMerge tests the Merge function.
 func TestMerge(t *testing.T) {
-	// Test case 1: Merge two sorted integer arrays
-	a := []int{1, 3, 5}
-	b := []int{2, 4, 6}
-	merged := Merge(a, b)
-	expected := []int{1, 2, 3, 4, 5, 6}
-	if !reflect.DeepEqual(merged, expected) {
+	//  Merge two sorted integer arrays.
+	intA := []int{1, 3, 5}
+	intB := []int{2, 4, 6}
+	mergedInt := Merge(intA, intB, true)
+	expectedInt := []int{1, 2, 3, 4, 5, 6}
+	if !reflect.DeepEqual(mergedInt, expectedInt) {
 		t.Errorf("Incorrect merged array. Expected %v, got %v",
-			expected, merged)
+			expectedInt, mergedInt)
 	}
 
-	// Test case 2: Merge two sorted string arrays.
+	//  Merge two unsorted integer arrays.
+	intA = []int{1, 3, 5}
+	intB = []int{2, 4, 6}
+	mergedInt = Merge(intA, intB)
+	expectedInt = []int{1, 3, 5, 2, 4, 6}
+	if !reflect.DeepEqual(mergedInt, expectedInt) {
+		t.Errorf("Incorrect merged array. Expected %v, got %v",
+			expectedInt, mergedInt)
+	}
+
+	// Merge two sorted string arrays.
 	strA := []string{"apple", "banana", "kiwi"}
 	strB := []string{"cherry", "mango", "orange"}
-	mergedStr := Merge(strA, strB)
+	mergedStr := Merge(strA, strB, true)
 	expectedStr := []string{
 		"apple", "banana", "cherry",
 		"kiwi", "mango", "orange",
@@ -508,17 +518,17 @@ func TestMerge(t *testing.T) {
 			expectedStr, mergedStr)
 	}
 
-	// Test case 3: Merge two sorted float arrays.
+	// Merge two sorted float arrays.
 	floatA := []float64{1.2, 3.4, 5.6}
 	floatB := []float64{2.1, 4.3, 6.5}
-	mergedFloat := Merge(floatA, floatB)
+	mergedFloat := Merge(floatA, floatB, true)
 	expectedFloat := []float64{1.2, 2.1, 3.4, 4.3, 5.6, 6.5}
 	if !reflect.DeepEqual(mergedFloat, expectedFloat) {
 		t.Errorf("Incorrect merged float array. Expected %v, got %v",
 			expectedFloat, mergedFloat)
 	}
 
-	// Test case 4: Merge empty arrays.
+	// Merge empty arrays.
 	emptyA := []int{}
 	emptyB := []int{}
 	mergedEmpty := Merge(emptyA, emptyB)

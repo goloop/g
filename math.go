@@ -95,23 +95,25 @@ func Median[T Numerable](v ...T) float64 {
 
 // Max returns the largest value among all input values.
 //
-// This function requires at least one parameter of a type that
-// satisfies the Numerable interface. Additional values can be
-// passed using variadic arguments.
-//
 // The function iterates through all the passed values
-// and returns the largest one. The type must be Numerable
+// and returns the largest one. The type must be Verifiable
 // and support the greater than (>) operator.
 //
 // Example usage:
 //
 //	n := []int{3,5,7,1,9,2}
-//	max := do.Max(n[0], n[1:]...)
+//	m0 := do.Max(n...)
+//	m1 := do.Max(3, 5, 7, 1, 9, 2)
 //
 // This function is generic and can work with any type T.
-func Max[T Verifiable](v T, more ...T) T {
-	max := v
-	for _, val := range more {
+func Max[T Verifiable](v ...T) T {
+	// Return zero if no values are provided.
+	if len(v) == 0 {
+		return reflect.Zero(reflect.TypeOf((*T)(nil)).Elem()).Interface().(T)
+	}
+
+	max := v[0]
+	for _, val := range v {
 		if val > max {
 			max = val
 		}
@@ -123,14 +125,14 @@ func Max[T Verifiable](v T, more ...T) T {
 // MaxList returns the largest value among all input values in a list.
 //
 // This function requires a list of values of a type that satisfies
-// the Numerable interface. It also accepts optional default values,
+// the Verifiable interface. It also accepts optional default values,
 // which are used when the input list is empty.
 //
 // If the input list is empty:
 //   - If defaults are provided, the maximum value among
 //     the defaults is returned.
-//   - If no defaults are provided, the function returns the minimal value
-//     for the Numerable type (0).
+//   - If no defaults are provided, the function returns
+//     the minimal value for the Verifiable type.
 //
 // Example usage:
 //
@@ -140,39 +142,31 @@ func Max[T Verifiable](v T, more ...T) T {
 //	m2 := do.MaxList([]int{}, 20, 10) // 20
 //
 // This function is generic and can work with any type T that satisfies
-// the Numerable interface.
+// the Verifiable interface.
 func MaxList[T Verifiable](v []T, defaults ...T) T {
-	if len(v) == 0 {
-		if len(defaults) > 0 {
-			m := defaults[0]
-			return Max(m, defaults[1:]...)
-		}
-
-		return reflect.Zero(reflect.TypeOf((*T)(nil)).Elem()).Interface().(T)
-	}
-
-	return Max(v[0], v[1:]...)
+	return If(len(v) != 0, Max(v...), Max(defaults...))
 }
 
 // Min returns the smallest value among all input values.
 //
-// This function requires at least one parameter of a type that
-// satisfies the Numerable interface. Additional values can be
-// passed using variadic arguments.
-//
 // The function iterates through all the passed values
-// and returns the smallest one. The type must be Numerable
+// and returns the smallest one. The type must be Verifiable
 // and support the less than (<) operator.
 //
 // Example usage:
 //
 //	n := []int{3,5,7,1,9,2}
-//	min := do.Min(n[0], n[1:]...)
+//	m0 := do.Min(n...)
+//	m1 := do.Min(3, 5, 7, 1, 9, 2)
 //
 // This function is generic and can work with any type T.
-func Min[T Verifiable](v T, more ...T) T {
-	min := v
-	for _, val := range more {
+func Min[T Verifiable](v ...T) T {
+	if len(v) == 0 {
+		return reflect.Zero(reflect.TypeOf((*T)(nil)).Elem()).Interface().(T)
+	}
+
+	min := v[0]
+	for _, val := range v {
 		if val < min {
 			min = val
 		}
@@ -191,7 +185,7 @@ func Min[T Verifiable](v T, more ...T) T {
 //   - If defaults are provided, the minimum value among
 //     the defaults is returned.
 //   - If no defaults are provided, the function returns
-//     the minimum value for the Numerable type (0).
+//     the minimum value for the Verifiable type.
 //
 // Example usage:
 //
@@ -201,18 +195,9 @@ func Min[T Verifiable](v T, more ...T) T {
 //	m2 := do.MinList([]int{}, 20, 10) // 10
 //
 // This function is generic and can work with any type T that satisfies
-// the Numerable interface.
+// the Verifiable interface.
 func MinList[T Verifiable](v []T, defaults ...T) T {
-	if len(v) == 0 {
-		if len(defaults) > 0 {
-			m := defaults[0]
-			return Min(m, defaults[1:]...)
-		}
-
-		return reflect.Zero(reflect.TypeOf((*T)(nil)).Elem()).Interface().(T)
-	}
-
-	return Min(v[0], v[1:]...)
+	return If(len(v) != 0, Min(v...), Min(defaults...))
 }
 
 // Sum returns the sum of all values.

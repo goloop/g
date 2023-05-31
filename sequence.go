@@ -1,11 +1,8 @@
 package do
 
 import (
-	"math"
 	"math/rand"
 	"reflect"
-	"sort"
-	"strings"
 	"time"
 )
 
@@ -115,7 +112,7 @@ func Reduce[T any, U any](vs []T, f func(U, T) U, init U) U {
 //
 // This function is generic and can work with any type T that satisfies
 // the Numerable interface.
-func Sort[T Numerable](v []T, inverse ...bool) {
+func Sort[T Verifiable](v []T, inverse ...bool) {
 	inv := All(inverse...)
 
 	if inv {
@@ -127,7 +124,7 @@ func Sort[T Numerable](v []T, inverse ...bool) {
 
 // The quicksortAsc is a helper function that performs the quicksort
 // algorithm on a slice in ascending order.
-func quicksortAsc[T Numerable](v []T, low, high int) {
+func quicksortAsc[T Verifiable](v []T, low, high int) {
 	if low < high {
 		pivotIndex := partitionAsc(v, low, high)
 		quicksortAsc(v, low, pivotIndex-1)
@@ -137,7 +134,7 @@ func quicksortAsc[T Numerable](v []T, low, high int) {
 
 // The quicksortDesc is a helper function that performs the quicksort
 // algorithm on a slice in descending order.
-func quicksortDesc[T Numerable](v []T, low, high int) {
+func quicksortDesc[T Verifiable](v []T, low, high int) {
 	if low < high {
 		pivotIndex := partitionDesc(v, low, high)
 		quicksortDesc(v, low, pivotIndex-1)
@@ -147,7 +144,7 @@ func quicksortDesc[T Numerable](v []T, low, high int) {
 
 // The partitionAsc is a helper function that selects a pivot and partitions
 // the slice around it in ascending order.
-func partitionAsc[T Numerable](v []T, low, high int) int {
+func partitionAsc[T Verifiable](v []T, low, high int) int {
 	pivot := v[high]
 	i := low - 1
 
@@ -165,7 +162,7 @@ func partitionAsc[T Numerable](v []T, low, high int) int {
 
 // The partitionDesc is a helper function that selects a pivot and partitions
 // the slice around it in descending order.
-func partitionDesc[T Numerable](v []T, low, high int) int {
+func partitionDesc[T Verifiable](v []T, low, high int) int {
 	pivot := v[high]
 	i := low - 1
 
@@ -189,18 +186,16 @@ func partitionDesc[T Numerable](v []T, low, high int) int {
 // for the type T of the parameters.
 //
 // This function is generic and can work with any type T.
-func Value[T any](v T, more ...T) T {
-	if !IsEmpty(v) || len(more) == 0 {
-		return v
-	}
-
-	for _, val := range more {
-		if !IsEmpty(val) {
-			return val
+func Value[T Verifiable](v ...T) T {
+	if len(v) != 0 {
+		for _, val := range v {
+			if !IsEmpty(val) {
+				return val
+			}
 		}
 	}
 
-	return v
+	return reflect.Zero(reflect.TypeOf((*T)(nil)).Elem()).Interface().(T)
 }
 
 // Zip takes two slices and returns a slice of pairs.
@@ -306,45 +301,18 @@ func Product[T Numerable](v ...T) T {
 //
 //	a := []int{1, 3, 5}
 //	b := []int{2, 4, 6}
-//	merged := do.Merge(a, b) // [1 2 3 4 5 6]
+//	mergedUnsort := do.Merge(a, b)     // [1 3 5 2 4 6]
+//	mergedSort := do.Merge(a, b, true) // [1 2 3 4 5 6]
 //
 // This function is generic and can work with any type T.
-func Merge[T Verifiable](a []T, b []T) []T {
+func Merge[T Verifiable](a []T, b []T, sort ...bool) []T {
 	merged := make([]T, 0, len(a)+len(b))
 	merged = append(merged, a...)
 	merged = append(merged, b...)
 
-	sort.Slice(merged, func(i, j int) bool {
-		return compareValues(merged[i], merged[j]) <= 0
-	})
+	if All(sort...) {
+		Sort(merged)
+	}
 
 	return merged
-}
-
-// The compareValues compares two values dynamically using reflection.
-// It returns a negative value if v1 < v2, zero if v1 == v2, and
-// a positive value if v1 > v2.
-func compareValues(v1, v2 interface{}) int {
-	v1Val := reflect.ValueOf(v1)
-	v2Val := reflect.ValueOf(v2)
-
-	// Handle different types
-	if v1Val.Type() != v2Val.Type() {
-		panic("cannot compare values of different types")
-	}
-
-	switch v1Val.Kind() {
-	case reflect.Int, reflect.Int8, reflect.Int16,
-		reflect.Int32, reflect.Int64:
-		return int(v1Val.Int() - v2Val.Int())
-	case reflect.Uint, reflect.Uint8, reflect.Uint16,
-		reflect.Uint32, reflect.Uint64:
-		return int(v1Val.Uint() - v2Val.Uint())
-	case reflect.Float32, reflect.Float64:
-		return int(math.Round(v1Val.Float() - v2Val.Float()))
-	case reflect.String:
-		return strings.Compare(v1Val.String(), v2Val.String())
-	default:
-		panic("unsupported type for comparison")
-	}
 }

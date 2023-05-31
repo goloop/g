@@ -202,30 +202,34 @@ func TestMax(t *testing.T) {
 	}{
 		{
 			name: "All positive numbers",
-			v:    5,
-			more: []int{7, 2, 4, 9},
+			more: []int{5, 7, 2, 4, 9},
 			want: 9,
 		},
 		{
 			name: "Includes negative numbers",
-			v:    0,
-			more: []int{-7, 2, -3, 9},
+			more: []int{0, -7, 2, -3, 9},
 			want: 9,
 		},
 		{
 			name: "Single number",
-			v:    1,
-			more: []int{},
+			more: []int{1},
 			want: 1,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := Max(tt.v, tt.more...); got != tt.want {
+			if got := Max(tt.more...); got != tt.want {
 				t.Errorf("Max() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+
+	// Empty slice.
+	// Return zero if no arguments are passed.
+	tmp := []int{}
+	if got := Max(tmp...); got != 0 {
+		t.Errorf("Max() = %v, want 0", got)
 	}
 }
 
@@ -282,36 +286,38 @@ func TestMaxList(t *testing.T) {
 func TestMin(t *testing.T) {
 	tests := []struct {
 		name string
-		v    int
 		more []int
 		want int
 	}{
 		{
 			name: "All positive numbers",
-			v:    5,
-			more: []int{7, 2, 4, 9},
+			more: []int{5, 7, 2, 4, 9},
 			want: 2,
 		},
 		{
 			name: "Includes negative numbers",
-			v:    0,
-			more: []int{-7, 2, -3, 9},
+			more: []int{0, -7, 2, -3, 9},
 			want: -7,
 		},
 		{
 			name: "Single number",
-			v:    1,
-			more: []int{},
+			more: []int{1},
 			want: 1,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := Min(tt.v, tt.more...); got != tt.want {
+			if got := Min(tt.more...); got != tt.want {
 				t.Errorf("Min() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+
+	// Empty slice.
+	tmp := []int{}
+	if got := Min(tmp...); got != 0 {
+		t.Errorf("Min() = %v, want 0", got)
 	}
 }
 
