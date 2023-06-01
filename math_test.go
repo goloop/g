@@ -546,3 +546,177 @@ func TestIsWhole(t *testing.T) {
 		}
 	}
 }
+
+// TestRandom tests the Random function.
+func TestRandom(t *testing.T) {
+	// No arguments.
+	result := Random[int]()
+	if result != 0 {
+		t.Errorf("Expected 0, got %v", result)
+	}
+
+	// One argument.
+	result = Random[int](5)
+	if result < 0 || result >= 5 {
+		t.Errorf("Expected a random int between 0 and 4, got %v", result)
+	}
+
+	// Two arguments.
+	result = Random[int](1, 5)
+	if result < 1 || result >= 5 {
+		t.Errorf("Expected a random int between 1 and 4, got %v", result)
+	}
+
+	// Two equal arguments.
+	result = Random[int](5, 5)
+	if result != 5 {
+		t.Errorf("Expected 5, got %v", result)
+	}
+
+	// Two arguments when max < min.
+	result = Random[int](15, 5)
+	if result < 5 || result >= 15 {
+		t.Errorf("Expected a random int between 5 and 14, got %v", result)
+	}
+
+	// Multiple arguments.
+	result = Random[int](1, 2, 3)
+	if result != 1 && result != 2 && result != 3 {
+		t.Errorf("Expected 1, 2, or 3, got %v", result)
+	}
+
+	// Additional test cases for different types.
+
+	// One argument of type float32.
+	resultFloat32 := Random[float32](10.5)
+	if resultFloat32 < 0.0 || resultFloat32 >= 10.5 {
+		t.Errorf("Expected a random float32 between 0.0 and 10.4, got %v",
+			resultFloat32)
+	}
+
+	// Two arguments of type float64.
+	resultFloat64 := Random[float64](1.5, 5.5)
+	if resultFloat64 < 1.5 || resultFloat64 >= 5.5 {
+		t.Errorf("Expected a random float64 between 1.5 and 5.4, got %v",
+			resultFloat64)
+	}
+}
+
+// Helper function to check if a list containsListValue a given value.
+func containsListValue[T comparable](list []T, value T) bool {
+	for _, v := range list {
+		if v == value {
+			return true
+		}
+	}
+	return false
+}
+
+// Helper function to check if a map contains a given value.
+func containsMapValue[K comparable, T comparable](m map[K]T, value T) bool {
+	for _, v := range m {
+		if v == value {
+			return true
+		}
+	}
+
+	return false
+}
+
+// TestRandomList tests the RandomList function.
+func TestRandomList(t *testing.T) {
+	// Test case 1: Non-empty list
+	list := []int{1, 2, 3, 4, 5}
+	value := RandomList(list)
+	if !containsListValue(list, value) {
+		t.Errorf("Expected a random element from the list, got %v", value)
+	}
+
+	// Test case 2: Empty list
+	emptyList := []string{}
+	zeroValue := RandomList(emptyList)
+	if zeroValue != "" {
+		t.Errorf("Expected the zero value of string type, got %v", zeroValue)
+	}
+}
+
+// TestRandomMap tests the RandomMap function.
+func TestRandomMap(t *testing.T) {
+	// Test case 1: Non-empty map
+	myMap := map[string]int{
+		"apple":  1,
+		"banana": 2,
+		"cherry": 3,
+	}
+	value := RandomMap(myMap)
+	if !containsMapValue(myMap, value) {
+		t.Errorf("Expected a random value from the map, got %v", value)
+	}
+
+	// Test case 2: Empty map
+	emptyMap := map[string]bool{}
+	zeroValue := RandomMap(emptyMap)
+	if zeroValue != reflect.Zero(reflect.TypeOf((*bool)(nil)).Elem()).Interface().(bool) {
+		t.Errorf("Expected the zero value of bool type (false), got %v", zeroValue)
+	}
+}
+
+// TestRandomListPlural tests the RandomListPlural function.
+func TestRandomListPlural(t *testing.T) {
+	// Test case 1: Non-empty list, n > 0
+	list := []int{1, 2, 3, 4, 5}
+	values := RandomListPlural(3, list)
+	if len(values) != 3 {
+		t.Errorf("Expected a slice of 3 random elements, got %v", values)
+	}
+	for _, value := range values {
+		if !containsListValue(list, value) {
+			t.Errorf("Expected a random element from the list, got %v", value)
+		}
+	}
+
+	// Test case 2: Empty list, n > 0
+	emptyList := []string{}
+	emptyValues := RandomListPlural(2, emptyList)
+	if len(emptyValues) != 0 {
+		t.Errorf("Expected an empty slice, got %v", emptyValues)
+	}
+
+	// Test case 3: Non-empty list, n <= 0
+	valuesZero := RandomListPlural(0, list)
+	if len(valuesZero) != 0 {
+		t.Errorf("Expected an empty slice, got %v", valuesZero)
+	}
+}
+
+// TestRandomMapPlural tests the RandomMapPlural function.
+func TestRandomMapPlural(t *testing.T) {
+	// Test case 1: Non-empty map, n > 0
+	myMap := map[string]int{
+		"apple":  1,
+		"banana": 2,
+		"cherry": 3,
+	}
+	values := RandomMapPlural(2, myMap)
+	if len(values) != 2 {
+		t.Errorf("Expected a slice of 2 random values, got %v", values)
+	}
+	for _, value := range values {
+		if !containsMapValue(myMap, value) {
+			t.Errorf("Expected a random value from the map, got %v", value)
+		}
+	}
+
+	// Test case 2: Empty map, n > 0
+	emptyMap := map[string]bool{}
+	emptyValues := RandomMapPlural(3, emptyMap)
+	if len(emptyValues) != 0 {
+		t.Errorf("Expected an empty slice, got %v", emptyValues)
+	}
+
+	// Test case 3: Non-empty map, n <= 0
+	valuesZero := RandomMapPlural(0, myMap)
+	if len(valuesZero) != 0 {
+		t.Errorf("Expected an empty slice, got %v", valuesZero)
+	}
+}

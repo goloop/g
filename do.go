@@ -6,6 +6,11 @@
 // pairing functionality.
 package do
 
+import (
+	"math/rand"
+	"time"
+)
+
 // Pair is a generic struct type with two fields: First and Second.
 // Used as the result element of the Zip function and can contain
 // a pair of values of any T and U types.
@@ -35,4 +40,13 @@ type Numerable interface {
 // or string operations are needed.
 type Verifiable interface {
 	Numerable | string | rune
+}
+
+// The randomGenerator is a global variable that is used by the Random function
+// to generate random numbers. It is initialized in the init() function.
+var randomGenerator *rand.Rand
+
+// The init initializes the randomGenerator variable.
+func init() {
+	randomGenerator = rand.New(rand.NewSource(time.Now().UnixNano()))
 }

@@ -308,3 +308,153 @@ func IsWhole[T Numerable](v T) bool {
 	_, fraction := math.Modf(float64(v))
 	return fraction == 0
 }
+
+// Random generates a random value of type T based on provided arguments:
+//
+//   - When called without any arguments, it returns 0.
+//   - When called with one argument, it returns a random value from 0 to n-1.
+//   - When called with two arguments, it returns a random value from a to b-1.
+//   - When called with more than two arguments, it returns a randomly selected
+//     value from the provided arguments.
+//
+// The function uses the time in nanoseconds as a seed for the random
+// number generator.
+//
+// Example:
+//
+//	Random[int]() => returns 0
+//	Random[int](5) => returns a random int from 0 to 4
+//	Random[int](1, 5) => returns a random int from 1 to 4
+//	Random[int](1, 2, 3) => returns 1, 2, or 3
+func Random[T Numerable](v ...T) T {
+	switch len(v) {
+	case 0:
+		return reflect.Zero(reflect.TypeOf((*T)(nil)).Elem()).Interface().(T)
+	case 1:
+		return randomValue(0, v[0])
+	case 2:
+		min := v[0]
+		max := v[1]
+		if min == max {
+			return min
+		} else if min > max {
+			min, max = max, min
+		}
+		return randomValue(min, max)
+	default:
+		return v[randomGenerator.Intn(len(v))]
+	}
+}
+
+// The randomValue function generates a random value of type T
+// based on provided arguments:
+func randomValue[T Numerable](min, max T) T {
+	var t interface{} = min
+	_, ok32 := t.(float32)
+	_, ok64 := t.(float64)
+	if ok32 || ok64 {
+		return T(float64(min) + randomGenerator.Float64()*float64(max-min))
+	}
+
+	return T(randomGenerator.Intn(int(max-min)) + int(min))
+}
+
+// RandomList returns a random element from the given list.
+// If the list is empty, it returns the zero value of type T.
+//
+// Example:
+//
+//	list := []int{1, 2, 3, 4, 5}
+//	value := RandomList(list) // returns a random element from the list
+//
+//	emptyList := []string{}
+//	value := RandomList(emptyList) // returns the zero value of string type
+func RandomList[T any](v []T) T {
+	if len(v) == 0 {
+		return reflect.Zero(reflect.TypeOf((*T)(nil)).Elem()).Interface().(T)
+	}
+	return v[randomGenerator.Intn(len(v))]
+}
+
+// RandomMap returns a random value from the given map.
+// If the map is empty, it returns the zero value of type T.
+//
+// Example:
+//
+//	myMap := map[string]int{
+//	    "apple":  1,
+//	    "banana": 2,
+//	    "cherry": 3,
+//	}
+//	value := RandomMap(myMap) // returns a random value from the map
+//
+//	emptyMap := map[string]bool{}
+//	value := RandomMap(emptyMap) // returns the zero value of bool type (false)
+func RandomMap[K comparable, T any](m map[K]T) T {
+	var keys []K
+	for k := range m {
+		keys = append(keys, k)
+	}
+
+	if len(keys) != 0 {
+		if v, ok := m[keys[randomGenerator.Intn(len(keys))]]; ok {
+			return v
+		}
+	}
+
+	return reflect.Zero(reflect.TypeOf((*T)(nil)).Elem()).Interface().(T)
+}
+
+// RandomListPlural returns a slice of n random elements from the given list v.
+// If n is less than or equal to zero, it returns an empty slice.
+//
+// Example:
+//
+//	list := []int{1, 2, 3, 4, 5}
+//	values := RandomListPlural(3, list) // returns a slice of 3 random
+//	                                    // elements from the list
+//	emptyList := []string{}
+//	values := RandomListPlural(2, emptyList) // returns an empty slice
+//
+//	values := RandomListPlural(0, list) // returns an empty slice
+func RandomListPlural[T any](n int, v []T) []T {
+	if n <= 0 || len(v) == 0 {
+		return make([]T, 0)
+	}
+
+	result := make([]T, n)
+	for i := 0; i < n; i++ {
+		result[i] = RandomList(v)
+	}
+
+	return result
+}
+
+// RandomMapPlural returns a slice of n random values from the given map m.
+// If n is less than or equal to zero, it returns an empty slice.
+//
+// Example:
+//
+//	myMap := map[string]int{
+//	    "apple":  1,
+//	    "banana": 2,
+//	    "cherry": 3,
+//	}
+//	values := RandomMapPlural(2, myMap) // returns a slice of 2 random
+//		                                // values from the map
+//	emptyMap := map[string]bool{}
+//	values := RandomMapPlural(3, emptyMap) // returns an empty slice ([]bool{})
+//
+//	values := RandomMapPlural(0, myMap) // returns an empty slice ([]int{})
+func RandomMapPlural[K comparable, T any](n int, m map[K]T) []T {
+	if n <= 0 || len(m) == 0 {
+		return make([]T, 0)
+	}
+
+	result := make([]T, n)
+	for i := 0; i < n; i++ {
+		result[i] = RandomMap(m)
+	}
+
+	return result
+}
