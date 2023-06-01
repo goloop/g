@@ -186,7 +186,7 @@ func partitionDesc[T Verifiable](v []T, low, high int) int {
 // for the type T of the parameters.
 //
 // This function is generic and can work with any type T.
-func Value[T Verifiable](v ...T) T {
+func Value[T any](v ...T) T {
 	if len(v) != 0 {
 		for _, val := range v {
 			if !IsEmpty(val) {
