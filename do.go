@@ -1,9 +1,20 @@
-// The do package is a utility library for Go 1.20+ that provides generic
-// and type-safe helper functions to simplify software development tasks.
-// The package uses Go's generics extensively and offers an assortment of
-// functions such as simplified conditionals, zero-value checks, numeric
-// operations, functional programming helpers, element operations, and
-// pairing functionality.
+// The 'do' package is a robust utility library for Go 1.20+ that brings
+// advanced generic and type-safe helper functions to streamline various
+// development tasks. This package employs Go's generics to their fullest
+// potential, catering to an array of needs for modern software development.
+//
+// Key features of the 'do' package encompass easy-to-use conditionals,
+// zero-value checks, numeric operations, functional programming aids, and
+// element operations. Moreover, it extends its usefulness to more complex
+// functionalities like pairing, ranking, looking up data in arrays and maps,
+// and manipulating lists in diverse ways including sorting, shuffling, and
+// reduction. Random number and element selection operations are also
+// provided, amplifying the package's versatility.
+//
+// The 'do' package champions a design philosophy that encourages code
+// clarity and promotes maintainability and reliability in Go applications.
+// It is an ideal tool for developers seeking to write clean, concise, and
+// efficient code while harnessing the power of Go generics.
 package do
 
 import (
