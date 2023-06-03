@@ -1,6 +1,7 @@
 package do
 
 import (
+	"context"
 	"math/rand"
 	"reflect"
 	"runtime"
@@ -371,6 +372,11 @@ func Merge[T Verifiable](a []T, b []T, sort ...bool) []T {
 //	exists = In("date", words...)
 //	fmt.Println(exists)  // Output: true
 func In[T Verifiable](v T, list ...T) bool {
+	// Will use context to stop the rest of the goroutines
+	// if the value has already been found.
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	p := runtime.NumCPU() * 2
 	found := &Found{}
 
@@ -395,10 +401,16 @@ func In[T Verifiable](v T, list ...T) bool {
 			defer wg.Done()
 
 			for _, b := range list[start:end] {
+				// Check if the context has been cancelled.
+				select {
+				case <-ctx.Done():
+					return
+				default:
+				}
+
 				if b == v {
-					// If the value is found, set it to
-					// true and return immediately.
 					found.SetValue(true)
+					cancel()
 					return
 				}
 			}

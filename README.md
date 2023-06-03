@@ -12,7 +12,7 @@ Key features of the **do** package include:
 
     Example:
     ```go
-    resp := do.If(do.In(ip, blacklist...), Response{...}, Response{...})
+    fn := do.If(do.In(ip, blacklist...), prohibitedFn, successFn)
     ```
 
 - **Zero-Value Checks**: Includes `IsEmpty`, `All`, `Any`, and `Value` functions that perform checks for zero-values in various contexts, thus saving valuable coding time and making code easier to comprehend.
@@ -80,6 +80,10 @@ It is the detail list of functions provided in Go package **do**:
 
   The In function checks if a given value 'v' of type 'T' is present in a list of 'T'. It employs the 'Verifiable' type constraint, permitting it to function with numeric types and strings. It utilizes goroutines for concurrent processing, significantly enhancing performance for larger data sets. The function returns true if the value is found in the list, otherwise it returns false.
 
+- **Index**[T comparable](vs []T, v T) int
+
+  The Index function returns the index of the first occurrence of the provided element in the given slice, or -1 if the element is not present.
+
 - **IsEmpty**[T any](v T) bool
 
   The IsEmpty function checks if a given value of any type is a "zero value" for that type. Zero values in Go are values that the variables of respective types hold upon their declaration, if they do not have any explicit initialization.
@@ -103,10 +107,6 @@ It is the detail list of functions provided in Go package **do**:
 - **IsWhole**[T Numerable](v T) bool
 
   The IsWhole function checks if a value is a whole number. It accepts a value of any type T that satisfies the Numerable interface and returns true if the value does not have a fractional part.
-
-- **Index**[T comparable](vs []T, v T) int
-
-  The Index function returns the index of the first occurrence of the provided element in the given slice, or -1 if the element is not present.
 
 - **Map**[T any, U any](vs []T, f func(T) U) []U
 
