@@ -4,7 +4,6 @@ import (
 	"context"
 	"math/rand"
 	"reflect"
-	"runtime"
 	"sync"
 	"time"
 )
@@ -377,7 +376,7 @@ func In[T Verifiable](v T, list ...T) bool {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	p := runtime.NumCPU() * 2
+	p := parallelTasks
 	found := &Found{}
 
 	if len(list) < p {

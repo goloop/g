@@ -19,6 +19,7 @@ package do
 
 import (
 	"math/rand"
+	"runtime"
 	"time"
 )
 
@@ -53,11 +54,46 @@ type Verifiable interface {
 	Numerable | string | rune
 }
 
-// The randomGenerator is a global variable that is used by the Random function
-// to generate random numbers. It is initialized in the init() function.
-var randomGenerator *rand.Rand
+var (
+	// The randomGenerator is a global variable that is used by
+	// the Random function to generate random numbers.
+	// It is initialized in the init() function.
+	randomGenerator *rand.Rand
+
+	// The parallelTasks the number of parallel tasks.
+	parallelTasks = 1
+
+	// The maxParallelTasks is the maximum number of parallel tasks.
+	maxParallelTasks = runtime.NumCPU() * 3
+)
 
 // The init initializes the randomGenerator variable.
 func init() {
+	parallelTasks = runtime.NumCPU() * 2
 	randomGenerator = rand.New(rand.NewSource(time.Now().UnixNano()))
+}
+
+// ParallelTasks returns the number of parallel tasks.
+//
+// If the function is called without parameters, it returns the
+// current value of parallelTasks.
+//
+// A function can receive one or more values for parallelTasks,
+// these values are added together to form the final result for
+// parallelTasks. If the new value for parallelTasks is less than
+// or equal to zero - it will be set to 1, if it is greater than
+// maxParallelTasks - it will be set to maxParallelTasks.
+func ParallelTasks(v ...int) int {
+	if len(v) > 0 {
+		n := Sum(v...)
+		if n <= 0 {
+			parallelTasks = 1
+		} else if n > maxParallelTasks {
+			parallelTasks = maxParallelTasks
+		} else {
+			parallelTasks = n
+		}
+	}
+
+	return parallelTasks
 }
