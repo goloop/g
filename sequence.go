@@ -3,8 +3,32 @@ package do
 import (
 	"math/rand"
 	"reflect"
+	"runtime"
+	"sync"
 	"time"
 )
+
+// Create a new type Found that can be safely shared across multiple goroutines.
+type Found struct {
+	m     sync.Mutex
+	value bool
+}
+
+// SetValue sets a new value for the Found. It locks the Mutex before
+// changing the value and unlocks it after the change is complete.
+func (f *Found) SetValue(value bool) {
+	f.m.Lock()
+	defer f.m.Unlock()
+	f.value = value
+}
+
+// GetValue retrieves the current value of the Found. It locks the Mutex
+// before reading the value and unlocks it after the read is complete.
+func (f *Found) GetValue() bool {
+	f.m.Lock()
+	defer f.m.Unlock()
+	return f.value
+}
 
 // Contains checks if a slice contains a specific element.
 //
@@ -315,4 +339,83 @@ func Merge[T Verifiable](a []T, b []T, sort ...bool) []T {
 	}
 
 	return merged
+}
+
+// In is a generic function that checks if a given value 'v' of type 'T' exists
+// in a variadic parameter list of 'T'. The function uses the 'Verifiable' type
+// constraint which allows it to operate on numeric types and strings.
+//
+// This function leverages goroutines for concurrent computation when the size
+// of the list is large. It splits the list into chunks (based on the number
+// of CPU cores) and checks each chunk in a separate goroutine. This allows the
+// function to take advantage of multi-core processors and improves performance
+// on large data sets.
+//
+// A 'sync.WaitGroup' is used to ensure all goroutines have completed, and a
+// thread-safe structure 'Found' is used to safely access the shared 'found'
+// variable across goroutines.
+//
+// Usage:
+//
+//	// Define a slice of integers
+//	numbers := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+//
+//	// Check if '5' exists in the slice
+//	exists := In(5, numbers...)
+//	fmt.Println(exists)  // Output: true
+//
+//	// Define a slice of strings
+//	words := []string{"apple", "banana", "cherry", "date", "elderberry"}
+//
+//	// Check if 'date' exists in the slice
+//	exists = In("date", words...)
+//	fmt.Println(exists)  // Output: true
+func In[T Verifiable](v T, list ...T) bool {
+	p := runtime.NumCPU() * 2
+	found := &Found{}
+
+	if len(list) < p {
+		return in(v, list...)
+	}
+
+	var wg sync.WaitGroup
+
+	chunkSize := len(list) / p
+
+	for i := 0; i < p; i++ {
+		wg.Add(1)
+
+		start := i * chunkSize
+		end := start + chunkSize
+		if i == p-1 {
+			end = len(list)
+		}
+
+		go func(start, end int) {
+			defer wg.Done()
+
+			for _, b := range list[start:end] {
+				if b == v {
+					// If the value is found, set it to
+					// true and return immediately.
+					found.SetValue(true)
+					return
+				}
+			}
+		}(start, end)
+	}
+
+	wg.Wait()
+
+	return found.GetValue()
+}
+
+// The in performs a sequential entry search.
+func in[T Verifiable](v T, list ...T) bool {
+	for _, b := range list {
+		if b == v {
+			return true
+		}
+	}
+	return false
 }

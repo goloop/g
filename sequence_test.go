@@ -1,8 +1,10 @@
 package do
 
 import (
+	"math/rand"
 	"reflect"
 	"testing"
+	"time"
 )
 
 // TestContains tests the Contains function.
@@ -536,5 +538,88 @@ func TestMerge(t *testing.T) {
 	if !reflect.DeepEqual(mergedEmpty, expectedEmpty) {
 		t.Errorf("Incorrect merged empty array. Expected %v, got %v",
 			expectedEmpty, mergedEmpty)
+	}
+}
+
+// TestIn tests the flat in function for string values.
+func TestIn(t *testing.T) {
+	slice := []string{"apple", "banana", "cherry", "date", "elderberry"}
+	if res := In("cherry", slice...); !res {
+		t.Errorf("expected %v, got %v", true, res)
+	}
+
+	if res := In("mango", slice...); res {
+		t.Errorf("expected %v, got %v", false, res)
+	}
+}
+
+// TestIn tests the In function for int values.
+func TestInWithInt(t *testing.T) {
+	generateIntSlice := func(size int) []int {
+		slice := make([]int, size)
+		rand.Seed(time.Now().UnixNano())
+		for i := range slice {
+			slice[i] = rand.Intn(100) - 50 // negative and positive integers
+		}
+		return slice
+	}
+
+	slice := generateIntSlice(10000)
+	expected := in(10, slice...)
+
+	if res := In(10, slice...); res != expected {
+		t.Errorf("expected %v, got %v", expected, res)
+	}
+
+	// For empty.
+	if res := In(100, []int{}...); res {
+		t.Errorf("expected %v, got %v", false, res)
+	}
+}
+
+// TestFloat tests the In function for float values.
+func TestInWithFloat(t *testing.T) {
+	generateFloatSlice := func(size int) []float64 {
+		slice := make([]float64, size)
+		rand.Seed(time.Now().UnixNano())
+		for i := range slice {
+			slice[i] = rand.Float64()*100 - 50 // negative and positive floats
+		}
+		return slice
+	}
+
+	slice := generateFloatSlice(10000)
+	expected := in(10.5, slice...)
+
+	if res := In(10.5, slice...); res != expected {
+		t.Errorf("expected %v, got %v", expected, res)
+	}
+
+	// For empty.
+	if res := In(100.5, []float64{}...); res {
+		t.Errorf("expected %v, got %v", false, res)
+	}
+}
+
+// TestString tests the In function for string values.
+func TestInWithString(t *testing.T) {
+	generateStringSlice := func(size int) []string {
+		slice := make([]string, size)
+		for i := range slice {
+			slice[i] = string(rune(i + 65)) // string with ASCII characters
+		}
+		return slice
+	}
+
+	slice := generateStringSlice(10000)
+	expected := in("A", slice...)
+
+	if res := In("A", slice...); res != expected {
+		t.Errorf("expected %v, got %v", expected, res)
+	}
+
+	// For empty.
+	if res := In("Go"); res {
+		t.Errorf("expected %v, got %v", false, res)
 	}
 }

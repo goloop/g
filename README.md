@@ -12,8 +12,7 @@ Key features of the **do** package include:
 
     Example:
     ```go
-    max := do.If(a > b, a, b)
-    resp := do.If(user.IsActive(), Response{...}, Response{...})
+    resp := do.If(do.In(ip, blacklist...), Response{...}, Response{...})
     ```
 
 - **Zero-Value Checks**: Includes `IsEmpty`, `All`, `Any`, and `Value` functions that perform checks for zero-values in various contexts, thus saving valuable coding time and making code easier to comprehend.
@@ -76,6 +75,10 @@ It is the detail list of functions provided in Go package **do**:
 - **HLookup**[T comparable, U any](v T, lookup []T, result []U, def U) U
 
   HLookup function looks up and retrieves data from a specific row in a table. It takes a search value, a slice of lookup values, a slice of result values, and an optional default value. If the search value is found in the lookup slice, it returns the corresponding value from the result slice, otherwise it returns the default value.
+
+- **In**[T Verifiable](v T, list ...T) bool
+
+  The In function checks if a given value 'v' of type 'T' is present in a list of 'T'. It employs the 'Verifiable' type constraint, permitting it to function with numeric types and strings. It utilizes goroutines for concurrent processing, significantly enhancing performance for larger data sets. The function returns true if the value is found in the list, otherwise it returns false.
 
 - **IsEmpty**[T any](v T) bool
 
