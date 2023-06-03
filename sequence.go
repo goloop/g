@@ -8,15 +8,19 @@ import (
 	"time"
 )
 
-// Create a new type Found that can be safely shared across multiple goroutines.
-type Found struct {
+// The foundValue is a helper struct that holds a boolean value
+// and a Mutex to protect it from concurrent access.
+//
+// They are used in the In function to detect the desired result
+// in a separate goroutine.
+type foundValue struct {
 	m     sync.Mutex
 	value bool
 }
 
 // SetValue sets a new value for the Found. It locks the Mutex before
 // changing the value and unlocks it after the change is complete.
-func (f *Found) SetValue(value bool) {
+func (f *foundValue) SetValue(value bool) {
 	f.m.Lock()
 	defer f.m.Unlock()
 	f.value = value
@@ -24,7 +28,7 @@ func (f *Found) SetValue(value bool) {
 
 // GetValue retrieves the current value of the Found. It locks the Mutex
 // before reading the value and unlocks it after the read is complete.
-func (f *Found) GetValue() bool {
+func (f *foundValue) GetValue() bool {
 	f.m.Lock()
 	defer f.m.Unlock()
 	return f.value
@@ -37,14 +41,18 @@ func (f *Found) GetValue() bool {
 //
 // T is the type of items in the slice and the element to be searched.
 // The function returns true if the element is found, and false otherwise.
-func Contains[T comparable](vs []T, v T) bool {
-	for _, item := range vs {
-		if item == v {
-			return true
-		}
-	}
-
-	return false
+//
+// Example usage:
+//
+//	nums := []int{1, 2, 3, 4, 5}
+//	result := do.Contains(nums, 3)
+//	fmt.Println(result) // prints: true
+//
+//	strSlice := []string{"Hello", "World", "Golang"}
+//	resultStr := do.Contains(strSlice, "Python")
+//	fmt.Println(resultStr) // prints: false
+func Contains[T Verifiable](vs []T, v T) bool {
+	return In(v, vs...)
 }
 
 // Filter applies a predicate function to all items in an input
@@ -53,6 +61,20 @@ func Contains[T comparable](vs []T, v T) bool {
 //
 // T is the type of items in the input slice.
 // The predicate function f takes an item of type T and returns a boolean.
+//
+// Example usage:
+//
+//	// Let's say you have a slice of integers and you want
+//	// to filter out even numbers:
+//	nums := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+//	evens := do.Filter(nums, func(v int) bool { return v%2 == 0 })
+//	fmt.Println(evens) // prints: [2 4 6 8 10]
+//
+//	//Or you may have a slice of strings and you want
+//	//to filter out strings with length greater than 5:
+//	strs := []string{"apple", "banana", "cherry", "date", "elderberry"}
+//	longStrings := do.Filter(strs, func(v string) bool { return len(v) > 5 })
+//	fmt.Println(longStrings) // prints: ["banana" "cherry" "elderberry"]
 func Filter[T any](vs []T, f func(T) bool) []T {
 	result := make([]T, 0)
 	for _, v := range vs {
@@ -70,6 +92,25 @@ func Filter[T any](vs []T, f func(T) bool) []T {
 // T is the type of the items in the slice and the element to be searched.
 // The function returns an integer indicating the position of the first
 // occurrence of the element, or -1 if the element is not found.
+//
+// Example usage:
+//
+//	//Let's say you have a slice of integers and you want
+//	//to find the index of the number 7:
+//	nums := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+//	idx := do.Index(nums, 7)
+//	fmt.Println(idx) // prints: 6
+//
+//	// Or you have a slice of strings and you want to find
+//	// the index of the string "cherry":
+//	fruits := []string{"apple", "banana", "cherry", "date", "elderberry"}
+//	idx := do.Index(fruits, "cherry")
+//	fmt.Println(idx) // prints: 2
+//
+//	// In case the element is not in the slice, the function will return -1:
+//	nums := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+//	idx := do.Index(nums, 11)
+//	fmt.Println(idx) // prints: -1
 func Index[T comparable](vs []T, v T) int {
 	for i, item := range vs {
 		if item == v {
@@ -86,6 +127,24 @@ func Index[T comparable](vs []T, v T) int {
 // T is the type of items in the input slice, and U is the type of
 // items in the output slice.
 // The function f takes an item of type T and returns a new item of type U.
+//
+// Example usage:
+//
+//	// Let's say you have a slice of integers and you want to create a
+//	// new slice where each element is the square of the original element:
+//	nums := []int{1, 2, 3, 4, 5}
+//	squares := do.Map(nums, func(n int) int {
+//	   return n * n
+//	})
+//	fmt.Println(squares) // prints: [1 4 9 16 25]
+//
+//	// Or you have a slice of strings and you want to create a new slice
+//	// where each element is the length of the original string:
+//	fruits := []string{"apple", "banana", "cherry", "date", "elderberry"}
+//	lengths := do.Map(fruits, func(s string) int {
+//	   return len(s)
+//	})
+//	fmt.Println(lengths) // prints: [5 6 6 4 10]
 func Map[T any, U any](vs []T, f func(T) U) []U {
 	result := make([]U, len(vs))
 	for i, v := range vs {
@@ -104,6 +163,24 @@ func Map[T any, U any](vs []T, f func(T) U) []U {
 //
 // The fold function f takes two parameters - an accumulator of type U
 // and an item of type T, and returns a new accumulator.
+//
+// Example usage:
+//
+//	// Let's say you have a slice of integers and you want to
+//	// compute the sum of all elements:
+//	nums := []int{1, 2, 3, 4, 5}
+//	sum := go.Reduce(nums, func(acc int, n int) int {
+//	   return acc + n
+//	}, 0)
+//	fmt.Println(sum) // prints: 15
+//
+//	// Or you have a slice of strings and you want to concatenate
+//	// them all into a single string:
+//	words := []string{"Hello", "World", "From", "Go"}
+//	sentence := go.Reduce(words, func(acc string, s string) string {
+//	   return acc + " " + s
+//	}, "")
+//	fmt.Println(sentence) // prints: "Hello World From Go"
 func Reduce[T any, U any](vs []T, f func(U, T) U, init U) U {
 	result := init
 	for _, v := range vs {
@@ -124,18 +201,25 @@ func Reduce[T any, U any](vs []T, f func(U, T) U, init U) U {
 //
 // The function uses the quicksort algorithm to sort the values.
 //
-// Example:
+// Example usage:
 //
-//	n := []int{3, 5, 1, 9, 2}
-//	do.Sort(n)
-//	// n is now []int{1, 2, 3, 5, 9}
+//	// If you have a slice of integers that you want
+//	// to sort in ascending order:
+//	nums := []int{5, 2, 7, 8, 1, 9}
+//	do.Sort(nums)
+//	fmt.Println(nums) // prints: [1 2 5 7 8 9]
 //
-//	n := []int{3, 5, 1, 9, 2}
-//	do.Sort(n, true)
-//	// n is now []int{9, 5, 3, 2, 1}
+//	// If you want to sort the same slice in descending order:
+//	nums := []int{5, 2, 7, 8, 1, 9}
+//	do.Sort(nums, true)
+//	fmt.Println(nums) // prints: [9 8 7 5 2 1]
 //
-// This function is generic and can work with any type T that satisfies
-// the Numerable interface.
+//	// This function is generic and can work with any type
+//	// that satisfies the Numerable interface.
+//	// For example, if you have a slice of floats:
+//	floats := []float64{5.5, 2.2, 7.7, 8.8, 1.1, 9.9}
+//	do.Sort(floats)
+//	fmt.Println(floats) // prints: [1.1 2.2 5.5 7.7 8.8 9.9]
 func Sort[T Verifiable](v []T, inverse ...bool) {
 	inv := All(inverse...)
 
@@ -210,6 +294,27 @@ func partitionDesc[T Verifiable](v []T, low, high int) int {
 // for the type T of the parameters.
 //
 // This function is generic and can work with any type T.
+//
+// Example usage:
+//
+//	// If you want to find the first non-zero value among
+//	// several integer variables:
+//	a, b, c := 0, 0, 3
+//	fmt.Println(do.Value(a, b, c)) // prints: 3
+//
+//	// If all values are zero, the function will return zero of the type T:
+//	a, b, c := 0, 0, 0
+//	fmt.Println(do.Value(a, b, c)) // prints: 0
+//
+//	// This function can work with any type. For example,
+//	// if you have several string variables:
+//	s1, s2, s3 := "", "Hello", "World"
+//	fmt.Println(do.Value(s1, s2, s3)) // prints: Hello
+//
+//	// If all strings are empty (which is the zero value for strings),
+//	// the function will return an empty string:
+//	s1, s2, s3 := "", "", ""
+//	fmt.Println(do.Value(s1, s2, s3)) // prints: ""
 func Value[T any](v ...T) T {
 	if len(v) != 0 {
 		for _, val := range v {
@@ -233,6 +338,27 @@ func Value[T any](v ...T) T {
 // The function returns a slice of struct where each struct has two fields:
 // First and Second, representing the elements from the first and second
 // slices respectively.
+//
+// Example usage:
+//
+//	// If you have two slices of the same length:
+//	a := []int{1, 2, 3}
+//	b := []string{"one", "two", "three"}
+//	pairs := do.Zip(a, b)
+//	for _, pair := range pairs {
+//	    fmt.Printf("(%d, %s)\n", pair.First, pair.Second)
+//	}
+//	// Prints: (1, one) (2, two) (3, three)
+//
+//	// If one slice is shorter than the other:
+//	a := []int{1, 2}
+//	b := []string{"one", "two", "three"}
+//	pairs := do.Zip(a, b)
+//	for _, pair := range pairs {
+//	    fmt.Printf("(%d, %s)\n", pair.First, pair.Second)
+//	}
+//	// Prints: (1, one) (2, two)
+//	// Note that the third element of the second slice is ignored.
 func Zip[T, U any](a []T, b []U) []Pair[T, U] {
 	minLength := len(a)
 	if len(b) < minLength {
@@ -256,6 +382,19 @@ func Zip[T, U any](a []T, b []U) []Pair[T, U] {
 // with unique values in the same order as they appear in the input slice.
 //
 // This function is generic and can work with any type T.
+//
+// Example usage:
+//
+//	// If you have a slice with duplicates:
+//	numbers := []int{1, 2, 2, 3, 3, 3, 4, 4, 4, 4}
+//	uniqueNumbers := do.Distinct(numbers)
+//	fmt.Println(uniqueNumbers)  // Prints: [1 2 3 4]
+//
+//	// This function also works with slices of other comparable types,
+//	// like strings:
+//	words := []string{"hello", "world", "hello", "gophers"}
+//	uniqueWords := do.Distinct(words)
+//	fmt.Println(uniqueWords)  // Prints: ["hello" "world" "gophers"]
 func Distinct[T comparable](v []T) []T {
 	uniqueMap := make(map[T]bool)
 	uniqueValues := make([]T, 0)
@@ -276,6 +415,21 @@ func Distinct[T comparable](v []T) []T {
 // in a random order using the Fisher-Yates algorithm.
 //
 // This function is generic and can work with any type T.
+//
+// Example usage:
+//
+//	// If you have a slice and want to shuffle its elements:
+//	numbers := []int{1, 2, 3, 4, 5}
+//	do.Shuffle(numbers)
+//	fmt.Println(numbers)
+//	// Prints the slice numbers in a random order, e.g., [3 1 5 2 4]
+//
+//	// This function also works with slices of other types, like strings:
+//	words := []string{"hello", "world", "gophers", "Go", "OpenAI"}
+//	do.Shuffle(words)
+//	fmt.Println(words)
+//	// Prints the slice words in a random order, e.g.,
+//	// ["Go" "gophers" "hello" "OpenAI" "world"]
 func Shuffle[T any](v []T) {
 	rand.Seed(time.Now().UnixNano())
 
@@ -293,13 +447,22 @@ func Shuffle[T any](v []T) {
 //
 // If there are no numeric values in the slice, the function returns 1.
 //
-// Example:
+// Example usage:
 //
-//	n := []int{2, 3, 4}
-//	prod := do.Product(n...) // 24
+//	// Calculate the product of a slice of integers:
+//	nums := []int{2, 3, 4}
+//	p := do.Product(nums)
+//	fmt.Println(p)  // Outputs: 24
 //
-// This function is generic and can work with any type T that satisfies
-// the Numerable interface.
+//	// Compute the product of a slice of floats:
+//	nums := []float64{1.2, 3.4, 5.6}
+//	p := do.Product(nums)
+//	fmt.Println(p)  // Outputs: 22.848
+//
+//	// If the slice is empty, the function returns 1:
+//	nums := []int{}
+//	p := do.Product(nums)
+//	fmt.Println(p)  // Outputs: 1
 func Product[T Numerable](v ...T) T {
 	if len(v) == 0 {
 		return 1
@@ -357,36 +520,35 @@ func Merge[T Verifiable](a []T, b []T, sort ...bool) []T {
 //
 // Usage:
 //
-//	// Define a slice of integers
+//	// Define a slice of integers.
 //	numbers := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 //
-//	// Check if '5' exists in the slice
-//	exists := In(5, numbers...)
+//	// Check if '5' exists in the slice.
+//	exists := do.In(5, numbers...)
 //	fmt.Println(exists)  // Output: true
 //
-//	// Define a slice of strings
+//	// Define a slice of strings.
 //	words := []string{"apple", "banana", "cherry", "date", "elderberry"}
 //
 //	// Check if 'date' exists in the slice
-//	exists = In("date", words...)
+//	exists = do.In("date", words...)
 //	fmt.Println(exists)  // Output: true
 func In[T Verifiable](v T, list ...T) bool {
+	var wg sync.WaitGroup
+
 	// Will use context to stop the rest of the goroutines
 	// if the value has already been found.
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	p := parallelTasks
-	found := &Found{}
+	found := &foundValue{}
 
 	if len(list) < p {
 		return in(v, list...)
 	}
 
-	var wg sync.WaitGroup
-
 	chunkSize := len(list) / p
-
 	for i := 0; i < p; i++ {
 		wg.Add(1)
 
@@ -409,7 +571,7 @@ func In[T Verifiable](v T, list ...T) bool {
 
 				if b == v {
 					found.SetValue(true)
-					cancel()
+					cancel() // stop all other goroutines
 					return
 				}
 			}
@@ -417,7 +579,6 @@ func In[T Verifiable](v T, list ...T) bool {
 	}
 
 	wg.Wait()
-
 	return found.GetValue()
 }
 
