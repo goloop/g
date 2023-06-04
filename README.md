@@ -4,6 +4,9 @@
 
 The **do** package is a comprehensive utility library for the Go programming language, augmenting Go's functionality with a collection of efficient helper functions aimed at simplifying and streamlining software development tasks. It robustly employs Go's generics, introduced in Go 1.18+, to provide versatile and type-safe functions capable of operating across a plethora of data types.
 
+
+## Features
+
 Key features of the **do** package include:
 
 - **Extensive use of Generics**: The package exploits Go's generic features to their fullest extent, allowing for flexible and type-safe operations across diverse data types.
@@ -198,3 +201,45 @@ It is the detail list of functions provided in Go package **do**:
 - **Zip**[T, U any](a []T, b []U) []Pair[T, U]
 
   The Zip function takes two slices and returns a slice of pairs, where each pair contains one element from each of the input slices. The function stops when the shorter input slice is exhausted.
+
+
+## Why exactly
+
+When developing software in C/C++, I like to use the ternal operator `max = a > b ? a : b`, in Python as `max = a if a > b ese b`. I find this a convenient solution for small operations, and I'm very unhappy about the lack of this possibility in Go, an the classic solution is very bulky:
+
+```go
+max := a
+if a < b {
+     max = b
+}
+```
+
+That's why I included an `If` method in this package:
+
+```go
+max := do.If(a>b, a, b)
+```
+
+A fairly common task is to check for the absence of something in a certain slice, this is well implemented in Python:
+
+```python
+if a in some_slice:
+     # do something...
+```
+
+On Go, you need to implement the `in` function first, but a simple implementation that iterates through the slice elements in a loop is not efficient, so I added an `In` function checks the slice in multiple goroutines, so it works much faster for large lists:
+
+
+```go
+if do.In(a, someSlice...) {
+    // do something ...
+}
+```
+
+Functions which are missing in Go but are, for example, in Python like `Any`, `And` etc.
+
+And such functions as `Min`, `Max`, `Sum`, `Union`, `Distinct`, `Map`, `Filter` are generally found in almost all projects.
+
+So I made a list of the most popular features (in my opinion) and grouped them together for quick access.
+
+What about functions like SymmetricDifference, CartesianProduct or IsWhole which are not so popular? If the Union, Intersection function has already been added, it would be wrong not to add SymmetricDifference, CartesianProduct. Therefore, some functions have been added because they fit this package in terms of meaning.
