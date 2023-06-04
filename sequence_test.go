@@ -565,7 +565,7 @@ func TestInWithInt(t *testing.T) {
 	}
 
 	slice := generateIntSlice(10000)
-	expected := in(10, slice...)
+	expected := In(10, slice...)
 
 	if res := In(10, slice...); res != expected {
 		t.Errorf("expected %v, got %v", expected, res)
@@ -589,7 +589,7 @@ func TestInWithFloat(t *testing.T) {
 	}
 
 	slice := generateFloatSlice(10000)
-	expected := in(10.5, slice...)
+	expected := In(10.5, slice...)
 
 	if res := In(10.5, slice...); res != expected {
 		t.Errorf("expected %v, got %v", expected, res)
@@ -612,7 +612,7 @@ func TestInWithString(t *testing.T) {
 	}
 
 	slice := generateStringSlice(10000)
-	expected := in("A", slice...)
+	expected := In("A", slice...)
 
 	if res := In("A", slice...); res != expected {
 		t.Errorf("expected %v, got %v", expected, res)

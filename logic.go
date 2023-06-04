@@ -1,6 +1,10 @@
 package do
 
-import "reflect"
+import (
+	"context"
+	"reflect"
+	"sync"
+)
 
 // If is a substitute for the ternary operator (?:)
 // which is not available in Go.
@@ -56,17 +60,52 @@ func If[T any](e bool, t, f T) T {
 //	empty := do.All()
 //	fmt.Println(empty) // Output: false
 func All[T any](v ...T) bool {
+	var wg sync.WaitGroup
+
+	// Will use context to stop the rest of the goroutines
+	// if the value has already been found.
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	p := parallelTasks
+	found := &foundValue{value: true}
+
 	if len(v) == 0 {
 		return false
 	}
 
-	for _, val := range v {
-		if IsEmpty(val) {
-			return false
+	chunkSize := len(v) / p
+	for i := 0; i < p; i++ {
+		wg.Add(1)
+
+		start := i * chunkSize
+		end := start + chunkSize
+		if i == p-1 {
+			end = len(v)
 		}
+
+		go func(start, end int) {
+			defer wg.Done()
+
+			for _, b := range v[start:end] {
+				// Check if the context has been cancelled.
+				select {
+				case <-ctx.Done():
+					return
+				default:
+				}
+
+				if IsEmpty(b) {
+					found.SetValue(false)
+					cancel() // stop all other goroutines
+					return
+				}
+			}
+		}(start, end)
 	}
 
-	return true
+	wg.Wait()
+	return found.GetValue()
 }
 
 // Any returns true if at least one value in the provided slice
@@ -93,13 +132,52 @@ func All[T any](v ...T) bool {
 //	resultB := do.Any(bools...)
 //	fmt.Println(resultB) // Output: true
 func Any[T any](v ...T) bool {
-	for _, val := range v {
-		if !IsEmpty(val) {
-			return true
-		}
+	var wg sync.WaitGroup
+
+	// Will use context to stop the rest of the goroutines
+	// if the value has already been found.
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	p := parallelTasks
+	found := &foundValue{value: false}
+
+	if len(v) == 0 {
+		return false
 	}
 
-	return false
+	chunkSize := len(v) / p
+	for i := 0; i < p; i++ {
+		wg.Add(1)
+
+		start := i * chunkSize
+		end := start + chunkSize
+		if i == p-1 {
+			end = len(v)
+		}
+
+		go func(start, end int) {
+			defer wg.Done()
+
+			for _, b := range v[start:end] {
+				// Check if the context has been cancelled.
+				select {
+				case <-ctx.Done():
+					return
+				default:
+				}
+
+				if !IsEmpty(b) {
+					found.SetValue(true)
+					cancel() // stop all other goroutines
+					return
+				}
+			}
+		}(start, end)
+	}
+
+	wg.Wait()
+	return found.GetValue()
 }
 
 // IsEmpty checks if the  v of any type T is "zero value" for that type.

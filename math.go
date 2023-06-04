@@ -3,6 +3,7 @@ package do
 import (
 	"math"
 	"reflect"
+	"sync"
 )
 
 // Abs returns the absolute value of a numeric input value.
@@ -101,6 +102,77 @@ func Median[T Numerable](v ...T) float64 {
 	}
 }
 
+// The doMiniMax function is used by the Min and Max functions
+// to calculate the minimum and maximum values.
+func doMiniMax[T Verifiable](m bool, v ...T) T {
+	var (
+		wg sync.WaitGroup
+		mu sync.Mutex
+	)
+
+	// Return zero if no values are provided.
+	if len(v) == 0 {
+		return reflect.Zero(reflect.TypeOf((*T)(nil)).Elem()).Interface().(T)
+	}
+
+	p := parallelTasks
+	chunkSize := len(v) / p
+	resultChan := make(chan T, p)
+	for i := 0; i < p; i++ {
+		wg.Add(1)
+
+		start := i * chunkSize
+		end := start + chunkSize
+		if i == p-1 {
+			end = len(v)
+		}
+
+		go func(c []T) {
+			defer wg.Done()
+			if len(c) == 0 {
+				return
+			}
+
+			r := c[0]
+			for _, val := range c[1:] {
+				if m {
+					if val > r {
+						r = val
+					}
+				} else {
+					if val < r {
+						r = val
+					}
+				}
+			}
+
+			mu.Lock()
+			resultChan <- r
+			mu.Unlock()
+		}(v[start:end])
+	}
+
+	go func() {
+		wg.Wait()
+		close(resultChan)
+	}()
+
+	r := v[0]
+	for val := range resultChan {
+		if m {
+			if val > r {
+				r = val
+			}
+		} else {
+			if val < r {
+				r = val
+			}
+		}
+	}
+
+	return r
+}
+
 // Max returns the largest value among all input values.
 //
 // The function iterates through all the passed values
@@ -117,19 +189,7 @@ func Median[T Numerable](v ...T) float64 {
 //	maxF: = do.Max(floats...)
 //	fmt.Println(maxF)  // Output: 5.5
 func Max[T Verifiable](v ...T) T {
-	// Return zero if no values are provided.
-	if len(v) == 0 {
-		return reflect.Zero(reflect.TypeOf((*T)(nil)).Elem()).Interface().(T)
-	}
-
-	max := v[0]
-	for _, val := range v {
-		if val > max {
-			max = val
-		}
-	}
-
-	return max
+	return doMiniMax(true, v...)
 }
 
 // MaxList returns the largest value among all input values in a list.
@@ -182,18 +242,7 @@ func MaxList[T Verifiable](v []T, defaults ...T) T {
 //	minS = do.Min(strings...)
 //	fmt.Println(minS)  // Output: a
 func Min[T Verifiable](v ...T) T {
-	if len(v) == 0 {
-		return reflect.Zero(reflect.TypeOf((*T)(nil)).Elem()).Interface().(T)
-	}
-
-	min := v[0]
-	for _, val := range v {
-		if val < min {
-			min = val
-		}
-	}
-
-	return min
+	return doMiniMax(false, v...)
 }
 
 // MinList returns the smallest value among all input values in a list.
@@ -242,16 +291,52 @@ func MinList[T Verifiable](v []T, defaults ...T) T {
 //	sum = do.Sum(floats...)
 //	fmt.Println(sum)  // Output: 16.5
 func Sum[T Numerable](v ...T) T {
+	var (
+		wg sync.WaitGroup
+		mu sync.Mutex
+	)
+
 	if len(v) == 0 {
-		return 0
+		return T(0)
 	}
 
-	sum := v[0]
-	for _, val := range v[1:] {
-		sum += val
+	p := parallelTasks
+	chunkSize := len(v) / p
+	resultChan := make(chan T, p)
+	for i := 0; i < p; i++ {
+		wg.Add(1)
+
+		start := i * chunkSize
+		end := start + chunkSize
+		if i == p-1 {
+			end = len(v)
+		}
+
+		go func(c []T) {
+			defer wg.Done()
+
+			r := T(0)
+			for _, val := range c {
+				r += val
+			}
+
+			mu.Lock()
+			resultChan <- r
+			mu.Unlock()
+		}(v[start:end])
 	}
 
-	return sum
+	go func() {
+		wg.Wait()
+		close(resultChan)
+	}()
+
+	r := T(0)
+	for val := range resultChan {
+		r += val
+	}
+
+	return r
 }
 
 // IsEven checks if a value is an even number.

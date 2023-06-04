@@ -544,8 +544,8 @@ func In[T Verifiable](v T, list ...T) bool {
 	p := parallelTasks
 	found := &foundValue{}
 
-	if len(list) < p {
-		return in(v, list...)
+	if len(list) == 0 {
+		return false
 	}
 
 	chunkSize := len(list) / p
@@ -580,14 +580,4 @@ func In[T Verifiable](v T, list ...T) bool {
 
 	wg.Wait()
 	return found.GetValue()
-}
-
-// The in performs a sequential entry search.
-func in[T Verifiable](v T, list ...T) bool {
-	for _, b := range list {
-		if b == v {
-			return true
-		}
-	}
-	return false
 }
