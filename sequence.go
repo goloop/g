@@ -2,6 +2,7 @@ package g
 
 import (
 	"context"
+	"math"
 	"math/rand"
 	"reflect"
 	"sync"
@@ -580,4 +581,56 @@ func In[T Verifiable](v T, list ...T) bool {
 
 	wg.Wait()
 	return found.GetValue()
+}
+
+// Range generates a slice of integers based on the provided parameters.
+//
+//   - If a single parameter is passed (Range(n)), the function returns
+//     a slice from 0 to n-1.
+//   - If two parameters are passed (Range(n, m)), the function returns
+//     a slice from n to m-1.
+//   - If three parameters are passed (Range(n, m, s)), the function returns
+//     a slice from n to m-1 with a step size of s.
+//
+// Example usage:
+//
+//	result := Range(5)
+//	// result: [0, 1, 2, 3, 4]
+//
+//	result := Range(3, 7)
+//	// result: [3, 4, 5, 6]
+//
+//	result := Range(1, 10, 2)
+//	// result: [1, 3, 5, 7, 9]
+//
+//	result := Range(10, 0, -1)
+//	// result: [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
+func Range(a int, opt ...int) []int {
+	var n, m, s int = 0, a, 1
+
+	// Sets range as n to m-1.
+	if len(opt) > 0 {
+		n = a
+		m = opt[0]
+	}
+
+	// Sets step size.
+	if len(opt) > 1 {
+		s = opt[1]
+	}
+
+	// Ignore incorrect parameters.
+	if s == 0 || s < 0 && n <= m || s > 0 && n >= m {
+		return []int{}
+	}
+
+	// Calculate the number of steps and create the slice of this size.
+	steps := Abs(int(math.Ceil(float64(m-n) / float64(s))))
+	result := make([]int, steps)
+
+	for i := 0; i < steps; i++ {
+		result[i] = n + i*s
+	}
+
+	return result
 }

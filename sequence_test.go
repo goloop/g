@@ -623,3 +623,52 @@ func TestInWithString(t *testing.T) {
 		t.Errorf("expected %v, got %v", false, res)
 	}
 }
+
+func TestRange(t *testing.T) {
+	testCases := []struct {
+		name     string
+		n        int
+		opt      []int
+		expected []int
+	}{
+		{
+			name:     "Single parameter",
+			n:        5,
+			opt:      []int{},
+			expected: []int{0, 1, 2, 3, 4},
+		},
+		{
+			name:     "Two parameters",
+			n:        3,
+			opt:      []int{7},
+			expected: []int{3, 4, 5, 6},
+		},
+		{
+			name:     "Three parameters",
+			n:        1,
+			opt:      []int{10, 2},
+			expected: []int{1, 3, 5, 7, 9},
+		},
+		{
+			name:     "Reverse range",
+			n:        10,
+			opt:      []int{0, -1},
+			expected: []int{10, 9, 8, 7, 6, 5, 4, 3, 2, 1},
+		},
+		{
+			name:     "Incorrect range",
+			n:        10,
+			opt:      []int{20, -1},
+			expected: []int{},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := Range(tc.n, tc.opt...)
+			if !reflect.DeepEqual(result, tc.expected) {
+				t.Errorf("Expected %v, but got %v", tc.expected, result)
+			}
+		})
+	}
+}

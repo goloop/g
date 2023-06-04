@@ -36,18 +36,6 @@ Please note that usage of the do package requires **Go 1.20** or later, due to i
 
 It is the detail list of functions provided in Go package **g**:
 
-
-- **If**[T any](e bool, t, f T) T
-
-  This function is a substitute for the ternary operator `(?:)` not available in Go. It accepts a boolean expression, and two values of any type. If the expression is true, it returns the first value, otherwise it returns the second value.
-
-  ```
-  Python | max = a if a > b else b
-  C/C++ | int max = (a > b) ? a : b;
-  Go | max := g.If(a > b, a, b)
-  ```
-
-
 - **Abs**[T Numerable](v T) T
 
   The Abs function takes a numeric input value of any type that satisfies the Numerable interface and returns its absolute value. It works by using the negation operator for numeric types that support it or returning the original value for unsigned integer types.
@@ -64,9 +52,25 @@ It is the detail list of functions provided in Go package **g**:
 
   The Average function calculates the average of a variable number of values that are of a type satisfying the Numerable interface. It computes the sum of all the values and divides it by the number of values to get the average. If no values are provided, it returns 0. This function returns the average as a float64, regardless of the input type.
 
+- **CartesianProduct**[T any](a []T, b []T) [][2]T
+
+  The CartesianProduct function returns all possible pairs from two slices. It generates a slice of pairs, where each pair consists of an element from the first input slice and an element from the second input slice. The length of the returned slice is equal to the product of the lengths of the input slices. This function is generic and can work with any type T. Note that this function does not preserve the order of elements.
+
+- **Complement**[T comparable](a []T, b []T) []T
+
+  The Complement function takes a universal set (b) and a subset of it (a) and returns a new slice containing items present in the universal set but not in the subset. It returns the complement of the subset. The function is generic and can work with any type T that is comparable. Note that this function does not preserve the order of elements.
+
 - **Contains**[T comparable](vs []T, v T) bool
 
   The Contains function checks if a given element is present in the given slice. It iterates over the slice and returns true if it encounters the element, else returns false.
+
+- **Difference**[T comparable](a []T, b []T) []T
+
+  The Difference function takes two slices and returns a new slice that contains the items present in the first slice but not in the second slice. It returns the difference of the slices. The function is generic and can work with any type T that is comparable. Note that this function does not preserve the order of elements.
+
+- **Diff**[T comparable](a []T, b []T) []T
+
+  Diff is an alias for the **Difference** function.
 
 - **Distinct**[T comparable](v []T) []T
 
@@ -87,6 +91,20 @@ It is the detail list of functions provided in Go package **g**:
 - **Index**[T comparable](vs []T, v T) int
 
   The Index function returns the index of the first occurrence of the provided element in the given slice, or -1 if the element is not present.
+
+- **Intersection**[T comparable](a []T, b []T) []T
+
+  The Intersection function takes two slices and returns a new slice that contains the common items present in both slices. It returns the intersection of the slices. The function is generic and can work with any type T that is comparable. Note that this function does not preserve the order of elements.
+
+- **If**[T any](e bool, t, f T) T
+
+  This function is a substitute for the ternary operator `(?:)` not available in Go. It accepts a boolean expression, and two values of any type. If the expression is true, it returns the first value, otherwise it returns the second value.
+
+  ```
+  Python | max = a if a > b else b
+  C/C++ | int max = (a > b) ? a : b;
+  Go | max := g.If(a > b, a, b)
+  ```
 
 - **IsEmpty**[T any](v T) bool
 
@@ -171,6 +189,10 @@ It is the detail list of functions provided in Go package **g**:
 
   The RandomMapPlural function returns a slice of n random values from the given map m. If n is less than or equal to zero or if the map is empty, it returns an empty slice.
 
+- **Range**(a int, opt ...int) []int
+
+  Range generates a slice of integers based on the provided parameters.
+
 - **Rank**[T Verifiable](number T, array []T, ascending ...bool) int
 
   This function returns the rank of a given value when compared to a list of other values. It can rank both from largest to smallest and smallest to largest based on the optional boolean argument. It assigns the same rank for duplicate values. The function works with any types satisfying the Verifiable interface.
@@ -190,6 +212,18 @@ It is the detail list of functions provided in Go package **g**:
 - **Sum**[T Numerable](v ...T) T
 
   The Sum function calculates the sum of all input values of any type that satisfies the Numerable interface. This function does not handle overflow - if the sum of the input values exceeds the maximum value for type T, the result will wrap around.
+
+- **SymmetricDifference**[T comparable](a []T, b []T) []T
+
+  The SymmetricDifference function takes two slices and returns a new slice that contains the items present in one of the slices but not in both. It returns the symmetric difference of the slices. The function is generic and can work with any type T that is comparable. Note that this function does not preserve the order of elements.
+
+- **Sdiff**[T comparable](a []T, b []T) []T
+
+  Sdiff is an alias for the SymmetricDifference function.
+
+- **Union**[T comparable](a []T, b []T) []T
+
+  The Union function takes two slices and returns a new slice that contains all unique items from both slices. It removes duplicates and returns the union of the slices. The function is generic and can work with any type T that is comparable. Note that this function does not preserve the order of elements.
 
 - **Value**[T any](v T, more ...T) T
 
