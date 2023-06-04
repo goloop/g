@@ -15,7 +15,7 @@
 // clarity and promotes maintainability and reliability in Go applications.
 // It is an ideal tool for developers seeking to write clean, concise, and
 // efficient code while harnessing the power of Go generics.
-package do
+package g
 
 import (
 	"math/rand"

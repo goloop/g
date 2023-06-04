@@ -1,4 +1,4 @@
-package do
+package g
 
 import (
 	"context"
@@ -22,13 +22,13 @@ import (
 // Example:
 //
 //	// Condition is true.
-//	max := do.If(3 > 2, 3, 2)  // Output: 3
+//	max := g.If(3 > 2, 3, 2)  // Output: 3
 //
 //	// If condition is false.
-//	max := do.If(2 > 3, 2, 3)  // Output: 3
+//	max := g.If(2 > 3, 2, 3)  // Output: 3
 //
 //	// Using with strings.
-//	greeting := do.If(user == "admin", "Hello, admin", "Hello, user")
+//	greeting := g.If(user == "admin", "Hello, admin", "Hello, user")
 //	fmt.Println(greeting) // Output: the appropriate greeting
 func If[T any](e bool, t, f T) T {
 	if e {
@@ -48,16 +48,16 @@ func If[T any](e bool, t, f T) T {
 //
 // Example usage:
 //
-//	allNonZero := do.All(1, 2, 3)
+//	allNonZero := g.All(1, 2, 3)
 //	fmt.Println(allNonZero) // Output: true
 //
-//	someZero := do.All(1, 0, 3)
+//	someZero := g.All(1, 0, 3)
 //	fmt.Println(someZero) // Output: false
 //
-//	allNonZeroMixed := do.All(1, "a", true)
+//	allNonZeroMixed := g.All(1, "a", true)
 //	fmt.Println(allNonZeroMixed) // Output: true
 //
-//	empty := do.All()
+//	empty := g.All()
 //	fmt.Println(empty) // Output: false
 func All[T any](v ...T) bool {
 	var wg sync.WaitGroup
@@ -119,17 +119,17 @@ func All[T any](v ...T) bool {
 //
 //	// Check if any element in a slice of integers is non-zero.
 //	ints := []int{0, 0, 0, 1, 0}
-//	resultI := do.Any(ints...)
+//	resultI := g.Any(ints...)
 //	fmt.Println(resultI) // Output: true
 //
 //	// Check if any element in a slice of strings is non-empty.
 //	strings := []string{"", "hello", "", ""}
-//	resultS := do.Any(strings...)
+//	resultS := g.Any(strings...)
 //	fmt.Println(resultS) // Output: true
 //
 //	// Check if any element in a slice of booleans is true.
 //	bools := []bool{false, false, true, false}
-//	resultB := do.Any(bools...)
+//	resultB := g.Any(bools...)
 //	fmt.Println(resultB) // Output: true
 func Any[T any](v ...T) bool {
 	var wg sync.WaitGroup
@@ -192,27 +192,27 @@ func Any[T any](v ...T) bool {
 //
 //	// Check if an integer variable is zero.
 //	var num int
-//	result := do.IsEmpty(num)
+//	result := g.IsEmpty(num)
 //	fmt.Println(result) // Output: true
 //
 //	// Check if a float variable is zero.
 //	var f float64
-//	result := do.IsEmpty(f)
+//	result := g.IsEmpty(f)
 //	fmt.Println(result) // Output: true
 //
 //	// Check if a pointer variable is nil.
 //	var ptr *int
-//	result := do.IsEmpty(ptr)
+//	result := g.IsEmpty(ptr)
 //	fmt.Println(result) // Output: true
 //
 //	// Check if a string variable is empty.
 //	var str string
-//	result := do.IsEmpty(str)
+//	result := g.IsEmpty(str)
 //	fmt.Println(result) // Output: true
 //
 //	// Check if a boolean variable is false.
 //	var flag bool
-//	result := do.IsEmpty(flag)
+//	result := g.IsEmpty(flag)
 //	fmt.Println(result) // Output: true
 func IsEmpty[T any](v T) bool {
 	t := reflect.TypeOf(v)
@@ -233,20 +233,20 @@ func IsEmpty[T any](v T) bool {
 //
 //	// Check if a variable holding a pointer to a string is a pointer.
 //	str := "hello"
-//	result := do.IsPointer(&str)
+//	result := g.IsPointer(&str)
 //	fmt.Println(result) // Output: true
 //
 //	// Check if a variable holding a string is a pointer.
-//	result = do.IsPointer(str)
+//	result = g.IsPointer(str)
 //	fmt.Println(result) // Output: false
 //
 //	// Check if a variable holding an integer is a pointer.
-//	result = do.IsPointer(10)
+//	result = g.IsPointer(10)
 //	fmt.Println(result) // Output: false
 //
 //	// Check if a variable holding nil is a pointer.
 //	var ptr *int
-//	result = do.IsPointer(ptr)
+//	result = g.IsPointer(ptr)
 //	fmt.Println(result) // Output: false
 func IsPointer(v interface{}) bool {
 	return reflect.TypeOf(v).Kind() == reflect.Ptr
@@ -262,27 +262,27 @@ func IsPointer(v interface{}) bool {
 //
 //	// Check if an integer variable is a numeric type.
 //	num := 10
-//	result := do.IsNumber(num)
+//	result := g.IsNumber(num)
 //	fmt.Println(result) // Output: true
 //
 //	// Check if a float variable is a numeric type.
 //	f := 3.14
-//	result = do.IsNumber(f)
+//	result = g.IsNumber(f)
 //	fmt.Println(result) // Output: true
 //
 //	// Check if a string variable is a numeric type.
 //	str := "hello"
-//	result = do.IsNumber(str)
+//	result = g.IsNumber(str)
 //	fmt.Println(result) // Output: false
 //
 //	// Check if a boolean variable is a numeric type.
 //	flag := true
-//	result = do.IsNumber(flag)
+//	result = g.IsNumber(flag)
 //	fmt.Println(result) // Output: false
 //
 //	// Check if a slice of integers is a numeric type.
 //	nums := []int{1, 2, 3}
-//	result = do.IsNumber(nums)
+//	result = g.IsNumber(nums)
 //	fmt.Println(result) // Output: false
 func IsNumber(v interface{}) bool {
 	switch v.(type) {

@@ -1,4 +1,4 @@
-package do
+package g
 
 import (
 	"math/rand"

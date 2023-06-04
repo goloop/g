@@ -1,4 +1,4 @@
-package do
+package g
 
 // Rank function returns the rank of a value when compared to a list of
 // other values. Rank can rank values from largest to smallest (i.e. top sales)
@@ -10,8 +10,8 @@ package do
 // ascending argument. To rank values where the largest value is ranked #1,
 // set ascending to false (or leave blank).
 //
-// do.Rank(7, []float64{1, 5, 2, 3, 7, 8})       // descending, returns  1
-// do.Rank(7, []float64{1, 5, 2, 3, 7, 8}, true) // ascending, returns 4
+// g.Rank(7, []float64{1, 5, 2, 3, 7, 8})       // descending, returns  1
+// g.Rank(7, []float64{1, 5, 2, 3, 7, 8}, true) // ascending, returns 4
 //
 // Set ascending to false when you want to rank something like top sales,
 // where the largest sales number should rank #1, and to set ascending to
@@ -31,15 +31,15 @@ package do
 // Example usage:
 //
 //	// Rank a number in a descending list.
-//	result := do.Rank(7, []float64{1, 5, 2, 3, 7, 8})
+//	result := g.Rank(7, []float64{1, 5, 2, 3, 7, 8})
 //	fmt.Println(result) // Output: 1
 //
 //	// Rank a number in an ascending list.
-//	result = do.Rank(7, []float64{1, 5, 2, 3, 7, 8}, true)
+//	result = g.Rank(7, []float64{1, 5, 2, 3, 7, 8}, true)
 //	fmt.Println(result) // Output: 4
 //
 //	// Rank a number that doesn't exist in the list.
-//	result = do.Rank(9, []float64{1, 5, 2, 3, 7, 8}, true)
+//	result = g.Rank(9, []float64{1, 5, 2, 3, 7, 8}, true)
 //	fmt.Println(result) // Output: -1
 func Rank[T Verifiable](number T, array []T, ascending ...bool) int {
 	var removed int
@@ -87,12 +87,12 @@ func Rank[T Verifiable](number T, array []T, ascending ...bool) int {
 //	// corresponding value from an int slice.
 //	lookup := []string{"A", "B", "C"}
 //	result := []int{1, 2, 3}
-//	val := do.HLookup("B", lookup, result, -1)
+//	val := g.HLookup("B", lookup, result, -1)
 //	fmt.Println(val) // Output: 2
 //
 //	// Perform a horizontal lookup on a string slice with a value that
 //	// doesn't exist, and return the default value.
-//	val = do.HLookup("D", lookup, result, -1)
+//	val = g.HLookup("D", lookup, result, -1)
 //	fmt.Println(val) // Output: -1
 func HLookup[T comparable, U any](v T, lookup []T, result []U, def U) U {
 	for i, item := range lookup {
@@ -118,12 +118,12 @@ func HLookup[T comparable, U any](v T, lookup []T, result []U, def U) U {
 //	// corresponding value from an int slice.
 //	lookup := []string{"A", "B", "C"}
 //	result := []int{1, 2, 3}
-//	val := do.VLookup("B", lookup, result, -1)
+//	val := g.VLookup("B", lookup, result, -1)
 //	fmt.Println(val) // Output: 2
 //
 //	// Perform a vertical lookup on a string slice with a value that
 //	// doesn't exist, and return the default value.
-//	val = do.VLookup("D", lookup, result, -1)
+//	val = g.VLookup("D", lookup, result, -1)
 //	fmt.Println(val) // Output: -1
 func VLookup[T comparable, U any](v T, lookup []T, result []U, def U) U {
 	for i, item := range lookup {

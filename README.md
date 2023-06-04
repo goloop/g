@@ -1,13 +1,14 @@
-[![Go Report Card](https://goreportcard.com/badge/github.com/goloop/do)](https://goreportcard.com/report/github.com/goloop/do) [![License](https://img.shields.io/badge/godoc-A+-brightgreen)](https://godoc.org/github.com/goloop/do) [![License](https://img.shields.io/badge/license-MIT-brightgreen)](https://github.com/goloop/do/blob/master/LICENSE)
+[![Go Report Card](https://goreportcard.com/badge/github.com/goloop/g)](https://goreportcard.com/report/github.com/goloop/g) [![License](https://img.shields.io/badge/godoc-A+-brightgreen)](https://godoc.org/github.com/goloop/g) [![License](https://img.shields.io/badge/license-MIT-brightgreen)](https://github.com/goloop/g/blob/master/LICENSE)
 
-# Do
+# G
 
-The **do** package is a comprehensive utility library for the Go programming language, augmenting Go's functionality with a collection of efficient helper functions aimed at simplifying and streamlining software development tasks. It robustly employs Go's generics, introduced in Go 1.18+, to provide versatile and type-safe functions capable of operating across a plethora of data types.
+
+The **g** package is a comprehensive utility library for the Go programming language, augmenting Go's functionality with a collection of efficient helper functions aimed at simplifying and streamlining software development tasks. It robustly employs Go's generics, introduced in Go 1.18+, to provide versatile and type-safe functions capable of operating across a plethora of data types.
 
 
 ## Features
 
-Key features of the **do** package include:
+Key features of the **g** package include:
 
 - **Extensive use of Generics**: The package exploits Go's generic features to their fullest extent, allowing for flexible and type-safe operations across diverse data types.
 
@@ -15,7 +16,7 @@ Key features of the **do** package include:
 
     Example:
     ```go
-    fn := do.If(do.In(ip, blacklist...), prohibitedFn, successFn)
+    fn := g.If(g.In(ip, blacklist...), prohibitedFn, successFn)
     ```
 
 - **Zero-Value Checks**: Includes `IsEmpty`, `All`, `Any`, and `Value` functions that perform checks for zero-values in various contexts, thus saving valuable coding time and making code easier to comprehend.
@@ -33,7 +34,7 @@ Please note that usage of the do package requires **Go 1.20** or later, due to i
 
 ## Functions
 
-It is the detail list of functions provided in Go package **do**:
+It is the detail list of functions provided in Go package **g**:
 
 
 - **If**[T any](e bool, t, f T) T
@@ -43,7 +44,7 @@ It is the detail list of functions provided in Go package **do**:
   ```
   Python | max = a if a > b else b
   C/C++ | int max = (a > b) ? a : b;
-  Go | max := do.If(a > b, a, b)
+  Go | max := g.If(a > b, a, b)
   ```
 
 
@@ -217,22 +218,22 @@ if a < b {
 That's why I included an `If` method in this package:
 
 ```go
-max := do.If(a>b, a, b)
+max := g.If(a>b, a, b)
 ```
 
 A fairly common task is to check for the absence of something in a certain slice, this is well implemented in Python:
 
 ```python
 if a in some_slice:
-     # do something...
+    # do something...
 ```
 
 On Go, you need to implement the `in` function first, but a simple implementation that iterates through the slice elements in a loop is not efficient, so I added an `In` function checks the slice in multiple goroutines, so it works much faster for large lists:
 
 
 ```go
-if do.In(a, someSlice...) {
-    // do something ...
+if g.In(a, someSlice...) {
+    // do something...
 }
 ```
 

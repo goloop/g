@@ -1,4 +1,4 @@
-package do
+package g
 
 import (
 	"math"
@@ -19,13 +19,13 @@ import (
 // Example usage:
 //
 //	var n int = -10
-//	fmt.Println(do.Abs(n))  // Output: 10
+//	fmt.Println(g.Abs(n))  // Output: 10
 //
 //	var f float64 = -15.5
-//	fmt.Println(do.Abs(f))  // Output: 15.5
+//	fmt.Println(g.Abs(f))  // Output: 15.5
 //
 //	var u uint = 20
-//	fmt.Println(do.Abs(u))  // Output: 20
+//	fmt.Println(g.Abs(u))  // Output: 20
 func Abs[T Numerable](v T) T {
 	if v < 0 {
 		return -v
@@ -46,11 +46,11 @@ func Abs[T Numerable](v T) T {
 // Example usage:
 //
 //	values := []int{3, 5, 7, 1, 9, 2}
-//	avg := do.Average(values...)
+//	avg := g.Average(values...)
 //	fmt.Println(avg)  // Output: 4.5
 //
 //	floats := []float64{1.1, 2.2, 3.3}
-//	avg = do.Average(floats...)
+//	avg = g.Average(floats...)
 //	fmt.Println(avg)  // Output: 2.2
 func Average[T Numerable](v ...T) float64 {
 	if len(v) == 0 {
@@ -75,11 +75,11 @@ func Average[T Numerable](v ...T) float64 {
 // Example usage:
 //
 //	values := []int{3, 5, 7, 1, 9, 2}
-//	median := do.Median(values...)
+//	median := g.Median(values...)
 //	fmt.Println(median)  // Output: 4.0
 //
 //	floats := []float64{1.1, 2.2, 3.3, 4.4, 5.5}
-//	median = do.Median(floats...)
+//	median = g.Median(floats...)
 //	fmt.Println(median)  // Output: 3.3
 func Median[T Numerable](v ...T) float64 {
 	if len(v) == 0 {
@@ -182,11 +182,11 @@ func doMiniMax[T Verifiable](m bool, v ...T) T {
 // Example usage:
 //
 //	values := []int{3, 5, 7, 1, 9, 2}
-//	maxI := do.Max(values...)
+//	maxI := g.Max(values...)
 //	fmt.Println(maxI)  // Output: 9
 //
 //	floats := []float64{1.1, 2.2, 3.3, 4.4, 5.5}
-//	maxF: = do.Max(floats...)
+//	maxF: = g.Max(floats...)
 //	fmt.Println(maxF)  // Output: 5.5
 func Max[T Verifiable](v ...T) T {
 	return doMiniMax(true, v...)
@@ -207,16 +207,16 @@ func Max[T Verifiable](v ...T) T {
 // Example usage:
 //
 //	values := []int{3, 5, 7, 1, 9, 2}
-//	max := do.MaxList(values)
+//	max := g.MaxList(values)
 //	fmt.Println(max)  // Output: 9
 //
 //	floats := []float64{1.1, 2.2, 3.3, 4.4, 5.5}
-//	max = do.MaxList(floats)
+//	max = g.MaxList(floats)
 //	fmt.Println(max)  // Output: 5.5
 //
 //	empty := []int{}
 //	defaults := []int{4, 5, 6}
-//	max = do.MaxList(empty, defaults...)
+//	max = g.MaxList(empty, defaults...)
 //	fmt.Println(max)  // Output: 6
 func MaxList[T Verifiable](v []T, defaults ...T) T {
 	return If(len(v) != 0, Max(v...), Max(defaults...))
@@ -231,15 +231,15 @@ func MaxList[T Verifiable](v []T, defaults ...T) T {
 // Example usage:
 //
 //	values := []int{3, 5, 7, 1, 9, 2}
-//	minI := do.Min(values...)
+//	minI := g.Min(values...)
 //	fmt.Println(minI)  // Output: 1
 //
 //	floats := []float64{1.1, 2.2, 3.3, 4.4, 5.5}
-//	minF = do.Min(floats...)
+//	minF = g.Min(floats...)
 //	fmt.Println(minF)  // Output: 1.1
 //
 //	strings := []string{"z", "a", "m", "c", "y"}
-//	minS = do.Min(strings...)
+//	minS = g.Min(strings...)
 //	fmt.Println(minS)  // Output: a
 func Min[T Verifiable](v ...T) T {
 	return doMiniMax(false, v...)
@@ -260,16 +260,16 @@ func Min[T Verifiable](v ...T) T {
 // Example usage:
 //
 //	values := []int{3, 5, 7, 1, 9, 2}
-//	minI := do.MinList(values)
+//	minI := g.MinList(values)
 //	fmt.Println(minI)  // Output: 1
 //
 //	floats := []float64{1.1, 2.2, 3.3, 4.4, 5.5}
-//	minF = do.MinList(floats)
+//	minF = g.MinList(floats)
 //	fmt.Println(minF)  // Output: 1.1
 //
 //	empty := []int{}
 //	defaults := []int{4, 5, 6}
-//	minD := do.MinList(empty, defaults...)
+//	minD := g.MinList(empty, defaults...)
 //	fmt.Println(minD)  // Output: 4
 func MinList[T Verifiable](v []T, defaults ...T) T {
 	return If(len(v) != 0, Min(v...), Min(defaults...))
@@ -284,11 +284,11 @@ func MinList[T Verifiable](v []T, defaults ...T) T {
 // Example usage:
 //
 //	values := []int{3, 5, 7, 1, 9, 2}
-//	sum := do.Sum(values...)
+//	sum := g.Sum(values...)
 //	fmt.Println(sum)  // Output: 27
 //
 //	floats := []float64{1.1, 2.2, 3.3, 4.4, 5.5}
-//	sum = do.Sum(floats...)
+//	sum = g.Sum(floats...)
 //	fmt.Println(sum)  // Output: 16.5
 func Sum[T Numerable](v ...T) T {
 	var (
@@ -353,16 +353,16 @@ func Sum[T Numerable](v ...T) T {
 //
 // Example usage:
 //
-//	even := do.IsEven(6)
+//	even := g.IsEven(6)
 //	fmt.Println(even)  // Output: true
 //
-//	odd := do.IsEven(7)
+//	odd := g.IsEven(7)
 //	fmt.Println(odd)  // Output: false
 //
-//	floatingPoint := do.IsEven(6.6)
+//	floatingPoint := g.IsEven(6.6)
 //	fmt.Println(floatingPoint)  // Output: false
 //
-//	floatingPoint = do.IsEven(6.6, true)
+//	floatingPoint = g.IsEven(6.6, true)
 //	fmt.Println(floatingPoint)  // Output: true
 func IsEven[T Numerable](v T, f ...bool) bool {
 	if All(f...) {
@@ -389,16 +389,16 @@ func IsEven[T Numerable](v T, f ...bool) bool {
 //
 // Example usage:
 //
-//	odd := do.IsOdd(7)
+//	odd := g.IsOdd(7)
 //	fmt.Println(odd)  // Output: true
 //
-//	even := do.IsOdd(6)
+//	even := g.IsOdd(6)
 //	fmt.Println(even)  // Output: false
 //
-//	floatingPoint := do.IsOdd(7.7)
+//	floatingPoint := g.IsOdd(7.7)
 //	fmt.Println(floatingPoint)  // Output: false
 //
-//	floatingPoint = do.IsOdd(7.7, true)
+//	floatingPoint = g.IsOdd(7.7, true)
 //	fmt.Println(floatingPoint)  // Output: true
 func IsOdd[T Numerable](v T, f ...bool) bool {
 	if All(f...) {
@@ -420,16 +420,16 @@ func IsOdd[T Numerable](v T, f ...bool) bool {
 //
 // Example usage:
 //
-//	whole := do.IsWhole(5)
+//	whole := g.IsWhole(5)
 //	fmt.Println(whole)  // Output: true
 //
-//	notWhole := do.IsWhole(5.5)
+//	notWhole := g.IsWhole(5.5)
 //	fmt.Println(notWhole)  // Output: false
 //
-//	zero := do.IsWhole(0)
+//	zero := g.IsWhole(0)
 //	fmt.Println(zero)  // Output: true
 //
-//	negative := do.IsWhole(-3)
+//	negative := g.IsWhole(-3)
 //	fmt.Println(negative)  // Output: true
 func IsWhole[T Numerable](v T) bool {
 	_, fraction := math.Modf(float64(v))
@@ -449,16 +449,16 @@ func IsWhole[T Numerable](v T) bool {
 //
 // Example usage:
 //
-//	rand0 := do.Random[int]()
+//	rand0 := g.Random[int]()
 //	fmt.Println(rand0)  // Output: 0
 //
-//	rand1 := do.Random[int](5)
+//	rand1 := g.Random[int](5)
 //	fmt.Println(rand1)  // Output: a random int from 0 to 4
 //
-//	rand2 := do.Random[int](1, 5)
+//	rand2 := g.Random[int](1, 5)
 //	fmt.Println(rand2)  // Output: a random int from 1 to 4
 //
-//	rand3 := do.Random[int](1, 2, 3)
+//	rand3 := g.Random[int](1, 2, 3)
 //	fmt.Println(rand3)  // Output: 1, 2, or 3
 func Random[T Numerable](v ...T) T {
 	switch len(v) {
@@ -499,11 +499,11 @@ func randomValue[T Numerable](min, max T) T {
 // Example usage:
 //
 //	list := []int{1, 2, 3, 4, 5}
-//	value := do.RandomList(list)
+//	value := g.RandomList(list)
 //	fmt.Println(value)  // Output: a random element from the list
 //
 //	emptyList := []string{}
-//	value := do.RandomList(emptyList)
+//	value := g.RandomList(emptyList)
 //	fmt.Println(value)  // Output: ""
 func RandomList[T any](v []T) T {
 	if len(v) == 0 {
@@ -522,11 +522,11 @@ func RandomList[T any](v []T) T {
 //	    "banana": 2,
 //	    "cherry": 3,
 //	}
-//	value := do.RandomMap(myMap)
+//	value := g.RandomMap(myMap)
 //	fmt.Println(value)  // Output: a random value from the map
 //
 //	emptyMap := map[string]bool{}
-//	value := do.RandomMap(emptyMap)
+//	value := g.RandomMap(emptyMap)
 //	fmt.Println(value)  // Output: zero value for T type (false)
 func RandomMap[K comparable, T any](m map[K]T) T {
 	var keys []K
@@ -549,14 +549,14 @@ func RandomMap[K comparable, T any](m map[K]T) T {
 // Example usage:
 //
 //	list := []int{1, 2, 3, 4, 5}
-//	values := do.RandomListPlural(3, list)
+//	values := g.RandomListPlural(3, list)
 //	fmt.Println(values)  // Output: a slice of 3 random elements from the list
 //
 //	emptyList := []string{}
-//	values := do.RandomListPlural(2, emptyList)
+//	values := g.RandomListPlural(2, emptyList)
 //	fmt.Println(values)  // Output: []
 //
-//	values := do.RandomListPlural(0, list)
+//	values := g.RandomListPlural(0, list)
 //	fmt.Println(values)  // Output: []
 func RandomListPlural[T any](n int, v []T) []T {
 	if n <= 0 || len(v) == 0 {
@@ -581,14 +581,14 @@ func RandomListPlural[T any](n int, v []T) []T {
 //	    "banana": 2,
 //	    "cherry": 3,
 //	}
-//	values := do.RandomMapPlural(2, myMap)
+//	values := g.RandomMapPlural(2, myMap)
 //	fmt.Println(values)  // Output: a slice of 2 random values from the map
 //
 //	emptyMap := map[string]bool{}
-//	values := do.RandomMapPlural(3, emptyMap)
+//	values := g.RandomMapPlural(3, emptyMap)
 //	fmt.Println(values)  // Output: []
 //
-//	values := do.RandomMapPlural(0, myMap)
+//	values := g.RandomMapPlural(0, myMap)
 //	fmt.Println(values)  // Output: []
 func RandomMapPlural[K comparable, T any](n int, m map[K]T) []T {
 	if n <= 0 || len(m) == 0 {
