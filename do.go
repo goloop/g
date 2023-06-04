@@ -54,6 +54,10 @@ type Verifiable interface {
 	Numerable | string | rune
 }
 
+// The MaxRangeSize is the maximum size for range generation
+// by the Range function.
+const MaxRangeSize = 100_000_000
+
 var (
 	// The randomGenerator is a global variable that is used by
 	// the Random function to generate random numbers.

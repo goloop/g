@@ -592,6 +592,8 @@ func In[T Verifiable](v T, list ...T) bool {
 //   - If three parameters are passed (Range(n, m, s)), the function returns
 //     a slice from n to m-1 with a step size of s.
 //
+// The maximum size of the generated slice is set by the MaxRangeSize constant.
+//
 // Example usage:
 //
 //	result := Range(5)
@@ -626,6 +628,7 @@ func Range(a int, opt ...int) []int {
 
 	// Calculate the number of steps and create the slice of this size.
 	steps := Abs(int(math.Ceil(float64(m-n) / float64(s))))
+	steps = If(steps >= MaxRangeSize, MaxRangeSize, steps)
 	result := make([]int, steps)
 
 	for i := 0; i < steps; i++ {

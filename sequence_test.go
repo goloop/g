@@ -624,12 +624,14 @@ func TestInWithString(t *testing.T) {
 	}
 }
 
+// TestRange tests the Range function.
 func TestRange(t *testing.T) {
 	testCases := []struct {
 		name     string
 		n        int
 		opt      []int
 		expected []int
+		len      int
 	}{
 		{
 			name:     "Single parameter",
@@ -661,13 +663,27 @@ func TestRange(t *testing.T) {
 			opt:      []int{20, -1},
 			expected: []int{},
 		},
+		{
+			name:     "Large range",
+			n:        MaxRangeSize + 100,
+			opt:      []int{},
+			expected: []int{},
+			len:      MaxRangeSize,
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			result := Range(tc.n, tc.opt...)
-			if !reflect.DeepEqual(result, tc.expected) {
-				t.Errorf("Expected %v, but got %v", tc.expected, result)
+			if tc.len != 0 {
+				if len(result) != tc.len {
+					t.Errorf("Expected length %d, but got %d",
+						tc.len, len(result))
+				}
+			} else {
+				if !reflect.DeepEqual(result, tc.expected) {
+					t.Errorf("Expected %v, but got %v", tc.expected, result)
+				}
 			}
 		})
 	}
