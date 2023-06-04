@@ -28,11 +28,19 @@ package do
 // The function works with both numbers and strings, all that satisfy
 // the Verifiable interface.
 //
-// Example:
+// Example usage:
 //
-//	do.Rank(7, []float64{1, 5, 2, 3, 7, 8})       // rank is 1
-//	do.Rank(7, []float64{1, 5, 2, 3, 7, 8}, true) // rank is 4
-//	do.Rank(9, []float64{1, 5, 2, 3, 7, 8}, true) // rank is -1
+//	// Rank a number in a descending list.
+//	result := do.Rank(7, []float64{1, 5, 2, 3, 7, 8})
+//	fmt.Println(result) // Output: 1
+//
+//	// Rank a number in an ascending list.
+//	result = do.Rank(7, []float64{1, 5, 2, 3, 7, 8}, true)
+//	fmt.Println(result) // Output: 4
+//
+//	// Rank a number that doesn't exist in the list.
+//	result = do.Rank(9, []float64{1, 5, 2, 3, 7, 8}, true)
+//	fmt.Println(result) // Output: -1
 func Rank[T Verifiable](number T, array []T, ascending ...bool) int {
 	var removed int
 
@@ -70,18 +78,22 @@ func Rank[T Verifiable](number T, array []T, ascending ...bool) int {
 // The function takes a search value `v`, a slice of lookup values `lookup`,
 // a slice of result values `result`, and an optional default value `def`.
 // It searches for the first occurrence of `v` in the `lookup` slice and
-// returns the corresponding value from the `result` slice. If `v` is not
+// Output: the corresponding value from the `result` slice. If `v` is not
 // found in the `lookup` slice, it returns the default value `def`.
 //
-// Example:
+// Example usage:
 //
+//	// Perform a horizontal lookup on a string slice and retrieve the
+//	// corresponding value from an int slice.
 //	lookup := []string{"A", "B", "C"}
 //	result := []int{1, 2, 3}
-//	val := do.HLookup("B", lookup, result, -1)  // val is 2
-//	val = do.HLookup("D", lookup, result, -1)   // val is -1
+//	val := do.HLookup("B", lookup, result, -1)
+//	fmt.Println(val) // Output: 2
 //
-// This function is generic and can work with any type T as the search value,
-// and any type U as the lookup and result values.
+//	// Perform a horizontal lookup on a string slice with a value that
+//	// doesn't exist, and return the default value.
+//	val = do.HLookup("D", lookup, result, -1)
+//	fmt.Println(val) // Output: -1
 func HLookup[T comparable, U any](v T, lookup []T, result []U, def U) U {
 	for i, item := range lookup {
 		if item == v {
@@ -97,18 +109,22 @@ func HLookup[T comparable, U any](v T, lookup []T, result []U, def U) U {
 // The function takes a search value `v`, a slice of lookup values `lookup`,
 // a slice of result values `result`, and an optional default value `def`.
 // It searches for the first occurrence of `v` in the `lookup` slice and
-// returns the corresponding value from the `result` slice. If `v` is not
+// Output: the corresponding value from the `result` slice. If `v` is not
 // found in the `lookup` slice, it returns the default value `def`.
 //
-// Example:
+// Example usage:
 //
+//	// Perform a vertical lookup on a string slice and retrieve the
+//	// corresponding value from an int slice.
 //	lookup := []string{"A", "B", "C"}
 //	result := []int{1, 2, 3}
-//	val := do.VLookup("B", lookup, result, -1)  // val is 2
-//	val = do.VLookup("D", lookup, result, -1)   // val is -1
+//	val := do.VLookup("B", lookup, result, -1)
+//	fmt.Println(val) // Output: 2
 //
-// This function is generic and can work with any type T as the search value,
-// and any type U as the lookup and result values.
+//	// Perform a vertical lookup on a string slice with a value that
+//	// doesn't exist, and return the default value.
+//	val = do.VLookup("D", lookup, result, -1)
+//	fmt.Println(val) // Output: -1
 func VLookup[T comparable, U any](v T, lookup []T, result []U, def U) U {
 	for i, item := range lookup {
 		if item == v {

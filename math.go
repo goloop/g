@@ -15,13 +15,16 @@ import (
 // For unsigned integer types, the absolute value is equal to
 // the original value.
 //
-// Example:
+// Example usage:
 //
-//	n := -5
-//	abs := do.Abs(n) // 5
+//	var n int = -10
+//	fmt.Println(do.Abs(n))  // Output: 10
 //
-// This function is generic and can work with any type T that satisfies
-// the Numerable interface.
+//	var f float64 = -15.5
+//	fmt.Println(do.Abs(f))  // Output: 15.5
+//
+//	var u uint = 20
+//	fmt.Println(do.Abs(u))  // Output: 20
 func Abs[T Numerable](v T) T {
 	if v < 0 {
 		return -v
@@ -39,12 +42,15 @@ func Abs[T Numerable](v T) T {
 // Note: this function returns the average as a float64,
 // regardless of the input type.
 //
-// Examples:
+// Example usage:
 //
-//	n := []int{3,5,7,1,9,2}
-//	avg := do.Average(n...)
+//	values := []int{3, 5, 7, 1, 9, 2}
+//	avg := do.Average(values...)
+//	fmt.Println(avg)  // Output: 4.5
 //
-// This function is generic and can work with any type T.
+//	floats := []float64{1.1, 2.2, 3.3}
+//	avg = do.Average(floats...)
+//	fmt.Println(avg)  // Output: 2.2
 func Average[T Numerable](v ...T) float64 {
 	if len(v) == 0 {
 		return 0
@@ -65,13 +71,15 @@ func Average[T Numerable](v ...T) float64 {
 // If the number of values is even, the median is the average of
 // the two middle values.
 //
-// Example:
+// Example usage:
 //
-//	n := []int{3, 5, 7, 1, 9, 2}
-//	median := do.Median(n...) // 4.0
+//	values := []int{3, 5, 7, 1, 9, 2}
+//	median := do.Median(values...)
+//	fmt.Println(median)  // Output: 4.0
 //
-// This function is generic and can work with any type T that
-// satisfies the Numerable interface.
+//	floats := []float64{1.1, 2.2, 3.3, 4.4, 5.5}
+//	median = do.Median(floats...)
+//	fmt.Println(median)  // Output: 3.3
 func Median[T Numerable](v ...T) float64 {
 	if len(v) == 0 {
 		return 0
@@ -101,11 +109,13 @@ func Median[T Numerable](v ...T) float64 {
 //
 // Example usage:
 //
-//	n := []int{3,5,7,1,9,2}
-//	m0 := do.Max(n...)
-//	m1 := do.Max(3, 5, 7, 1, 9, 2)
+//	values := []int{3, 5, 7, 1, 9, 2}
+//	maxI := do.Max(values...)
+//	fmt.Println(maxI)  // Output: 9
 //
-// This function is generic and can work with any type T.
+//	floats := []float64{1.1, 2.2, 3.3, 4.4, 5.5}
+//	maxF: = do.Max(floats...)
+//	fmt.Println(maxF)  // Output: 5.5
 func Max[T Verifiable](v ...T) T {
 	// Return zero if no values are provided.
 	if len(v) == 0 {
@@ -136,13 +146,18 @@ func Max[T Verifiable](v ...T) T {
 //
 // Example usage:
 //
-//	n := []int{3, 5, 7, 1, 9, 2}
-//	m0 := do.MaxList(n, 10, 20)       // 20
-//	m1 := do.MaxList([]int{})         //  0
-//	m2 := do.MaxList([]int{}, 20, 10) // 20
+//	values := []int{3, 5, 7, 1, 9, 2}
+//	max := do.MaxList(values)
+//	fmt.Println(max)  // Output: 9
 //
-// This function is generic and can work with any type T that satisfies
-// the Verifiable interface.
+//	floats := []float64{1.1, 2.2, 3.3, 4.4, 5.5}
+//	max = do.MaxList(floats)
+//	fmt.Println(max)  // Output: 5.5
+//
+//	empty := []int{}
+//	defaults := []int{4, 5, 6}
+//	max = do.MaxList(empty, defaults...)
+//	fmt.Println(max)  // Output: 6
 func MaxList[T Verifiable](v []T, defaults ...T) T {
 	return If(len(v) != 0, Max(v...), Max(defaults...))
 }
@@ -155,11 +170,17 @@ func MaxList[T Verifiable](v []T, defaults ...T) T {
 //
 // Example usage:
 //
-//	n := []int{3,5,7,1,9,2}
-//	m0 := do.Min(n...)
-//	m1 := do.Min(3, 5, 7, 1, 9, 2)
+//	values := []int{3, 5, 7, 1, 9, 2}
+//	minI := do.Min(values...)
+//	fmt.Println(minI)  // Output: 1
 //
-// This function is generic and can work with any type T.
+//	floats := []float64{1.1, 2.2, 3.3, 4.4, 5.5}
+//	minF = do.Min(floats...)
+//	fmt.Println(minF)  // Output: 1.1
+//
+//	strings := []string{"z", "a", "m", "c", "y"}
+//	minS = do.Min(strings...)
+//	fmt.Println(minS)  // Output: a
 func Min[T Verifiable](v ...T) T {
 	if len(v) == 0 {
 		return reflect.Zero(reflect.TypeOf((*T)(nil)).Elem()).Interface().(T)
@@ -189,13 +210,18 @@ func Min[T Verifiable](v ...T) T {
 //
 // Example usage:
 //
-//	n := []int{3, 5, 7, 1, 9, 2}
-//	m0 := do.MinList(n, 20, 10)       // 1
-//	m1 := do.MinList([]int{})         // 0
-//	m2 := do.MinList([]int{}, 20, 10) // 10
+//	values := []int{3, 5, 7, 1, 9, 2}
+//	minI := do.MinList(values)
+//	fmt.Println(minI)  // Output: 1
 //
-// This function is generic and can work with any type T that satisfies
-// the Verifiable interface.
+//	floats := []float64{1.1, 2.2, 3.3, 4.4, 5.5}
+//	minF = do.MinList(floats)
+//	fmt.Println(minF)  // Output: 1.1
+//
+//	empty := []int{}
+//	defaults := []int{4, 5, 6}
+//	minD := do.MinList(empty, defaults...)
+//	fmt.Println(minD)  // Output: 4
 func MinList[T Verifiable](v []T, defaults ...T) T {
 	return If(len(v) != 0, Min(v...), Min(defaults...))
 }
@@ -208,10 +234,13 @@ func MinList[T Verifiable](v []T, defaults ...T) T {
 //
 // Example usage:
 //
-//	n := []int{3,5,7,1,9,2}
-//	sum := do.Sum(n...)
+//	values := []int{3, 5, 7, 1, 9, 2}
+//	sum := do.Sum(values...)
+//	fmt.Println(sum)  // Output: 27
 //
-// This function is generic and can work with any type T.
+//	floats := []float64{1.1, 2.2, 3.3, 4.4, 5.5}
+//	sum = do.Sum(floats...)
+//	fmt.Println(sum)  // Output: 16.5
 func Sum[T Numerable](v ...T) T {
 	if len(v) == 0 {
 		return 0
@@ -237,15 +266,19 @@ func Sum[T Numerable](v ...T) T {
 // If the value has a non-zero fractional part and `f` is true,
 // it returns false since an even number cannot have a fractional part.
 //
-// Examples:
+// Example usage:
 //
-//	do.IsEven(4)         // true
-//	do.IsEven(3)         // false
-//	do.IsEven(4.2)       // false
-//	do.IsEven(4.2, true) // true
+//	even := do.IsEven(6)
+//	fmt.Println(even)  // Output: true
 //
-// This function is generic and can work with any type T that satisfies
-// the Numerable interface.
+//	odd := do.IsEven(7)
+//	fmt.Println(odd)  // Output: false
+//
+//	floatingPoint := do.IsEven(6.6)
+//	fmt.Println(floatingPoint)  // Output: false
+//
+//	floatingPoint = do.IsEven(6.6, true)
+//	fmt.Println(floatingPoint)  // Output: true
 func IsEven[T Numerable](v T, f ...bool) bool {
 	if All(f...) {
 		// Ignore the fact that the number is a float
@@ -269,15 +302,19 @@ func IsEven[T Numerable](v T, f ...bool) bool {
 // it returns true since an odd number cannot have a fractional part.
 // Otherwise, it returns the negation of the IsEven function.
 //
-// Examples:
+// Example usage:
 //
-//	do.IsOdd(3)         // true
-//	do.IsOdd(4)         // false
-//	do.IsOdd(5.5)       // false
-//	do.IsOdd(5.5, true) // true
+//	odd := do.IsOdd(7)
+//	fmt.Println(odd)  // Output: true
 //
-// This function is generic and can work with any type T that satisfies
-// the Numerable interface.
+//	even := do.IsOdd(6)
+//	fmt.Println(even)  // Output: false
+//
+//	floatingPoint := do.IsOdd(7.7)
+//	fmt.Println(floatingPoint)  // Output: false
+//
+//	floatingPoint = do.IsOdd(7.7, true)
+//	fmt.Println(floatingPoint)  // Output: true
 func IsOdd[T Numerable](v T, f ...bool) bool {
 	if All(f...) {
 		// Ignore the fact that the number is a float
@@ -296,14 +333,19 @@ func IsOdd[T Numerable](v T, f ...bool) bool {
 // since a whole number cannot have a fractional part.
 // If the value does not have a fractional part, it returns true.
 //
-// Examples:
+// Example usage:
 //
-//	do.IsWhole(4)   // true
-//	do.IsWhole(3.5) // false
-//	do.IsWhole(5.0) // true
+//	whole := do.IsWhole(5)
+//	fmt.Println(whole)  // Output: true
 //
-// This function is generic and can work with any type T that satisfies
-// the Numerable interface.
+//	notWhole := do.IsWhole(5.5)
+//	fmt.Println(notWhole)  // Output: false
+//
+//	zero := do.IsWhole(0)
+//	fmt.Println(zero)  // Output: true
+//
+//	negative := do.IsWhole(-3)
+//	fmt.Println(negative)  // Output: true
 func IsWhole[T Numerable](v T) bool {
 	_, fraction := math.Modf(float64(v))
 	return fraction == 0
@@ -320,12 +362,19 @@ func IsWhole[T Numerable](v T) bool {
 // The function uses the time in nanoseconds as a seed for the random
 // number generator.
 //
-// Example:
+// Example usage:
 //
-//	Random[int]() => returns 0
-//	Random[int](5) => returns a random int from 0 to 4
-//	Random[int](1, 5) => returns a random int from 1 to 4
-//	Random[int](1, 2, 3) => returns 1, 2, or 3
+//	rand0 := do.Random[int]()
+//	fmt.Println(rand0)  // Output: 0
+//
+//	rand1 := do.Random[int](5)
+//	fmt.Println(rand1)  // Output: a random int from 0 to 4
+//
+//	rand2 := do.Random[int](1, 5)
+//	fmt.Println(rand2)  // Output: a random int from 1 to 4
+//
+//	rand3 := do.Random[int](1, 2, 3)
+//	fmt.Println(rand3)  // Output: 1, 2, or 3
 func Random[T Numerable](v ...T) T {
 	switch len(v) {
 	case 0:
@@ -362,13 +411,15 @@ func randomValue[T Numerable](min, max T) T {
 // RandomList returns a random element from the given list.
 // If the list is empty, it returns the zero value of type T.
 //
-// Example:
+// Example usage:
 //
 //	list := []int{1, 2, 3, 4, 5}
-//	value := RandomList(list) // returns a random element from the list
+//	value := do.RandomList(list)
+//	fmt.Println(value)  // Output: a random element from the list
 //
 //	emptyList := []string{}
-//	value := RandomList(emptyList) // returns the zero value of string type
+//	value := do.RandomList(emptyList)
+//	fmt.Println(value)  // Output: ""
 func RandomList[T any](v []T) T {
 	if len(v) == 0 {
 		return reflect.Zero(reflect.TypeOf((*T)(nil)).Elem()).Interface().(T)
@@ -379,17 +430,19 @@ func RandomList[T any](v []T) T {
 // RandomMap returns a random value from the given map.
 // If the map is empty, it returns the zero value of type T.
 //
-// Example:
+// Example usage:
 //
 //	myMap := map[string]int{
 //	    "apple":  1,
 //	    "banana": 2,
 //	    "cherry": 3,
 //	}
-//	value := RandomMap(myMap) // returns a random value from the map
+//	value := do.RandomMap(myMap)
+//	fmt.Println(value)  // Output: a random value from the map
 //
 //	emptyMap := map[string]bool{}
-//	value := RandomMap(emptyMap) // returns the zero value of bool type (false)
+//	value := do.RandomMap(emptyMap)
+//	fmt.Println(value)  // Output: zero value for T type (false)
 func RandomMap[K comparable, T any](m map[K]T) T {
 	var keys []K
 	for k := range m {
@@ -408,15 +461,18 @@ func RandomMap[K comparable, T any](m map[K]T) T {
 // RandomListPlural returns a slice of n random elements from the given list v.
 // If n is less than or equal to zero, it returns an empty slice.
 //
-// Example:
+// Example usage:
 //
 //	list := []int{1, 2, 3, 4, 5}
-//	values := RandomListPlural(3, list) // returns a slice of 3 random
-//	                                    // elements from the list
-//	emptyList := []string{}
-//	values := RandomListPlural(2, emptyList) // returns an empty slice
+//	values := do.RandomListPlural(3, list)
+//	fmt.Println(values)  // Output: a slice of 3 random elements from the list
 //
-//	values := RandomListPlural(0, list) // returns an empty slice
+//	emptyList := []string{}
+//	values := do.RandomListPlural(2, emptyList)
+//	fmt.Println(values)  // Output: []
+//
+//	values := do.RandomListPlural(0, list)
+//	fmt.Println(values)  // Output: []
 func RandomListPlural[T any](n int, v []T) []T {
 	if n <= 0 || len(v) == 0 {
 		return make([]T, 0)
@@ -433,19 +489,22 @@ func RandomListPlural[T any](n int, v []T) []T {
 // RandomMapPlural returns a slice of n random values from the given map m.
 // If n is less than or equal to zero, it returns an empty slice.
 //
-// Example:
+// Example usage:
 //
 //	myMap := map[string]int{
 //	    "apple":  1,
 //	    "banana": 2,
 //	    "cherry": 3,
 //	}
-//	values := RandomMapPlural(2, myMap) // returns a slice of 2 random
-//		                                // values from the map
-//	emptyMap := map[string]bool{}
-//	values := RandomMapPlural(3, emptyMap) // returns an empty slice ([]bool{})
+//	values := do.RandomMapPlural(2, myMap)
+//	fmt.Println(values)  // Output: a slice of 2 random values from the map
 //
-//	values := RandomMapPlural(0, myMap) // returns an empty slice ([]int{})
+//	emptyMap := map[string]bool{}
+//	values := do.RandomMapPlural(3, emptyMap)
+//	fmt.Println(values)  // Output: []
+//
+//	values := do.RandomMapPlural(0, myMap)
+//	fmt.Println(values)  // Output: []
 func RandomMapPlural[K comparable, T any](n int, m map[K]T) []T {
 	if n <= 0 || len(m) == 0 {
 		return make([]T, 0)

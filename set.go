@@ -17,12 +17,12 @@ package do
 //	a := []int{1, 2, 3}
 //	b := []int{3, 4, 5}
 //	result := do.Union(a, b)
-//	fmt.Println(result) // prints: [1 2 3 4 5]
+//	fmt.Println(result) // Output: [1 2 3 4 5]
 //
 //	a := []string{"a", "b", "c"}
 //	b := []string{"c", "d", "e"}
 //	result := do.Union(a, b)
-//	fmt.Println(result) // prints: [a b c d e]
+//	fmt.Println(result) // Output: [a b c d e]
 func Union[T comparable](a []T, b []T) []T {
 	distinctValues := map[T]bool{}
 
@@ -60,12 +60,12 @@ func Union[T comparable](a []T, b []T) []T {
 //	a := []int{1, 2, 3}
 //	b := []int{3, 4, 5}
 //	result := do.Intersection(a, b)
-//	fmt.Println(result) // prints: [3]
+//	fmt.Println(result) // Output: [3]
 //
 //	a := []string{"a", "b", "c"}
 //	b := []string{"c", "d", "e"}
 //	result := do.Intersection(a, b)
-//	fmt.Println(result) // prints: [c]
+//	fmt.Println(result) // Output: [c]
 func Intersection[T comparable](a []T, b []T) []T {
 	m1 := make(map[T]bool)
 	for _, item := range a {
@@ -104,12 +104,12 @@ func Intersection[T comparable](a []T, b []T) []T {
 //	a := []int{1, 2, 3}
 //	b := []int{3, 4, 5}
 //	result := do.Difference(a, b)
-//	fmt.Println(result) // prints: [1, 2]
+//	fmt.Println(result) // Output: [1, 2]
 //
 //	a := []string{"a", "b", "c"}
 //	b := []string{"c", "d", "e"}
 //	result := do.Difference(a, b)
-//	fmt.Println(result) // prints: ["a", "b"]
+//	fmt.Println(result) // Output: ["a", "b"]
 func Difference[T comparable](a []T, b []T) []T {
 	m1 := make(map[T]bool)
 	for _, item := range a {
@@ -153,12 +153,12 @@ func Diff[T comparable](a []T, b []T) []T {
 //	a := []int{1, 2, 3}
 //	b := []int{3, 4, 5}
 //	result := do.SymmetricDifference(a, b)
-//	fmt.Println(result) // prints: [1, 2, 4, 5]
+//	fmt.Println(result) // Output: [1, 2, 4, 5]
 //
 //	a := []string{"a", "b", "c"}
 //	b := []string{"c", "d", "e"}
 //	result := do.SymmetricDifference(a, b)
-//	fmt.Println(result) // prints: ["a", "b", "d", "e"]
+//	fmt.Println(result) // Output: ["a", "b", "d", "e"]
 func SymmetricDifference[T comparable](a []T, b []T) []T {
 	m1 := make(map[T]bool)
 	for _, item := range a {
@@ -190,7 +190,7 @@ func Sdiff[T comparable](a []T, b []T) []T {
 }
 
 // Complement takes a universal set (b) and a subset of it (a) and
-// returns a new slice containing items present in the universal set
+// Output: a new slice containing items present in the universal set
 // but not in the subset. The type T must be comparable.
 //
 // The function returns the complement of the subset.
@@ -207,12 +207,12 @@ func Sdiff[T comparable](a []T, b []T) []T {
 //	u := []int{1, 2, 3, 4, 5}
 //	a := []int{1, 2, 3}
 //	result := do.Complement(a, u)
-//	fmt.Println(result) // prints: [4, 5]
+//	fmt.Println(result) // Output: [4, 5]
 //
 //	u := []string{"a", "b", "c", "d", "e"}
 //	a := []string{"a", "b", "c"}
 //	result := do.Complement(a, u)
-//	fmt.Println(result) // prints: ["d", "e"]
+//	fmt.Println(result) // Output: ["d", "e"]
 func Complement[T comparable](a []T, b []T) []T {
 	m1 := make(map[T]bool)
 	for _, item := range a {
@@ -248,12 +248,12 @@ func Complement[T comparable](a []T, b []T) []T {
 //	a := []int{1, 2}
 //	b := []int{3, 4}
 //	result := do.CartesianProduct(a, b)
-//	// result: [[1, 3], [1, 4], [2, 3], [2, 4]]
+//	// Output: [[1, 3], [1, 4], [2, 3], [2, 4]]
 //
 //	x := []string{"A", "B"}
 //	y := []string{"C", "D"}
 //	result := do.CartesianProduct(x, y)
-//	// result: [["A", "C"], ["A", "D"], ["B", "C"], ["B", "D"]]
+//	// Output: [["A", "C"], ["A", "D"], ["B", "C"], ["B", "D"]]
 func CartesianProduct[T any](a []T, b []T) [][2]T {
 	var result [][2]T
 

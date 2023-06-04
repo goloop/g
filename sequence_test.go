@@ -25,7 +25,7 @@ func TestContains(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Check if output is as expected.
-			if got := Contains(tt.v, tt.val); got != tt.want {
+			if got := Contains(tt.val, tt.v); got != tt.want {
 				t.Errorf("Contains() = %v, want %v", got, tt.want)
 			}
 		})

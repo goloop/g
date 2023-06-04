@@ -44,14 +44,14 @@ func (f *foundValue) GetValue() bool {
 //
 // Example usage:
 //
-//	nums := []int{1, 2, 3, 4, 5}
-//	result := do.Contains(nums, 3)
-//	fmt.Println(result) // prints: true
+//	numSlice := []int{1, 2, 3, 4, 5}
+//	resultNum := do.Contains(3, numSlice)
+//	fmt.Println(resultNum) // Output: true
 //
 //	strSlice := []string{"Hello", "World", "Golang"}
-//	resultStr := do.Contains(strSlice, "Python")
-//	fmt.Println(resultStr) // prints: false
-func Contains[T Verifiable](vs []T, v T) bool {
+//	resultStr := do.Contains("Python", strSlice)
+//	fmt.Println(resultStr) // Output: false
+func Contains[T Verifiable](v T, vs []T) bool {
 	return In(v, vs...)
 }
 
@@ -68,13 +68,13 @@ func Contains[T Verifiable](vs []T, v T) bool {
 //	// to filter out even numbers:
 //	nums := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 //	evens := do.Filter(nums, func(v int) bool { return v%2 == 0 })
-//	fmt.Println(evens) // prints: [2 4 6 8 10]
+//	fmt.Println(evens) // Output: [2 4 6 8 10]
 //
 //	//Or you may have a slice of strings and you want
 //	//to filter out strings with length greater than 5:
 //	strs := []string{"apple", "banana", "cherry", "date", "elderberry"}
 //	longStrings := do.Filter(strs, func(v string) bool { return len(v) > 5 })
-//	fmt.Println(longStrings) // prints: ["banana" "cherry" "elderberry"]
+//	fmt.Println(longStrings) // Output: ["banana" "cherry" "elderberry"]
 func Filter[T any](vs []T, f func(T) bool) []T {
 	result := make([]T, 0)
 	for _, v := range vs {
@@ -99,18 +99,18 @@ func Filter[T any](vs []T, f func(T) bool) []T {
 //	//to find the index of the number 7:
 //	nums := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 //	idx := do.Index(nums, 7)
-//	fmt.Println(idx) // prints: 6
+//	fmt.Println(idx) // Output: 6
 //
 //	// Or you have a slice of strings and you want to find
 //	// the index of the string "cherry":
 //	fruits := []string{"apple", "banana", "cherry", "date", "elderberry"}
 //	idx := do.Index(fruits, "cherry")
-//	fmt.Println(idx) // prints: 2
+//	fmt.Println(idx) // Output: 2
 //
 //	// In case the element is not in the slice, the function will return -1:
 //	nums := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 //	idx := do.Index(nums, 11)
-//	fmt.Println(idx) // prints: -1
+//	fmt.Println(idx) // Output: -1
 func Index[T comparable](vs []T, v T) int {
 	for i, item := range vs {
 		if item == v {
@@ -136,7 +136,7 @@ func Index[T comparable](vs []T, v T) int {
 //	squares := do.Map(nums, func(n int) int {
 //	   return n * n
 //	})
-//	fmt.Println(squares) // prints: [1 4 9 16 25]
+//	fmt.Println(squares) // Output: [1 4 9 16 25]
 //
 //	// Or you have a slice of strings and you want to create a new slice
 //	// where each element is the length of the original string:
@@ -144,7 +144,7 @@ func Index[T comparable](vs []T, v T) int {
 //	lengths := do.Map(fruits, func(s string) int {
 //	   return len(s)
 //	})
-//	fmt.Println(lengths) // prints: [5 6 6 4 10]
+//	fmt.Println(lengths) // Output: [5 6 6 4 10]
 func Map[T any, U any](vs []T, f func(T) U) []U {
 	result := make([]U, len(vs))
 	for i, v := range vs {
@@ -172,7 +172,7 @@ func Map[T any, U any](vs []T, f func(T) U) []U {
 //	sum := go.Reduce(nums, func(acc int, n int) int {
 //	   return acc + n
 //	}, 0)
-//	fmt.Println(sum) // prints: 15
+//	fmt.Println(sum) // Output: 15
 //
 //	// Or you have a slice of strings and you want to concatenate
 //	// them all into a single string:
@@ -180,7 +180,7 @@ func Map[T any, U any](vs []T, f func(T) U) []U {
 //	sentence := go.Reduce(words, func(acc string, s string) string {
 //	   return acc + " " + s
 //	}, "")
-//	fmt.Println(sentence) // prints: "Hello World From Go"
+//	fmt.Println(sentence) // Output: "Hello World From Go"
 func Reduce[T any, U any](vs []T, f func(U, T) U, init U) U {
 	result := init
 	for _, v := range vs {
@@ -207,19 +207,19 @@ func Reduce[T any, U any](vs []T, f func(U, T) U, init U) U {
 //	// to sort in ascending order:
 //	nums := []int{5, 2, 7, 8, 1, 9}
 //	do.Sort(nums)
-//	fmt.Println(nums) // prints: [1 2 5 7 8 9]
+//	fmt.Println(nums) // Output: [1 2 5 7 8 9]
 //
 //	// If you want to sort the same slice in descending order:
 //	nums := []int{5, 2, 7, 8, 1, 9}
 //	do.Sort(nums, true)
-//	fmt.Println(nums) // prints: [9 8 7 5 2 1]
+//	fmt.Println(nums) // Output: [9 8 7 5 2 1]
 //
 //	// This function is generic and can work with any type
 //	// that satisfies the Numerable interface.
 //	// For example, if you have a slice of floats:
 //	floats := []float64{5.5, 2.2, 7.7, 8.8, 1.1, 9.9}
 //	do.Sort(floats)
-//	fmt.Println(floats) // prints: [1.1 2.2 5.5 7.7 8.8 9.9]
+//	fmt.Println(floats) // Output: [1.1 2.2 5.5 7.7 8.8 9.9]
 func Sort[T Verifiable](v []T, inverse ...bool) {
 	inv := All(inverse...)
 
@@ -300,21 +300,21 @@ func partitionDesc[T Verifiable](v []T, low, high int) int {
 //	// If you want to find the first non-zero value among
 //	// several integer variables:
 //	a, b, c := 0, 0, 3
-//	fmt.Println(do.Value(a, b, c)) // prints: 3
+//	fmt.Println(do.Value(a, b, c)) // Output: 3
 //
 //	// If all values are zero, the function will return zero of the type T:
 //	a, b, c := 0, 0, 0
-//	fmt.Println(do.Value(a, b, c)) // prints: 0
+//	fmt.Println(do.Value(a, b, c)) // Output: 0
 //
 //	// This function can work with any type. For example,
 //	// if you have several string variables:
 //	s1, s2, s3 := "", "Hello", "World"
-//	fmt.Println(do.Value(s1, s2, s3)) // prints: Hello
+//	fmt.Println(do.Value(s1, s2, s3)) // Output: Hello
 //
 //	// If all strings are empty (which is the zero value for strings),
 //	// the function will return an empty string:
 //	s1, s2, s3 := "", "", ""
-//	fmt.Println(do.Value(s1, s2, s3)) // prints: ""
+//	fmt.Println(do.Value(s1, s2, s3)) // Output: ""
 func Value[T any](v ...T) T {
 	if len(v) != 0 {
 		for _, val := range v {
@@ -348,7 +348,7 @@ func Value[T any](v ...T) T {
 //	for _, pair := range pairs {
 //	    fmt.Printf("(%d, %s)\n", pair.First, pair.Second)
 //	}
-//	// Prints: (1, one) (2, two) (3, three)
+//	// Output: (1, one) (2, two) (3, three)
 //
 //	// If one slice is shorter than the other:
 //	a := []int{1, 2}
@@ -357,7 +357,7 @@ func Value[T any](v ...T) T {
 //	for _, pair := range pairs {
 //	    fmt.Printf("(%d, %s)\n", pair.First, pair.Second)
 //	}
-//	// Prints: (1, one) (2, two)
+//	// Output: (1, one) (2, two)
 //	// Note that the third element of the second slice is ignored.
 func Zip[T, U any](a []T, b []U) []Pair[T, U] {
 	minLength := len(a)
@@ -388,13 +388,13 @@ func Zip[T, U any](a []T, b []U) []Pair[T, U] {
 //	// If you have a slice with duplicates:
 //	numbers := []int{1, 2, 2, 3, 3, 3, 4, 4, 4, 4}
 //	uniqueNumbers := do.Distinct(numbers)
-//	fmt.Println(uniqueNumbers)  // Prints: [1 2 3 4]
+//	fmt.Println(uniqueNumbers)  // Output: [1 2 3 4]
 //
 //	// This function also works with slices of other comparable types,
 //	// like strings:
 //	words := []string{"hello", "world", "hello", "gophers"}
 //	uniqueWords := do.Distinct(words)
-//	fmt.Println(uniqueWords)  // Prints: ["hello" "world" "gophers"]
+//	fmt.Println(uniqueWords)  // Output: ["hello" "world" "gophers"]
 func Distinct[T comparable](v []T) []T {
 	uniqueMap := make(map[T]bool)
 	uniqueValues := make([]T, 0)
