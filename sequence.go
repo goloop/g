@@ -710,3 +710,27 @@ func Rangef[T any](fn func(int) T, a int, opt ...int) []T {
 
 	return result
 }
+
+// Reverse changes slice with elements in reverse order.
+//
+// It takes a slice 'v' of any type 'T' and swaps the elements
+// in-place to reverse their order.
+//
+// Example usage:
+//
+//	numbers := []int{1, 2, 3, 4, 5}
+//	Reverse(numbers)
+//	// numbers: [5, 4, 3, 2, 1]
+//
+//	names := []string{"Alice", "Bob", "Charlie", "Dave"}
+//	Reverse(names)
+//	// names: ["Dave", "Charlie", "Bob", "Alice"]
+//
+//	empty := []bool{}
+//	Reverse(empty)
+//	// empty: []
+func Reverse[T any](v []T) {
+	for i, j := 0, len(v)-1; i < j; i, j = i+1, j-1 {
+		v[i], v[j] = v[j], v[i]
+	}
+}

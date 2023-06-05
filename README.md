@@ -205,6 +205,10 @@ It is the detail list of functions provided in Go package **g**:
 
   Reduce combines all elements of a slice into a single value using a provided function.
 
+- **Reverse**[T any](v []T) []T
+
+  Reverse changes slice with elements in reverse order.
+
 - **Shuffle**[T any](v []T)
 
   The Shuffle function rearranges the elements of the slice in a random order.

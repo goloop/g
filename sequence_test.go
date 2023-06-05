@@ -728,3 +728,34 @@ func TestRangef(t *testing.T) {
 			expected, result)
 	}
 }
+
+// TestReverse tests the Reverse function.
+func TestReverse(t *testing.T) {
+	// Test case 1: Reversing a slice of integers
+	numbers := []int{1, 2, 3, 4, 5}
+	expectedNumbers := []int{5, 4, 3, 2, 1}
+	Reverse(numbers)
+
+	if !reflect.DeepEqual(numbers, expectedNumbers) {
+		t.Errorf("Reverse(numbers) = %v, expected %v",
+			numbers, expectedNumbers)
+	}
+
+	// Test case 2: Reversing a slice of strings
+	names := []string{"Alice", "Bob", "Charlie", "Dave"}
+	expectedNames := []string{"Dave", "Charlie", "Bob", "Alice"}
+	Reverse(names)
+
+	if !reflect.DeepEqual(names, expectedNames) {
+		t.Errorf("Reverse(names) = %v, expected %v", names, expectedNames)
+	}
+
+	// Test case 3: Reversing an empty slice
+	empty := []bool{}
+	expectedEmpty := []bool{}
+	Reverse(empty)
+
+	if !reflect.DeepEqual(empty, expectedEmpty) {
+		t.Errorf("Reverse(empty) = %v, expected %v", empty, expectedEmpty)
+	}
+}
