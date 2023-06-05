@@ -10,8 +10,8 @@ package g
 // ascending argument. To rank values where the largest value is ranked #1,
 // set ascending to false (or leave blank).
 //
-// g.Rank(7, []float64{1, 5, 2, 3, 7, 8})       // descending, returns  1
-// g.Rank(7, []float64{1, 5, 2, 3, 7, 8}, true) // ascending, returns 4
+//	g.Rank(7, []float64{1, 5, 2, 3, 7, 8})       // descending, returns  1
+//	g.Rank(7, []float64{1, 5, 2, 3, 7, 8}, true) // ascending, returns 4
 //
 // Set ascending to false when you want to rank something like top sales,
 // where the largest sales number should rank #1, and to set ascending to
