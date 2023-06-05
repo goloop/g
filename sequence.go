@@ -628,11 +628,84 @@ func Range(a int, opt ...int) []int {
 
 	// Calculate the number of steps and create the slice of this size.
 	steps := Abs(int(math.Ceil(float64(m-n) / float64(s))))
-	steps = If(steps >= MaxRangeSize, MaxRangeSize, steps)
+	steps = If(steps >= MaxRangeSize, 0, steps) // limit the size of the slice
 	result := make([]int, steps)
 
 	for i := 0; i < steps; i++ {
 		result[i] = n + i*s
+	}
+
+	return result
+}
+
+// Rangef generates a slice of values based on the provided parameters
+// and a given function as func(int) T.
+//
+//   - If a single parameter is passed (Range(fn, n)), the function returns
+//     a slice from 0 to n-1 and pass it in fn.
+//   - If two parameters are passed (Range(fn, n, m)), the function returns
+//     a slice from n to m-1 and pass it in fn.
+//   - If three parameters are passed (Range(fn,  n, m, s)), the function
+//     returns a slice from n to m-1 with a step size of s, and pass it in fn.
+//
+// Example usage:
+//
+//	func appleFactory() func(int) string {
+//		var appleVarieties = []string{
+//			"Gala",
+//			"Fuji",
+//			"Honeycrisp",
+//			"Red Delicious",
+//			"Granny Smith",
+//			"Golden Delicious",
+//			"Pink Lady",
+//			"Braeburn",
+//			"McIntosh",
+//			"Jazz",
+//		}
+//
+//		return func(i int) string {
+//			if i >= 0 && i < len(appleVarieties) {
+//				return appleVarieties[i]
+//			}
+//			return "-"
+//		}
+//	}
+//
+//	Rangef(appleFactory(), 3)
+//	// Output:  [Gala Fuji Honeycrisp]
+//
+//	Rangef(appleFactory(), 4, 7)
+//	// Output: [Granny Smith Golden Delicious Pink Lady]
+//
+//	//Rangef(appleFactory(), 7, 12, 2)
+//	// Output: [Braeburn Jazz -]
+func Rangef[T any](fn func(int) T, a int, opt ...int) []T {
+	var n, m, s int = 0, a, 1
+
+	// Sets range as n to m-1.
+	if len(opt) > 0 {
+		n = a
+		m = opt[0]
+	}
+
+	// Sets step size.
+	if len(opt) > 1 {
+		s = opt[1]
+	}
+
+	// Ignore incorrect parameters.
+	if s == 0 || s < 0 && n <= m || s > 0 && n >= m {
+		return []T{}
+	}
+
+	// Calculate the number of steps and create the slice of this size.
+	steps := Abs(int(math.Ceil(float64(m-n) / float64(s))))
+	steps = If(steps >= MaxRangeSize, 0, steps) // limit the size of the slice
+	result := make([]T, steps)
+
+	for i := 0; i < steps; i++ {
+		result[i] = fn(n + i*s)
 	}
 
 	return result

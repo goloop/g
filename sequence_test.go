@@ -1,6 +1,7 @@
 package g
 
 import (
+	"fmt"
 	"math/rand"
 	"reflect"
 	"testing"
@@ -631,7 +632,6 @@ func TestRange(t *testing.T) {
 		n        int
 		opt      []int
 		expected []int
-		len      int
 	}{
 		{
 			name:     "Single parameter",
@@ -668,23 +668,63 @@ func TestRange(t *testing.T) {
 			n:        MaxRangeSize + 100,
 			opt:      []int{},
 			expected: []int{},
-			len:      MaxRangeSize,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			result := Range(tc.n, tc.opt...)
-			if tc.len != 0 {
-				if len(result) != tc.len {
-					t.Errorf("Expected length %d, but got %d",
-						tc.len, len(result))
-				}
-			} else {
-				if !reflect.DeepEqual(result, tc.expected) {
-					t.Errorf("Expected %v, but got %v", tc.expected, result)
-				}
+			if !reflect.DeepEqual(result, tc.expected) {
+				t.Errorf("Expected %v, but got %v", tc.expected, result)
 			}
 		})
+	}
+}
+
+// TestRangef tests the Rangef function.
+func TestRangef(t *testing.T) {
+	// Define the apple factory function
+	appleFactory := func(i int) string {
+		appleVarieties := []string{
+			"Gala",
+			"Fuji",
+			"Honeycrisp",
+			"Red Delicious",
+			"Granny Smith",
+			"Golden Delicious",
+			"Pink Lady",
+			"Braeburn",
+			"McIntosh",
+			"Jazz",
+		}
+
+		if i >= 0 && i < len(appleVarieties) {
+			return appleVarieties[i]
+		}
+		return "-"
+	}
+
+	// Single parameter.
+	result := Rangef(appleFactory, 3)
+	expected := []string{"Gala", "Fuji", "Honeycrisp"}
+	if fmt.Sprint(result) != fmt.Sprint(expected) {
+		t.Errorf("Test case 1 failed: Expected %v, but got %v",
+			expected, result)
+	}
+
+	// Two parameters.
+	result = Rangef(appleFactory, 4, 7)
+	expected = []string{"Granny Smith", "Golden Delicious", "Pink Lady"}
+	if fmt.Sprint(result) != fmt.Sprint(expected) {
+		t.Errorf("Test case 2 failed: Expected %v, but got %v",
+			expected, result)
+	}
+
+	// Three parameters.
+	result = Rangef(appleFactory, 7, 12, 2)
+	expected = []string{"Braeburn", "Jazz", "-"}
+	if fmt.Sprint(result) != fmt.Sprint(expected) {
+		t.Errorf("Test case 3 failed: Expected %v, but got %v",
+			expected, result)
 	}
 }

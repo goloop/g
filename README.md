@@ -193,6 +193,10 @@ It is the detail list of functions provided in Go package **g**:
 
   Range generates a slice of integers based on the provided parameters.
 
+- **Rangef**[T any](fn func(int) T, a int, opt ...int) []T
+
+  Rangef generates a slice of values based on the provided parameters and a given function as func(int) T.
+
 - **Rank**[T Verifiable](number T, array []T, ascending ...bool) int
 
   This function returns the rank of a given value when compared to a list of other values. It can rank both from largest to smallest and smallest to largest based on the optional boolean argument. It assigns the same rank for duplicate values. The function works with any types satisfying the Verifiable interface.
