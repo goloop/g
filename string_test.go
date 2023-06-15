@@ -77,3 +77,47 @@ func TestTrim(t *testing.T) {
 		})
 	}
 }
+
+// TestPreserve tests the Preserve function.
+func TestPreserve(t *testing.T) {
+	testCases := []struct {
+		name     string
+		input    string
+		patterns []string
+		expected string
+	}{
+		{
+			name:     "Default behavior",
+			input:    "Hello, World!",
+			expected: "Hello World",
+		},
+		{
+			name:     "Preserve numbers",
+			input:    "+380 (96) 123 4567",
+			patterns: []string{Numbers},
+			expected: "380961234567",
+		},
+		{
+			name:     "Preserve letters",
+			input:    "i@goloop.one",
+			patterns: []string{Letters},
+			expected: "igoloopone",
+		},
+		{
+			name:     "Preserve symbols",
+			input:    "Hello, World!",
+			patterns: []string{Symbols},
+			expected: ",!",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := Preserve(tc.input, tc.patterns...)
+			if result != tc.expected {
+				t.Errorf("Preserve(%q, %v) = %q; want %q",
+					tc.input, tc.patterns, result, tc.expected)
+			}
+		})
+	}
+}

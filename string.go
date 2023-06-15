@@ -104,3 +104,44 @@ func Trim(s string, patterns ...string) string {
 		return exists
 	})
 }
+
+// Preserve keeps only characters specified by the patterns in the string.
+//
+// It is a utility function that helps you to 'preserve' only the characters
+// you want in your strings. Just as an archaeologist would go through a site
+// preserving important artefacts, this function iterates over the string and
+// keeps only the characters specified as patterns.
+//
+// By default, if no patterns are specified, it keeps only alphanumeric
+// characters (i.e., letters, numbers and space). However, you can specify
+// your own patterns to fit your needs. The function uses an efficient
+// mapping approach to achieve this, making it effective for processing
+// large strings.
+//
+// Example usage:
+//
+//	g.Preserve("Hello, World!")                 // Output: "Hello World"
+//	g.Preserve("+380 (96) 123 4567", g.Numbers) // Output: "380961234567"
+func Preserve(s string, patterns ...string) string {
+	var sb strings.Builder
+
+	if len(patterns) == 0 {
+		patterns = []string{Letters, Numbers, " "}
+	}
+
+	// Characters to be kept.
+	ctk := make(map[rune]struct{})
+	for _, pattern := range patterns {
+		for _, ch := range pattern {
+			ctk[ch] = struct{}{}
+		}
+	}
+
+	for _, r := range s {
+		if _, ok := ctk[r]; ok {
+			sb.WriteRune(r)
+		}
+	}
+
+	return sb.String()
+}

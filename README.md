@@ -158,6 +158,10 @@ It is the detail list of functions provided in Go package **g**:
 
   The MinList function returns the smallest value from a list of values of a type satisfying the Numerable interface. If the input list is empty, it uses provided default values or returns the minimal value for the Numerable type.
 
+- **Preserve**(s string, patterns ...string) string
+
+  The Preserve function keeps only characters specified by the patterns in the string.
+
 - **Product**[T Numerable](v ...T) T
 
   The Product function calculates the product of all numeric values in the input slice.
