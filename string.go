@@ -28,6 +28,45 @@ const (
 	Hidden = "\t\b\n\r\v\f"
 )
 
+// The filterOrPreserveChars is a helper function that filters or preserves
+// characters in a string based on a set of provided patterns. It takes in
+// a string `s`, a  boolean `i` that determines whether to filter or preserve
+// characters,  a default set of patterns `d`, and optional patterns `p`.
+// If `i` is true, it preserves only the characters in the patterns;
+// if `i` is false, it filters out the characters in the patterns.
+// By default, if no optional patterns are provided, it uses the default
+// set `d`. The function employs a map for efficient character lookup,
+// and a strings.Builder to efficiently build the result string.
+// It iterates over the input string and for each rune, it checks if the rune
+// exists in the map. Depending on the value of `i`, it either writes the rune
+// to the result string (if preserving) or skips it (if filtering).
+//
+// This function is not exported and is used internally by the Weed and
+// Preserve functions to reduce code duplication and improve maintenance.
+func filterOrPreserveChars(s string, i bool, d []string, p ...string) string {
+	var sb strings.Builder
+
+	if len(p) == 0 {
+		p = d
+	}
+
+	// Characters as a map
+	cm := make(map[rune]struct{})
+	for _, pattern := range p {
+		for _, ch := range pattern {
+			cm[ch] = struct{}{}
+		}
+	}
+
+	for _, r := range s {
+		if _, ok := cm[r]; (i && ok) || (!i && !ok) {
+			sb.WriteRune(r)
+		}
+	}
+
+	return sb.String()
+}
+
 // Weed removes characters by the patterns from the whole string.
 //
 // It is a utility function that helps you to 'clean up' your strings,
@@ -48,27 +87,12 @@ const (
 //	g.Weed(" i@ goloop.one", g.Whitespaces)  // Output: "i@goloop.one"
 //	g.Weed("+380 (96) 123 4567", " +()")     // Output: "380961234567"
 func Weed(s string, patterns ...string) string {
-	var sb strings.Builder
-
-	if len(patterns) == 0 {
-		patterns = []string{Hidden}
-	}
-
-	// Characters to be deleted.
-	cbd := make(map[rune]struct{})
-	for _, pattern := range patterns {
-		for _, ch := range pattern {
-			cbd[ch] = struct{}{}
-		}
-	}
-
-	for _, r := range s {
-		if _, ok := cbd[r]; !ok {
-			sb.WriteRune(r)
-		}
-	}
-
-	return sb.String()
+	return filterOrPreserveChars(
+		s,
+		false,
+		[]string{Hidden},
+		patterns...,
+	)
 }
 
 // Trim removes all leading and trailing occurrences of specified characters
@@ -123,25 +147,10 @@ func Trim(s string, patterns ...string) string {
 //	g.Preserve("Hello, World!")                 // Output: "Hello World"
 //	g.Preserve("+380 (96) 123 4567", g.Numbers) // Output: "380961234567"
 func Preserve(s string, patterns ...string) string {
-	var sb strings.Builder
-
-	if len(patterns) == 0 {
-		patterns = []string{Letters, Numbers, " "}
-	}
-
-	// Characters to be kept.
-	ctk := make(map[rune]struct{})
-	for _, pattern := range patterns {
-		for _, ch := range pattern {
-			ctk[ch] = struct{}{}
-		}
-	}
-
-	for _, r := range s {
-		if _, ok := ctk[r]; ok {
-			sb.WriteRune(r)
-		}
-	}
-
-	return sb.String()
+	return filterOrPreserveChars(
+		s,
+		true,
+		[]string{Letters, Numbers, " "},
+		patterns...,
+	)
 }
