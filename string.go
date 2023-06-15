@@ -3,14 +3,29 @@ package g
 import "strings"
 
 const (
-	// Breakers is a set of characters that are used as breakers.
-	Breakers = "\t\n\r"
+	// Numbers is a string of all numbers.
+	Numbers = "1234567890"
+
+	// Letters is a string of all ASCII letters.
+	Letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+	// Symbols is a string of all special ASCII symbols.
+	Symbols = ".,:;!?/\\|`~@#$%^&*()_+-=<>"
+
+	// Quotes is a string of all quotes.
+	Quotes = "'\"`"
+
+	// Brackets is a string of all breakers.
+	Brackets = "()[]<>{}"
 
 	// Whitespaces is a set of characters that are used as whitespaces.
-	Whitespaces = " \t\n\r"
+	Whitespaces = " \t\b"
 
-	// NonAlphabetics is a set of characters that are used as non-alphabetics.
-	NonAlphabetics = " +-!@#$%^&*()[]{}|\\/\t\n\r~<>?.,:;'`\""
+	// Breakers is a set of characters that are used as breakers.
+	Breakers = "\n\r\v\f"
+
+	// Hidden contains part of Whitespaces group and all Breakers.
+	Hidden = "\t\b\n\r\v\f"
 )
 
 // Weed removes characters by the patterns from the whole string.
@@ -29,14 +44,14 @@ const (
 //
 // Example usage:
 //
-//	g.Weed("Hello\t World")                        // Output: "Hello World"
-//	g.Weed(" i@ goloop.one", g.Whitespaces)        // Output: "i@goloop.one"
-//	g.Weed("+380 (96) 123 4567", g.NonAlphabetics) // Output: "380961234567"
+//	g.Weed("Hello\t World")                  // Output: "Hello World"
+//	g.Weed(" i@ goloop.one", g.Whitespaces)  // Output: "i@goloop.one"
+//	g.Weed("+380 (96) 123 4567", " +()")     // Output: "380961234567"
 func Weed(s string, patterns ...string) string {
 	var sb strings.Builder
 
 	if len(patterns) == 0 {
-		patterns = []string{Breakers}
+		patterns = []string{Hidden}
 	}
 
 	// Characters to be deleted.
@@ -73,7 +88,7 @@ func Weed(s string, patterns ...string) string {
 //	g.Trim(" i@ goloop.one ", g.Whitespaces)  // Output: "i@ goloop.one"
 func Trim(s string, patterns ...string) string {
 	if len(patterns) == 0 {
-		patterns = []string{Whitespaces}
+		patterns = []string{Whitespaces, Breakers}
 	}
 
 	// Characters to be deleted.

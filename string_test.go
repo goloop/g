@@ -21,13 +21,13 @@ func TestWeed(t *testing.T) {
 		{
 			name:     "NonAlphabetics Weed",
 			s:        "+380 (96) 123 4567",
-			patterns: []string{NonAlphabetics},
+			patterns: []string{Whitespaces, Symbols},
 			want:     "380961234567",
 		},
 		{
 			name:     "Whitespaces Weed",
 			s:        " i @goloop.one\n",
-			patterns: []string{Whitespaces},
+			patterns: []string{Whitespaces, Breakers},
 			want:     "i@goloop.one",
 		},
 	}
@@ -64,7 +64,7 @@ func TestTrim(t *testing.T) {
 		{
 			name:     "Whitespace Trim",
 			s:        " \ti@goloop.one\n ",
-			patterns: []string{Whitespaces},
+			patterns: []string{Whitespaces, Breakers},
 			want:     "i@goloop.one",
 		},
 	}
