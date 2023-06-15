@@ -229,6 +229,10 @@ It is the detail list of functions provided in Go package **g**:
 
   Sdiff is an alias for the SymmetricDifference function.
 
+- **Trim**(s string, patterns ...string) string
+
+  Trim function is a utility that removes all leading and trailing occurrences of specified characters from the string. If no characters are provided, it trims leading and trailing whitespace. This function is especially useful to tidy up user input or to normalize strings for consistent processing. The function utilizes the TrimFunc from the standard strings package, making it efficient for processing large strings.
+
 - **Union**[T comparable](a []T, b []T) []T
 
   The Union function takes two slices and returns a new slice that contains all unique items from both slices. It removes duplicates and returns the union of the slices. The function is generic and can work with any type T that is comparable. Note that this function does not preserve the order of elements.
@@ -240,6 +244,10 @@ It is the detail list of functions provided in Go package **g**:
 - **VLookup**[T comparable, U any](v T, lookup []T, result []U, def U) U
 
   Similar to HLookup, the VLookup function looks up and retrieves data from a specific column in a table. It works in the same way as HLookup but used for vertical lookups.
+
+- **Weed**(s string, patterns ...string) string
+
+  Weed function is a utility that helps 'clean up' your strings by removing any unwanted characters, termed as 'weeds'. If no patterns are specified, it removes the most common breakers characters (e.g., newline, tab). However, users can specify their own patterns according to their needs. An efficient mapping approach is employed to perform the cleaning process, making this function particularly effective for large strings.
 
 - **Zip**[T, U any](a []T, b []U) []Pair[T, U]
 

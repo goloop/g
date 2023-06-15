@@ -445,6 +445,7 @@ func TestIsEven(t *testing.T) {
 	}
 }
 
+// TestIsOdd tests the IsOdd function.
 func TestIsOdd(t *testing.T) {
 	// Test cases for integer values.
 	// Expected results: true if the value is odd, false otherwise.

@@ -180,9 +180,8 @@ func TestReduce(t *testing.T) {
 			func(a, b int) int {
 				if a > b {
 					return a
-				} else {
-					return b
 				}
+				return b
 			},
 			0,
 			5,
@@ -193,9 +192,8 @@ func TestReduce(t *testing.T) {
 			func(a, b int) int {
 				if a < b {
 					return a
-				} else {
-					return b
 				}
+				return b
 			},
 			5,
 			1,
@@ -681,11 +679,85 @@ func TestRange(t *testing.T) {
 	}
 }
 
+/*
 // TestRangef tests the Rangef function.
+
+	func TestRangef(t *testing.T) {
+		// Define the apple factory function
+		appleFactory := func(i int) string {
+			appleVarieties := []string{
+				"Gala",
+				"Fuji",
+				"Honeycrisp",
+				"Red Delicious",
+				"Granny Smith",
+				"Golden Delicious",
+				"Pink Lady",
+				"Braeburn",
+				"McIntosh",
+				"Jazz",
+			}
+
+			if i >= 0 && i < len(appleVarieties) {
+				return appleVarieties[i]
+			}
+			return "-"
+		}
+
+		// Single parameter.
+		result := Rangef(appleFactory, 3)
+		expected := []string{"Gala", "Fuji", "Honeycrisp"}
+		if fmt.Sprint(result) != fmt.Sprint(expected) {
+			t.Errorf("Test case 1 failed: Expected %v, but got %v",
+				expected, result)
+		}
+
+		// Two parameters.
+		result = Rangef(appleFactory, 4, 7)
+		expected = []string{"Granny Smith", "Golden Delicious", "Pink Lady"}
+		if fmt.Sprint(result) != fmt.Sprint(expected) {
+			t.Errorf("Test case 2 failed: Expected %v, but got %v",
+				expected, result)
+		}
+
+		// Three parameters.
+		result = Rangef(appleFactory, 7, 12, 2)
+		expected = []string{"Braeburn", "Jazz", "-"}
+		if fmt.Sprint(result) != fmt.Sprint(expected) {
+			t.Errorf("Test case 3 failed: Expected %v, but got %v",
+				expected, result)
+		}
+	}
+*/
 func TestRangef(t *testing.T) {
-	// Define the apple factory function
-	appleFactory := func(i int) string {
-		appleVarieties := []string{
+	tests := []struct {
+		name string
+		a    int
+		opt  []int
+		want []string
+	}{
+		{
+			name: "Step Size 0",
+			a:    3,
+			opt:  []int{0},
+			want: []string{},
+		},
+		{
+			name: "Negative Step Size and n <= m",
+			a:    2,
+			opt:  []int{5, -1},
+			want: []string{},
+		},
+		{
+			name: "Positive Step Size and n >= m",
+			a:    5,
+			opt:  []int{2, 1},
+			want: []string{},
+		},
+	}
+
+	appleFactory := func() func(int) string {
+		var appleVarieties = []string{
 			"Gala",
 			"Fuji",
 			"Honeycrisp",
@@ -698,14 +770,24 @@ func TestRangef(t *testing.T) {
 			"Jazz",
 		}
 
-		if i >= 0 && i < len(appleVarieties) {
-			return appleVarieties[i]
+		return func(i int) string {
+			if i >= 0 && i < len(appleVarieties) {
+				return appleVarieties[i]
+			}
+			return "-"
 		}
-		return "-"
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := Rangef(appleFactory(), tt.a, tt.opt...); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Rangef() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 
 	// Single parameter.
-	result := Rangef(appleFactory, 3)
+	result := Rangef(appleFactory(), 3)
 	expected := []string{"Gala", "Fuji", "Honeycrisp"}
 	if fmt.Sprint(result) != fmt.Sprint(expected) {
 		t.Errorf("Test case 1 failed: Expected %v, but got %v",
@@ -713,7 +795,7 @@ func TestRangef(t *testing.T) {
 	}
 
 	// Two parameters.
-	result = Rangef(appleFactory, 4, 7)
+	result = Rangef(appleFactory(), 4, 7)
 	expected = []string{"Granny Smith", "Golden Delicious", "Pink Lady"}
 	if fmt.Sprint(result) != fmt.Sprint(expected) {
 		t.Errorf("Test case 2 failed: Expected %v, but got %v",
@@ -721,7 +803,7 @@ func TestRangef(t *testing.T) {
 	}
 
 	// Three parameters.
-	result = Rangef(appleFactory, 7, 12, 2)
+	result = Rangef(appleFactory(), 7, 12, 2)
 	expected = []string{"Braeburn", "Jazz", "-"}
 	if fmt.Sprint(result) != fmt.Sprint(expected) {
 		t.Errorf("Test case 3 failed: Expected %v, but got %v",
