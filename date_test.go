@@ -50,6 +50,12 @@ func TestStrToDate(t *testing.T) {
 			time.Date(2023, time.July, 7, 16, 30, 0, 0, time.UTC),
 			false,
 		},
+		{
+			"16:30",
+			nil,
+			time.Date(0, time.January, 1, 16, 30, 0, 0, time.UTC),
+			false,
+		},
 
 		// GoLang style.
 		{
@@ -77,7 +83,7 @@ func TestStrToDate(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		got, err := StrToDate(test.input, test.patterns...)
+		got, err := StringToDate(test.input, test.patterns...)
 		if (err != nil) != test.wantErr {
 			t.Errorf("StrToDate(%q, %v) error = %v, wantErr %v",
 				test.input, test.patterns, err, test.wantErr)
@@ -96,7 +102,7 @@ func TestDateToStrPlural(t *testing.T) {
 		testTime := time.Date(2020, 7, 17, 0, 0, 0, 0, time.UTC)
 		patterns := []string{"2006-01-02", "02 Jan 06", time.RFC3339}
 		expected := []string{"2020-07-17", "17 Jul 20", "2020-07-17T00:00:00Z"}
-		results, err := DateToStrPlural(testTime, patterns...)
+		results, err := DateToStrings(testTime, patterns...)
 
 		if err != nil {
 			t.Errorf("Unexpected error: %v", err)
@@ -109,11 +115,12 @@ func TestDateToStrPlural(t *testing.T) {
 
 	t.Run("Test with no formats", func(t *testing.T) {
 		testTime := time.Date(2023, 6, 16, 0, 0, 0, 0, time.UTC)
-		expected := []string{"2023-06-16T00:00:00Z"} // default RFC3339 format
-		results, err := DateToStrPlural(testTime)
+		expected := []string{"2023-06-16 00:00:00"} // default DateTime format
+		results, err := DateToStrings(testTime)
 		if err != nil {
 			t.Errorf("Unexpected error: %v", err)
 		}
+
 		if !reflect.DeepEqual(results, expected) {
 			t.Errorf("Expected %v, got %v", expected, results)
 		}
@@ -124,10 +131,11 @@ func TestDateToStrPlural(t *testing.T) {
 		testTime := time.Date(2023, 6, 16, 0, 0, 0, 0, time.UTC)
 		patterns := []string{"%Y-%m-%d"}
 		expected := []string{"2023-06-16"}
-		results, err := DateToStrPlural(testTime, patterns...)
+		results, err := DateToStrings(testTime, patterns...)
 		if err != nil {
 			t.Errorf("Unexpected error: %v", err)
 		}
+
 		if !reflect.DeepEqual(results, expected) {
 			t.Errorf("Expected %v, got %v", expected, results)
 		}

@@ -68,7 +68,7 @@ func All[T any](v ...T) bool {
 	defer cancel()
 
 	p := parallelTasks
-	found := &foundValue{value: true}
+	found := &logicFoundValue{value: true}
 
 	if len(v) == 0 {
 		return false
@@ -140,7 +140,7 @@ func Any[T any](v ...T) bool {
 	defer cancel()
 
 	p := parallelTasks
-	found := &foundValue{value: false}
+	found := &logicFoundValue{value: false}
 
 	if len(v) == 0 {
 		return false

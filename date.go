@@ -9,7 +9,64 @@ import (
 )
 
 var (
+	// The dataTimeFormats is predefined layouts for use
+	// in DateToString, DateToStrings and StringToDate functions.
+	// Each element shows by example the formatting of an element of
+	// the reference time. Only these values are recognized.
+	// Text in the layout string that is not recognized as part of the
+	// reference time is echoed verbatim during Format and expected to appear
+	// verbatim in the input to Parse.
+	//
+	//	Year: "2006" "06"
+	//	Month: "Jan" "January" "01" "1"
+	//	Day of the week: "Mon" "Monday"
+	//	Day of the month: "2" "_2" "02"
+	//	Day of the year: "__2" "002"
+	//	Hour: "15" "3" "03" (PM or AM)
+	//	Minute: "4" "04"
+	//	Second: "5" "05"
+	//	AM/PM mark: "PM"
+	//
+	// Numeric time zone offsets format as follows:
+	//
+	//	"-0700"     ±hhmm
+	//	"-07:00"    ±hh:mm
+	//	"-07"       ±hh
+	//	"-070000"   ±hhmmss
+	//	"-07:00:00" ±hh:mm:ss
+	//
+	// Replacing the sign in the format with a Z triggers
+	// the ISO 8601 behavior of printing Z instead of an
+	// offset for the UTC zone. Thus:
+	//
+	//	"Z0700"      Z or ±hhmm
+	//	"Z07:00"     Z or ±hh:mm
+	//	"Z07"        Z or ±hh
+	//	"Z070000"    Z or ±hhmmss
+	//	"Z07:00:00"  Z or ±hh:mm:ss
 	dataTimeFormats = []string{
+		time.Layout,
+		time.ANSIC,
+		time.UnixDate,
+		time.RubyDate,
+		time.RFC822,
+		time.RFC822Z,
+		time.RFC850,
+		time.RFC1123,
+		time.RFC1123Z,
+		time.RFC3339,
+		time.RFC3339Nano,
+		time.Kitchen,
+		time.Stamp,
+		time.StampMilli,
+		time.StampMicro,
+		time.StampNano,
+		time.DateTime,
+		time.DateOnly,
+		time.TimeOnly,
+
+		"15:04", // short time: hours and minutes
+
 		"2.1.06",
 		"2.1.2006",
 		"2.01.06",
@@ -158,7 +215,6 @@ var (
 		"2006-1-2",
 		"06-01-2",
 		"2006-01-2",
-		"2006-01-02",
 		"06-1-02",
 		"2006-1-02",
 
@@ -174,11 +230,15 @@ var (
 		"2006-1-2 15:04:05",
 		"06-01-2 15:04:05",
 		"2006-01-2 15:04:05",
-		"2006-01-02 15:04:05",
 		"06-1-02 15:04:05",
 		"2006-1-02 15:04:05",
 	}
 
+	// The pythonToGolangFormats maps Python date format specifiers
+	// to GoLang date format specifiers.
+	//
+	// Note that Python specifiers such as %U and %W have no
+	// counterparts in GoLang.
 	pythonToGolangFormats = map[string]string{
 		"%d": "02",
 		"%m": "01",
@@ -207,42 +267,66 @@ var (
 	}
 )
 
-type foundDate struct {
+// The dateFoundValue is a thread-safe value that indicates
+// whether a date was found in a string.
+type dateFoundValue struct {
 	m     sync.Mutex
-	value bool
-	t     time.Time
+	found bool
+	value time.Time
 }
 
-// SetValue sets a new value for the Found. It locks the Mutex before
-// changing the value and unlocks it after the change is complete.
-func (f *foundDate) SetValue(value bool, t time.Time) {
+// SetValue sets a new value for the found object. It locks the Mutex
+// before changing the value and unlocks it after the change is complete.
+func (f *dateFoundValue) SetValue(found bool, value time.Time) {
 	f.m.Lock()
 	defer f.m.Unlock()
-	f.t = t
+
 	f.value = value
+	f.found = found
 }
 
 // GetValue retrieves the current value of the Found. It locks the Mutex
 // before reading the value and unlocks it after the read is complete.
-func (f *foundDate) GetValue() (time.Time, error) {
+func (f *dateFoundValue) GetValue() (time.Time, error) {
 	f.m.Lock()
 	defer f.m.Unlock()
-	if f.value {
-		return f.t, nil
+
+	if f.found {
+		return f.value, nil
 	}
 
-	return time.Time{}, errors.New("unable format")
+	return time.Time{}, errors.New("date and time could not be recognized")
 }
 
+// The pythonToGolangFormat converts a Python date format specifier to a
+// GoLang date format specifier.
 func pythonToGolangFormat(format string) string {
-	for k, v := range pythonToGolangFormats {
-		format = strings.ReplaceAll(format, k, v)
+	builder := &strings.Builder{}
+
+	i := 0
+	for i < len(format) {
+		replaced := false
+		for k, v := range pythonToGolangFormats {
+			if strings.HasPrefix(format[i:], k) {
+				builder.WriteString(v)
+				i += len(k)
+				replaced = true
+				break
+			}
+		}
+
+		if !replaced {
+			builder.WriteByte(format[i])
+			i++
+		}
 	}
-	return format
+
+	return builder.String()
 }
 
-// StrToDate converts a string to a time.Time object using the provided
+// StringToDate converts a string to a time.Time object using the provided
 // formats. If no format is given, it uses default date-time formats.
+//
 // This function leverages goroutines to parse the string concurrently
 // using different formats. When the first successful parsing occurs,
 // the function stops all other goroutines and returns the result.
@@ -250,32 +334,33 @@ func pythonToGolangFormat(format string) string {
 //
 // Example usage:
 //
-//	t, err := StrToDate("2006-01-02")
+//	// Automatic pattern detection.
+//	t, err := StringToDate("2006-01-02")
 //	if err != nil {
 //	    log.Fatal(err)
 //	}
 //	fmt.Println(t)
 //
-//	t, err = StrToDate("2006/01/02 15:04:05")
+//	t, err = StringToDate("2006/01/02 15:04:05")
 //	if err != nil {
 //	    log.Fatal(err)
 //	}
 //	fmt.Println(t)
 //
 //	// Using custom formats as Python.
-//	t, err = StrToDate("Jan 02, 2006", "%b %d, %Y")
+//	t, err = StringToDate("Jan 02, 2006", "%b %d, %Y")
 //	if err != nil {
 //	    log.Fatal(err)
 //	}
 //	fmt.Println(t)
 //
 //	// Using Go's date formatting
-//	t, err = StrToDate("Jan 02, 2006", "Jan 02, 2006")
+//	t, err = StringToDate("Jan 02, 2006", "Jan 02, 2006")
 //	if err != nil {
 //	    log.Fatal(err)
 //	}
 //	fmt.Println(t)
-func StrToDate(s string, patterns ...string) (time.Time, error) {
+func StringToDate(s string, patterns ...string) (time.Time, error) {
 	var (
 		wg      sync.WaitGroup
 		formats []string
@@ -300,7 +385,7 @@ func StrToDate(s string, patterns ...string) (time.Time, error) {
 
 	v := formats
 	p := parallelTasks
-	found := &foundDate{value: false, t: time.Time{}}
+	found := &dateFoundValue{found: false, value: time.Time{}}
 
 	chunkSize := len(v) / p
 	for i := 0; i < p; i++ {
@@ -337,25 +422,25 @@ func StrToDate(s string, patterns ...string) (time.Time, error) {
 	return found.GetValue()
 }
 
-// DateToStr converts a Date to a string based on the provided format.
+// DateToString converts a Date to a string based on the provided format.
 //
 // If multiple formats are provided, only the first one will be processed.
 //
 // Example usage:
 //
 //	date := time.Date(2023, 7, 17, 0, 0, 0, 0, time.UTC)
-//	s, err := DateToStr(date, "2006-01-02")
+//	s, err := DateToString(date, "2006-01-02")
 //	if err != nil {
 //	  log.Fatal(err)
 //	}
 //	fmt.Println(s)  // Output: "2023-07-17"
-func DateToStr(t time.Time, patterns ...string) (string, error) {
+func DateToString(t time.Time, patterns ...string) (string, error) {
 	var formats []string
 	if len(patterns) != 0 {
 		formats = append(formats, patterns[0]) // first only value
 	}
 
-	s, err := DateToStrPlural(t, formats...)
+	s, err := DateToStrings(t, formats...)
 	if err != nil {
 		return "", err
 	}
@@ -363,8 +448,8 @@ func DateToStr(t time.Time, patterns ...string) (string, error) {
 	return s[0], nil
 }
 
-// DateToStrPlural converts a Time object (t) into string(s) using the
-// provided formats. The function uses RFC3339 format as a default
+// DateToStrings converts a Time object into string(s) using the
+// provided formats. The function uses time.DateTime format as a default
 // option if no format is provided. In case the pattern includes
 // a percentage ("%") character, it converts Python strftime format
 // to Go's time format before applying it.
@@ -376,7 +461,7 @@ func DateToStr(t time.Time, patterns ...string) (string, error) {
 //
 //	t := time.Now()
 //	patterns := []string{"%Y-%m-%d", "02 Jan 06", time.RFC3339}
-//	results, err := DateToStrPlural(t, patterns...)
+//	results, err := DateToStrings(t, patterns...)
 //
 //	if err != nil {
 //		log.Fatal(err)
@@ -386,8 +471,11 @@ func DateToStr(t time.Time, patterns ...string) (string, error) {
 //	for i, str := range results {
 //		fmt.Printf("Date in format %s: %s\n", patterns[i], str)
 //	}
-func DateToStrPlural(t time.Time, patterns ...string) ([]string, error) {
-	var formats []string
+func DateToStrings(t time.Time, patterns ...string) ([]string, error) {
+	var (
+		formats []string
+		results []string
+	)
 
 	for _, pattern := range patterns {
 		if strings.Contains(pattern, "%") {
@@ -399,16 +487,20 @@ func DateToStrPlural(t time.Time, patterns ...string) ([]string, error) {
 
 	if len(formats) == 0 {
 		// Use the format from the system locale.
-		formats = append(formats, time.RFC3339)
+		formats = append(formats, time.DateTime)
 	}
 
-	var results []string
 	for _, format := range formats {
+		// Format does not return an error if the formatting data is written
+		// incorrectly. It just leaves the unrecognized fragment as is.
 		s := t.Format(format)
+
+		// The only way to check the correct format - reconstruction of time.
 		_, err := time.Parse(format, s)
 		if err != nil {
-			return []string{}, errors.New("unable format")
+			return []string{}, err
 		}
+
 		results = append(results, s)
 	}
 

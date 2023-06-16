@@ -9,19 +9,19 @@ import (
 	"time"
 )
 
-// The foundValue is a helper struct that holds a boolean value
+// The logicFoundValue is a helper struct that holds a boolean value
 // and a Mutex to protect it from concurrent access.
 //
 // They are used in the In function to detect the desired result
 // in a separate goroutine.
-type foundValue struct {
+type logicFoundValue struct {
 	m     sync.Mutex
 	value bool
 }
 
 // SetValue sets a new value for the Found. It locks the Mutex before
 // changing the value and unlocks it after the change is complete.
-func (f *foundValue) SetValue(value bool) {
+func (f *logicFoundValue) SetValue(value bool) {
 	f.m.Lock()
 	defer f.m.Unlock()
 	f.value = value
@@ -29,7 +29,7 @@ func (f *foundValue) SetValue(value bool) {
 
 // GetValue retrieves the current value of the Found. It locks the Mutex
 // before reading the value and unlocks it after the read is complete.
-func (f *foundValue) GetValue() bool {
+func (f *logicFoundValue) GetValue() bool {
 	f.m.Lock()
 	defer f.m.Unlock()
 	return f.value
@@ -71,8 +71,8 @@ func Contains[T Verifiable](v T, vs []T) bool {
 //	evens := g.Filter(nums, func(v int) bool { return v%2 == 0 })
 //	fmt.Println(evens) // Output: [2 4 6 8 10]
 //
-//	//Or you may have a slice of strings and you want
-//	//to filter out strings with length greater than 5:
+//	// Or you may have a slice of strings and you want
+//	// to filter out strings with length greater than 5:
 //	strs := []string{"apple", "banana", "cherry", "date", "elderberry"}
 //	longStrings := g.Filter(strs, func(v string) bool { return len(v) > 5 })
 //	fmt.Println(longStrings) // Output: ["banana" "cherry" "elderberry"]
@@ -96,8 +96,8 @@ func Filter[T any](vs []T, f func(T) bool) []T {
 //
 // Example usage:
 //
-//	//Let's say you have a slice of integers and you want
-//	//to find the index of the number 7:
+//	// Let's say you have a slice of integers and you want
+//	// to find the index of the number 7:
 //	nums := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 //	idx := g.Index(nums, 7)
 //	fmt.Println(idx) // Output: 6
@@ -543,7 +543,7 @@ func In[T Verifiable](v T, list ...T) bool {
 	defer cancel()
 
 	p := parallelTasks
-	found := &foundValue{}
+	found := &logicFoundValue{}
 
 	if len(list) == 0 {
 		return false
