@@ -64,6 +64,14 @@ It is the detail list of functions provided in Go package **g**:
 
   The Contains function checks if a given element is present in the given slice. It iterates over the slice and returns true if it encounters the element, else returns false.
 
+- **DateToStr**(t time.Time, patterns ...string) (string, error)
+
+  The DateToStr converts a Date to a string based on the provided format. Supports both Golang and Python style formatting. If multiple formats are provided, only the first one will be processed.
+
+- **DateToStrPlural**(t time.Time, patterns ...string) ([]string, error)
+
+  The DateToStrPlural converts a Date to a string based on the provided format. Supports both Golang and Python style formatting.
+
 - **Difference**[T comparable](a []T, b []T) []T
 
   The Difference function takes two slices and returns a new slice that contains the items present in the first slice but not in the second slice. It returns the difference of the slices. The function is generic and can work with any type T that is comparable. Note that this function does not preserve the order of elements.
@@ -220,6 +228,10 @@ It is the detail list of functions provided in Go package **g**:
 - **Sort**[T Numerable](v []T, inverse ...bool)
 
   The Sort function sorts a slice in ascending or descending order, depending on the value of the 'inverse' parameter.
+
+- **StrToDate**(s string, patterns ...string) (time.Time, error)
+
+  StrToDate converts a string to a time.Time object using the provided formats. If no format is given, it uses default date-time formats. Supports both Golang and Python style formatting.
 
 - **Sum**[T Numerable](v ...T) T
 
