@@ -18,8 +18,8 @@ func TestFindDuplicatesDateTimeFormats(t *testing.T) {
 	}
 }
 
-// TestStrToDate tests StrToDate function.
-func TestStrToDate(t *testing.T) {
+// TestStringToDate tests StringToDate function.
+func TestStringToDate(t *testing.T) {
 	tests := []struct {
 		input    string
 		patterns []string
@@ -96,8 +96,34 @@ func TestStrToDate(t *testing.T) {
 	}
 }
 
-// TestDateToStrPlural tests DateToStrPlural function.
-func TestDateToStrPlural(t *testing.T) {
+// TestDateToString tests DateToString function.
+func TestDateToString(t *testing.T) {
+	t1 := time.Date(2023, 7, 17, 0, 0, 0, 0, time.UTC)
+
+	s, err := DateToString(t1, "2006-01-02")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if s != "2023-07-17" {
+		t.Errorf("Expected 2023-07-17, got %s", s)
+	}
+
+	s, err = DateToString(t1, "02-01-2006", "01-02-2006")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if s != "17-07-2023" {
+		t.Errorf("Expected 17-07-2023, got %s", s)
+	}
+
+	s, _ = DateToString(t1, "abc")
+	if s != "" {
+		t.Errorf("Expected an empty string, got %s", s)
+	}
+}
+
+// TestDateToStrings tests DateToStrings function.
+func TestDateToStrings(t *testing.T) {
 	t.Run("Test with multiple formats", func(t *testing.T) {
 		testTime := time.Date(2020, 7, 17, 0, 0, 0, 0, time.UTC)
 		patterns := []string{"2006-01-02", "02 Jan 06", time.RFC3339}
@@ -140,4 +166,71 @@ func TestDateToStrPlural(t *testing.T) {
 			t.Errorf("Expected %v, got %v", expected, results)
 		}
 	})
+
+	// Incorrect format.
+	t.Run("Test with incorrect format", func(t *testing.T) {
+		testTime := time.Date(2023, 6, 16, 0, 0, 0, 0, time.UTC)
+		patterns := []string{"abc"}
+		r, err := DateToStrings(testTime, patterns...)
+		if err == nil {
+			t.Errorf("An error is expected for an invalid format, but %v", r)
+		}
+	})
+}
+
+// TestChangeTimeZone tests ChangeTimeZone function.
+func TestChangeTimeZone(t *testing.T) {
+	t1, _ := time.Parse(time.RFC3339, "2023-06-17T08:15:45Z")
+	t2, _ := ChangeTimeZone(t1, "America/New_York")
+
+	if t2.Location().String() != "America/New_York" {
+		t.Errorf("Expected 'America/New_York', got %s", t2.Location())
+	}
+
+	if t1.Hour() != t2.Hour() || t1.Minute() != t2.Minute() {
+		t.Errorf("Expected hour and minute to remain the same, " +
+			"but they changed")
+	}
+
+	_, err := ChangeTimeZone(t1, "Invalid/TimeZone")
+	if err == nil {
+		t.Errorf("Expected an error, but didn't get one")
+	}
+}
+
+// TestSetTimeZone tests SetTimeZone function.
+func TestSetTimeZone(t *testing.T) {
+	t1, _ := time.Parse(time.RFC3339, "2023-06-17T08:15:45Z")
+	t2, _ := SetTimeZone(t1, "America/New_York")
+
+	if t2.Location().String() != "America/New_York" {
+		t.Errorf("Expected 'America/New_York', got %s", t2.Location())
+	}
+
+	if t1.Hour() == t2.Hour() && t1.Minute() == t2.Minute() {
+		t.Errorf("Expected hour and minute to change, " +
+			"but they remained the same")
+	}
+
+	_, err := SetTimeZone(t1, "Invalid/TimeZone")
+	if err == nil {
+		t.Errorf("Expected an error, but didn't get one")
+	}
+}
+
+// TestMoveTimeZone tests MoveTimeZone function.
+func TestMoveTimeZone(t *testing.T) {
+	t1 := time.Date(2023, 6, 17, 12, 0, 0, 0, time.UTC)
+
+	t2 := MoveTimeZone(t1, 3)
+	expected := time.Date(2023, 6, 17, 15, 0, 0, 0, time.UTC)
+	if !t2.Equal(expected) {
+		t.Errorf("Expected %s, got %s", expected, t2)
+	}
+
+	t3 := MoveTimeZone(t1, -2)
+	expected = time.Date(2023, 6, 17, 10, 0, 0, 0, time.UTC)
+	if !t3.Equal(expected) {
+		t.Errorf("Expected %s, got %s", expected, t3)
+	}
 }

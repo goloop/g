@@ -496,13 +496,83 @@ func DateToStrings(t time.Time, patterns ...string) ([]string, error) {
 		s := t.Format(format)
 
 		// The only way to check the correct format - reconstruction of time.
-		_, err := time.Parse(format, s)
-		if err != nil {
-			return []string{}, err
+		t2, err := time.Parse(format, s)
+		if err != nil || t != t2 {
+			return []string{}, errors.New("invalid format")
 		}
 
 		results = append(results, s)
 	}
 
 	return results, nil
+}
+
+// ChangeTimeZone returns a time where the hour and minute are the same
+// as the input time, but the time zone is changed. This can be used to
+// convert a local time to a different time zone while keeping the "clock
+// time" the same.
+//
+// Example usage:
+//
+//	t, _ := time.Parse(time.RFC3339, "2023-06-17T08:15:45Z")
+//	newTime, err := ChangeTimeZone(t, "America/New_York")
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+//	fmt.Println(newTime)
+//	// Output: 2023-06-17 08:15:45 -0400 EDT
+func ChangeTimeZone(t time.Time, timezone string) (time.Time, error) {
+	loc, err := time.LoadLocation(timezone)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	return time.Date(
+		t.Year(),
+		t.Month(),
+		t.Day(),
+		t.Hour(),
+		t.Minute(),
+		t.Second(),
+		t.Nanosecond(),
+		loc,
+	), nil
+}
+
+// SetTimeZone changes the time zone, and changes the local time
+// according to the new time zone. This can be used to convert the time from
+// one time zone to another. The time value will adjust to maintain the same
+// moment in time, but the hour, minute, and second may change.
+//
+// Example usage:
+//
+//	t, _ := time.Parse(time.RFC3339, "2023-06-17T08:15:45Z")
+//	newTime, err := SetTimeZone(t, "America/New_York")
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+//	fmt.Println(newTime)
+//	// Output: 2023-06-17 04:15:45 -0400 EDT
+func SetTimeZone(t time.Time, timezone string) (time.Time, error) {
+	loc, err := time.LoadLocation(timezone)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	return t.In(loc), nil
+}
+
+// MoveTimeZone adds or subtracts multiple time zones from a given time.
+// The function uses the time.Duration type to add/subtract hours from
+// the current time. Positive 'tz' values move the time forward, and
+// negative values move it backward.
+//
+// Example usage:
+//
+//	t := time.Now()
+//	newTime := MoveTimeZone(t, -3)
+//	fmt.Println(newTime)
+//	// Output: <current time minus 3 hours>
+func MoveTimeZone(t time.Time, tz int) time.Time {
+	return t.Add(time.Duration(tz) * time.Hour)
 }
