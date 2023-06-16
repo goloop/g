@@ -56,6 +56,10 @@ It is the detail list of functions provided in Go package **g**:
 
   The CartesianProduct function returns all possible pairs from two slices. It generates a slice of pairs, where each pair consists of an element from the first input slice and an element from the second input slice. The length of the returned slice is equal to the product of the lengths of the input slices. This function is generic and can work with any type T. Note that this function does not preserve the order of elements.
 
+- **ChangeTimeZone**(t time.Time, timezone string) (time.Time, error)
+
+  The ChangeTimeZone returns a time where the hour and minute are the same as the input time, but the time zone is changed.
+
 - **Complement**[T comparable](a []T, b []T) []T
 
   The Complement function takes a universal set (b) and a subset of it (a) and returns a new slice containing items present in the universal set but not in the subset. It returns the complement of the subset. The function is generic and can work with any type T that is comparable. Note that this function does not preserve the order of elements.
@@ -166,6 +170,10 @@ It is the detail list of functions provided in Go package **g**:
 
   The MinList function returns the smallest value from a list of values of a type satisfying the Numerable interface. If the input list is empty, it uses provided default values or returns the minimal value for the Numerable type.
 
+- **MoveTimeZone**(t time.Time, tz int) time.Time
+
+  The MoveTimeZone adds or subtracts multiple time zones from a given time.
+
 - **Preserve**(s string, patterns ...string) string
 
   The Preserve function keeps only characters specified by the patterns in the string.
@@ -224,6 +232,10 @@ It is the detail list of functions provided in Go package **g**:
 - **Shuffle**[T any](v []T)
 
   The Shuffle function rearranges the elements of the slice in a random order.
+
+- **SetTimeZone**(t time.Time, timezone string) (time.Time, error)
+
+  The SetTimeZone changes the time zone, and changes the local time according to the new time zone.
 
 - **Sort**[T Numerable](v []T, inverse ...bool)
 
