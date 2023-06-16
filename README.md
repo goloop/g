@@ -1,4 +1,4 @@
-[![Go Report Card](https://goreportcard.com/badge/github.com/goloop/g)](https://goreportcard.com/report/github.com/goloop/g) [![License](https://img.shields.io/badge/godoc-A+-brightgreen)](https://godoc.org/github.com/goloop/g) [![License](https://img.shields.io/badge/license-MIT-brightgreen)](https://github.com/goloop/g/blob/master/LICENSE) [![Stay with Ukraine](https://img.shields.io/static/v1?label=Stay%20with&message=Ukraine&color=FFD500&labelColor=007ACC&style=flat)](https://u24.gov.ua/)
+[![Go Report Card](https://goreportcard.com/badge/github.com/goloop/g)](https://goreportcard.com/report/github.com/goloop/g) [![License](https://img.shields.io/badge/godoc-A+-brightgreen?style=flat)](https://godoc.org/github.com/goloop/g) [![License](https://img.shields.io/badge/license-MIT-brightgreen?style=flat)](https://github.com/goloop/g/blob/master/LICENSE) [![Stay with Ukraine](https://img.shields.io/static/v1?label=Stay%20with&message=Ukraine%20♥&color=ffd700&labelColor=007acc&style=flat)](https://u24.gov.ua/)
 
 # G
 
