@@ -554,6 +554,7 @@ func TestIn(t *testing.T) {
 
 // TestIn tests the In function for int values.
 func TestInWithInt(t *testing.T) {
+	minLoadPeGoroutine = 20
 	generateIntSlice := func(size int) []int {
 		slice := make([]int, size)
 		rand.Seed(time.Now().UnixNano())

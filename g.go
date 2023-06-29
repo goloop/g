@@ -1,4 +1,4 @@
-// Package 'g' is a robust utility library for Go 1.20+ that brings
+// Package g is a robust utility library for Go 1.20+ that brings
 // advanced generic and type-safe helper functions to streamline various
 // development tasks. This package employs Go's generics to their fullest
 // potential, catering to an array of needs for modern software development.
@@ -54,7 +54,7 @@ type Verifiable interface {
 	Numerable | string | rune
 }
 
-// The MaxRangeSize is the maximum size for range generation
+// MaxRangeSize is the maximum size for range generation
 // by the Range function.
 const MaxRangeSize = 100_000_000
 
@@ -69,6 +69,16 @@ var (
 
 	// The maxParallelTasks is the maximum number of parallel tasks.
 	maxParallelTasks = runtime.NumCPU() * 3
+
+	// The minLoadPerGoroutine is the minimum slice size for processing
+	// in an individual goroutine. Essentially, it delineates the threshold
+	// at which it becomes worthwhile to divide the slice processing amongst
+	// multiple goroutines. If each goroutine isn't handling a sufficiently
+	// large subslice, the overhead of goroutine creation and management
+	// may outweigh the benefits of concurrent processing. This variable
+	// specifies the minimum number of iterations per goroutine to ensure
+	// an efficient division of labor.
+	minLoadPeGoroutine = 1024
 )
 
 // The init initializes the randomGenerator variable.

@@ -71,11 +71,11 @@ func All[T any](v ...T) bool {
 	found := &logicFoundValue{value: true}
 
 	// If the length of the slice is less than or equal to
-	// the number of parallel tasks, then we do not need
+	// the minLoadPeGoroutine, then we do not need
 	// to use goroutines.
 	if l := len(v); l == 0 {
 		return false
-	} else if l <= p*2 {
+	} else if l/p < minLoadPeGoroutine {
 		for _, b := range v {
 			if IsEmpty(b) {
 				return false
@@ -154,11 +154,11 @@ func Any[T any](v ...T) bool {
 	found := &logicFoundValue{value: false}
 
 	// If the length of the slice is less than or equal to
-	// the number of parallel tasks, then we do not need
+	// the minLoadPeGoroutine, then we do not need
 	// to use goroutines.
 	if l := len(v); l == 0 {
 		return false
-	} else if l <= p*2 {
+	} else if l/p < minLoadPeGoroutine {
 		for _, b := range v {
 			if !IsEmpty(b) {
 				return true
