@@ -545,7 +545,18 @@ func In[T Verifiable](v T, list ...T) bool {
 	p := parallelTasks
 	found := &logicFoundValue{}
 
-	if len(list) == 0 {
+	// If the length of the slice is less than or equal to
+	// the number of parallel tasks, then we do not need
+	// to use goroutines.
+	if l := len(list); l == 0 {
+		return false
+	} else if l <= p*2 {
+		for _, b := range list {
+			if b == v {
+				return true
+			}
+		}
+
 		return false
 	}
 

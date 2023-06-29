@@ -70,8 +70,19 @@ func All[T any](v ...T) bool {
 	p := parallelTasks
 	found := &logicFoundValue{value: true}
 
-	if len(v) == 0 {
+	// If the length of the slice is less than or equal to
+	// the number of parallel tasks, then we do not need
+	// to use goroutines.
+	if l := len(v); l == 0 {
 		return false
+	} else if l <= p*2 {
+		for _, b := range v {
+			if IsEmpty(b) {
+				return false
+			}
+		}
+
+		return true
 	}
 
 	chunkSize := len(v) / p
@@ -142,7 +153,18 @@ func Any[T any](v ...T) bool {
 	p := parallelTasks
 	found := &logicFoundValue{value: false}
 
-	if len(v) == 0 {
+	// If the length of the slice is less than or equal to
+	// the number of parallel tasks, then we do not need
+	// to use goroutines.
+	if l := len(v); l == 0 {
+		return false
+	} else if l <= p*2 {
+		for _, b := range v {
+			if !IsEmpty(b) {
+				return true
+			}
+		}
+
 		return false
 	}
 
