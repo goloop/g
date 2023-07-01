@@ -109,8 +109,8 @@ func TestAll(t *testing.T) {
 		v    []interface{}
 		want bool
 	}{
-		{"Trit as True", []interface{}{trit.True, trit.Convert(1)}, true},
-		{"Trit as False", []interface{}{trit.True, trit.Convert(-1)}, false},
+		{"Trit as True", []interface{}{trit.True, trit.Define(1)}, true},
+		{"Trit as False", []interface{}{trit.True, trit.Define(-1)}, false},
 		{"All non-zero values", []interface{}{1, true, "test"}, true},
 		{"One zero value", []interface{}{1, 0, "test"}, false},
 		{"All zero values", []interface{}{0, false, ""}, false},
@@ -202,8 +202,8 @@ func TestAny(t *testing.T) {
 		v    []interface{}
 		want bool
 	}{
-		{"Trit as True", []interface{}{trit.False, trit.Convert(1)}, true},
-		{"Trit as False", []interface{}{trit.False, trit.Convert(-1)}, false},
+		{"Trit as True", []interface{}{trit.False, trit.Define(1)}, true},
+		{"Trit as False", []interface{}{trit.False, trit.Define(-1)}, false},
 		{"All non-zero values", []interface{}{1, true, "test"}, true},
 		{"One non-zero value", []interface{}{0, false, "test"}, true},
 		{"All zero values", []interface{}{0, false, ""}, false},
