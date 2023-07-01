@@ -1,2 +1,4 @@
 github.com/goloop/trit v1.4.0 h1:QUYl5nSKQyBFb6OykaiqQBtPEqD5G+GBakhX1YBlbeA=
 github.com/goloop/trit v1.4.0/go.mod h1:DVMcZPI0c2vjgl/F7SXsAE3AsDDEdVnAofRhnzqFsi0=
+github.com/goloop/trit v1.5.0 h1:cVbZZRUTMNkxdF4N4WbsLn+vf89O3a6tbLUXzsaQFYk=
+github.com/goloop/trit v1.5.0/go.mod h1:DVMcZPI0c2vjgl/F7SXsAE3AsDDEdVnAofRhnzqFsi0=
