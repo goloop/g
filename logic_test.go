@@ -1,10 +1,14 @@
 package g
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/goloop/trit"
+)
 
 // TestIf tests the If function.
 func TestIf(t *testing.T) {
-	tests := []struct {
+	testsBool := []struct {
 		name     string
 		cond     bool
 		trueVal  interface{}
@@ -17,7 +21,27 @@ func TestIf(t *testing.T) {
 		{"Values are different types", true, 10, "ten", 10},
 	}
 
-	for _, tt := range tests {
+	for _, tt := range testsBool {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := If(tt.cond, tt.trueVal, tt.falseVal); got != tt.want {
+				t.Errorf("If() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+
+	testsTrit := []struct {
+		name     string
+		cond     trit.Trit
+		trueVal  interface{}
+		falseVal interface{}
+		want     interface{}
+	}{
+		{"Trir true, returns trueVal", trit.True, "pass", "fail", "pass"},
+		{"Trit false, returns falseVal", trit.False, "pass", "fail", "fail"},
+		{"Trit unknown, returns falseVal", trit.False, "pass", "fail", "fail"},
+	}
+
+	for _, tt := range testsTrit {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := If(tt.cond, tt.trueVal, tt.falseVal); got != tt.want {
 				t.Errorf("If() = %v, want %v", got, tt.want)
@@ -35,6 +59,8 @@ func TestAll(t *testing.T) {
 		v    []interface{}
 		want bool
 	}{
+		{"Trit as True", []interface{}{trit.True, trit.Convert(1)}, true},
+		{"Trit as False", []interface{}{trit.True, trit.Convert(-1)}, false},
 		{"All non-zero values", []interface{}{1, true, "test"}, true},
 		{"One zero value", []interface{}{1, 0, "test"}, false},
 		{"All zero values", []interface{}{0, false, ""}, false},
@@ -92,7 +118,7 @@ func TestAll(t *testing.T) {
 			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // zerro here
+			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, trit.Unknown, 1, 1, 1, 1, 1, 1, // zerro here
 			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -126,19 +152,21 @@ func TestAny(t *testing.T) {
 		v    []interface{}
 		want bool
 	}{
+		{"Trit as True", []interface{}{trit.False, trit.Convert(1)}, true},
+		{"Trit as False", []interface{}{trit.False, trit.Convert(-1)}, false},
 		{"All non-zero values", []interface{}{1, true, "test"}, true},
 		{"One non-zero value", []interface{}{0, false, "test"}, true},
 		{"All zero values", []interface{}{0, false, ""}, false},
 		{"Empty input", []interface{}{}, false},
 		{"Big size with ctx cancel", []interface{}{
+			trit.False, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, trit.Unknown, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -194,6 +222,9 @@ func TestIsEmpty(t *testing.T) {
 		v    interface{}
 		want bool
 	}{
+		{"Trint True", trit.True, false},
+		{"Trint False", trit.False, true},
+		{"Trint Unknown", trit.Unknown, true},
 		{"Zero int", int(0), true},
 		{"Non-zero int", int(1), false},
 		{"Zero float", float64(0), true},

@@ -4,6 +4,8 @@ import (
 	"context"
 	"reflect"
 	"sync"
+
+	"github.com/goloop/trit"
 )
 
 // If is a substitute for the ternary operator (?:)
@@ -30,9 +32,16 @@ import (
 //	// Using with strings.
 //	greeting := g.If(user == "admin", "Hello, admin", "Hello, user")
 //	fmt.Println(greeting) // Output: the appropriate greeting
-func If[T any](e bool, t, f T) T {
-	if e {
-		return t
+func If[L bool | trit.Trit, T any](e L, t, f T) T {
+	switch val := interface{}(e).(type) {
+	case trit.Tritter:
+		if val.IsTrue() {
+			return t
+		}
+	case bool:
+		if val {
+			return t
+		}
 	}
 
 	return f
@@ -241,6 +250,12 @@ func IsEmpty[T any](v T) bool {
 	if t == nil {
 		return true
 	}
+
+	switch val := interface{}(v).(type) {
+	case trit.Tritter:
+		return !val.IsTrue()
+	}
+
 	zero := reflect.Zero(t).Interface()
 	return reflect.DeepEqual(v, zero)
 }
