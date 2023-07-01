@@ -36,7 +36,7 @@ func TestIf(t *testing.T) {
 		falseVal interface{}
 		want     interface{}
 	}{
-		{"Trir true, returns trueVal", trit.True, "pass", "fail", "pass"},
+		{"Trit true, returns trueVal", trit.True, "pass", "fail", "pass"},
 		{"Trit false, returns falseVal", trit.False, "pass", "fail", "fail"},
 		{"Trit unknown, returns falseVal", trit.False, "pass", "fail", "fail"},
 	}
@@ -44,6 +44,56 @@ func TestIf(t *testing.T) {
 	for _, tt := range testsTrit {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := If(tt.cond, tt.trueVal, tt.falseVal); got != tt.want {
+				t.Errorf("If() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+// TestIfTrit tests the If function for Trit type.
+func TestIfTrit(t *testing.T) {
+	tests := []struct {
+		name       string
+		cond       trit.Trit
+		trueVal    interface{}
+		falseVal   interface{}
+		unknownVal []interface{}
+		want       interface{}
+	}{
+		{
+			name:       "Trit unknown, returns unknownVal",
+			cond:       trit.Unknown,
+			trueVal:    "pass",
+			falseVal:   "fail",
+			unknownVal: []interface{}{"unknown"},
+			want:       "unknown",
+		},
+		{
+			name:       "Trit unknown, returns falseVal",
+			cond:       trit.Unknown,
+			trueVal:    "pass",
+			falseVal:   "fail",
+			unknownVal: []interface{}{}, // hasn't unknownVal
+			want:       "fail",
+		},
+		{
+			name:       "Trit unknown, returns falseVal",
+			cond:       trit.Unknown,
+			trueVal:    "pass",
+			falseVal:   "fail",
+			unknownVal: []interface{}{}, // hasn't unknownVal
+			want:       "fail",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := If(
+				tt.cond,
+				tt.trueVal,
+				tt.falseVal,
+				tt.unknownVal...,
+			); got != tt.want {
 				t.Errorf("If() = %v, want %v", got, tt.want)
 			}
 		})

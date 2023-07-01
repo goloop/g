@@ -21,7 +21,7 @@ import (
 // values of any type T (t and f). If the expression e is true,
 // it returns t, otherwise it returns f.
 //
-// Example:
+// Example usage:
 //
 //	// Condition is true.
 //	max := g.If(3 > 2, 3, 2)  // Output: 3
@@ -32,11 +32,32 @@ import (
 //	// Using with strings.
 //	greeting := g.If(user == "admin", "Hello, admin", "Hello, user")
 //	fmt.Println(greeting) // Output: the appropriate greeting
-func If[L bool | trit.Trit, T any](e L, t, f T) T {
+//
+// The function can work with Trit types, so it can get the status Unknown.
+// In this case, if the function receives two possible solutions, it will
+// return the second one (false):
+//
+//	max := g.If(trit.Unknown, 3, 2)  // Output: 2
+//
+// This function can accept an optional argument u, for cases of working
+// with Trit types. In this case, if Trit is Unknow, the third value will
+// be returned:
+//
+//	max := g.If(trit.Unknown, 3, 2, 1)  // Output: 1
+//
+// If more than 3 possible result values are passed, the others of
+// the results will be ignored. The third and more likely results
+// are ignored for boolean expression values.
+//
+//	max := g.If(trit.Unknown, 3, 2, 1, 5, 7)  // Output: 1 and 5, 7 are ignored
+//	min := g.If(3 > 2, 3, 2, 1, 5, 7)  // Output: 3 and 1, 5, 7 are ignored
+func If[L bool | trit.Trit, T any](e L, t, f T, u ...T) T {
 	switch val := interface{}(e).(type) {
 	case trit.Tritter:
 		if val.IsTrue() {
 			return t
+		} else if len(u) != 0 && val.IsUnknown() {
+			return u[0]
 		}
 	case bool:
 		if val {
