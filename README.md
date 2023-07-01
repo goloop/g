@@ -34,7 +34,8 @@ Please note that usage of the do package requires **Go 1.20** or later, due to i
 
 ## Functions
 
-It is the detail list of functions provided in Go package **g**:
+This package offers a collection of functions, each with comprehensive documentation and usage examples. A brief summary of these functions can be found below, but we highly recommend referring to the detailed [documentation](https://godoc.org/github.com/goloop/g) for complete understanding and effective usage.
+
 
 - **Abs**[T Numerable](v T) T
 
