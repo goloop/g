@@ -223,8 +223,8 @@ func TestIsEmpty(t *testing.T) {
 		want bool
 	}{
 		{"Trint True", trit.True, false},
-		{"Trint False", trit.False, true},
-		{"Trint Unknown", trit.Unknown, true},
+		{"Trint False", trit.False, false},
+		{"Trint Unknown", trit.Unknown, true}, // only trit.Unknown is empty
 		{"Zero int", int(0), true},
 		{"Non-zero int", int(1), false},
 		{"Zero float", float64(0), true},
@@ -243,6 +243,92 @@ func TestIsEmpty(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := IsEmpty(tt.v); got != tt.want {
 				t.Errorf("IsEmpty() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+// TestIsFalse tests the IsFalse function.
+func TestIsFalse(t *testing.T) {
+	tests := []struct {
+		name string
+		v    any
+		want bool
+	}{
+		{
+			name: "value is nil",
+			v:    nil,
+			want: true,
+		},
+		{
+			name: "value is zero",
+			v:    0,
+			want: true,
+		},
+		{
+			name: "value is Trit with true state",
+			v:    trit.True,
+			want: false,
+		},
+		{
+			name: "value is Trit with false state",
+			v:    trit.False,
+			want: true,
+		},
+		{
+			name: "value is Trit with unknown state",
+			v:    trit.Unknown,
+			want: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsFalse(tt.v); got != tt.want {
+				t.Errorf("IsFalse() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+// TestIsTrue tests the IsTrue function.
+func TestIsTrue(t *testing.T) {
+	tests := []struct {
+		name string
+		v    any
+		want bool
+	}{
+		{
+			name: "value is nil",
+			v:    nil,
+			want: false,
+		},
+		{
+			name: "value is zero",
+			v:    0,
+			want: false,
+		},
+		{
+			name: "value is Trit with true state",
+			v:    trit.True,
+			want: true,
+		},
+		{
+			name: "value is Trit with false state",
+			v:    trit.False,
+			want: false,
+		},
+		{
+			name: "value is Trit with unknown state",
+			v:    trit.Unknown,
+			want: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsTrue(tt.v); got != tt.want {
+				t.Errorf("IsTrue() = %v, want %v", got, tt.want)
 			}
 		})
 	}

@@ -86,7 +86,7 @@ func All[T any](v ...T) bool {
 		return false
 	} else if l/p < minLoadPerGoroutine {
 		for _, b := range v {
-			if IsEmpty(b) {
+			if IsFalse(b) {
 				return false
 			}
 		}
@@ -115,7 +115,7 @@ func All[T any](v ...T) bool {
 				default:
 				}
 
-				if IsEmpty(b) {
+				if IsFalse(b) {
 					found.SetValue(false)
 					cancel() // stop all other goroutines
 					return
@@ -169,7 +169,7 @@ func Any[T any](v ...T) bool {
 		return false
 	} else if l/p < minLoadPerGoroutine {
 		for _, b := range v {
-			if !IsEmpty(b) {
+			if !IsFalse(b) {
 				return true
 			}
 		}
@@ -198,7 +198,7 @@ func Any[T any](v ...T) bool {
 				default:
 				}
 
-				if !IsEmpty(b) {
+				if !IsFalse(b) {
 					found.SetValue(true)
 					cancel() // stop all other goroutines
 					return
@@ -251,13 +251,44 @@ func IsEmpty[T any](v T) bool {
 		return true
 	}
 
+	// For Trit empty state is Unknown only.
 	switch val := interface{}(v).(type) {
 	case trit.Tritter:
+		return val.IsUnknown()
+	}
+
+	zero := reflect.Zero(t).Interface()
+	return reflect.DeepEqual(v, zero)
+}
+
+// IsFalse checks if the v of any type T is true value for that type.
+//
+// P.s. trit.False and trit.Unknown are false values.
+func IsFalse[T any](v T) bool {
+	t := reflect.TypeOf(v)
+	if t == nil {
+		return true
+	}
+
+	// For Trit not true states is: False and Unknown.
+	switch val := interface{}(v).(type) {
+	case trit.Tritter:
+		// Anything that is not a true is a false, when converting
+		// three-valued object to a boolean object the Unknown is False.
 		return !val.IsTrue()
 	}
 
 	zero := reflect.Zero(t).Interface()
 	return reflect.DeepEqual(v, zero)
+}
+
+// IsTrue checks if the v of any type T is true value for that type.
+//
+// P.s. trit.False and trit.Unknown are false values.
+func IsTrue[T any](v T) bool {
+	// Anything that is not a true is a false, when converting
+	// three-valued object to a boolean object the Unknown is False.
+	return !IsFalse(v)
 }
 
 // IsPointer checks if a value is a pointer.
