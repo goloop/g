@@ -546,11 +546,11 @@ func In[T Verifiable](v T, list ...T) bool {
 	found := &logicFoundValue{}
 
 	// If the length of the slice is less than or equal to
-	// the minLoadPeGoroutine, then we do not need
+	// the minLoadPerGoroutine, then we do not need
 	// to use goroutines.
 	if l := len(list); l == 0 {
 		return false
-	} else if l/p < minLoadPeGoroutine {
+	} else if l/p < minLoadPerGoroutine {
 		for _, b := range list {
 			if b == v {
 				return true

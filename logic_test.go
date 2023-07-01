@@ -29,7 +29,7 @@ func TestIf(t *testing.T) {
 // TestAll tests the All function.
 func TestAll(t *testing.T) {
 	// Define a list of test cases as anonymous struct.
-	minLoadPeGoroutine = 20
+	minLoadPerGoroutine = 20
 	tests := []struct {
 		name string
 		v    []interface{}
@@ -120,7 +120,7 @@ func TestAll(t *testing.T) {
 // TestAny tests the Any function.
 func TestAny(t *testing.T) {
 	// Define test cases.
-	minLoadPeGoroutine = 20
+	minLoadPerGoroutine = 20
 	tests := []struct {
 		name string
 		v    []interface{}

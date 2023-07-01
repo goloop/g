@@ -78,7 +78,7 @@ var (
 	// may outweigh the benefits of concurrent processing. This variable
 	// specifies the minimum number of iterations per goroutine to ensure
 	// an efficient division of labor.
-	minLoadPeGoroutine = 1024
+	minLoadPerGoroutine = 1024
 )
 
 // The init initializes the randomGenerator variable.

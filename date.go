@@ -383,24 +383,37 @@ func StringToDate(s string, patterns ...string) (time.Time, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	v := formats
 	p := parallelTasks
 	found := &dateFoundValue{found: false, value: time.Time{}}
 
-	chunkSize := len(v) / p
+	// If the length of the slice is less than or equal to
+	// the minLoadPerGoroutine, then we do not need
+	// to use goroutines.
+	if l := len(formats); l/p < minLoadPerGoroutine {
+		for _, format := range formats {
+			t, err := time.Parse(format, s)
+			if err == nil {
+				return t, nil
+			}
+		}
+
+		return found.GetValue()
+	}
+
+	chunkSize := len(formats) / p
 	for i := 0; i < p; i++ {
 		wg.Add(1)
 
 		start := i * chunkSize
 		end := start + chunkSize
 		if i == p-1 {
-			end = len(v)
+			end = len(formats)
 		}
 
 		go func(start, end int) {
 			defer wg.Done()
 
-			for _, layout := range v[start:end] {
+			for _, layout := range formats[start:end] {
 				// Check if the context has been cancelled.
 				select {
 				case <-ctx.Done():

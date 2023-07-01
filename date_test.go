@@ -20,6 +20,8 @@ func TestFindDuplicatesDateTimeFormats(t *testing.T) {
 
 // TestStringToDate tests StringToDate function.
 func TestStringToDate(t *testing.T) {
+	minLoadPerGoroutine = 4
+	ParallelTasks(2)
 	tests := []struct {
 		input    string
 		patterns []string
@@ -79,6 +81,21 @@ func TestStringToDate(t *testing.T) {
 			[]string{"%Y/%m/%d %H:%M:%S"},
 			time.Time{},
 			true,
+		},
+
+		// Gorutines.
+		{
+			"16/07/2023 14:00:00",
+			[]string{
+				"02/01/2006 15:04:05",
+				"7.07.2023",
+				"7/07/2023",
+				"2023/07/23",
+				"7.07.2023 16:30",
+				"16/07/2023 14:00:00",
+			},
+			time.Date(2023, time.July, 16, 14, 0, 0, 0, time.UTC),
+			false,
 		},
 	}
 
