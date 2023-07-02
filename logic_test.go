@@ -100,6 +100,58 @@ func TestIfTrit(t *testing.T) {
 	}
 }
 
+// TestAllBool tests the All function with bool.
+func TestAllBool(t *testing.T) {
+	// Define a list of test cases as anonymous struct.
+	minLoadPerGoroutine = 20
+	tests := []struct {
+		name string
+		v    []bool
+		want bool
+	}{
+		{
+			name: "Empty",
+			v:    []bool{},
+			want: false,
+		},
+		{
+			name: "One true",
+			v:    []bool{true},
+			want: true,
+		},
+		{
+			name: "Many true",
+			v:    []bool{true, true, true},
+			want: true,
+		},
+		{
+			name: "Mix true and false",
+			v:    []bool{true, false, true},
+			want: false,
+		},
+		{
+			name: "Many false",
+			v:    []bool{false, false, false},
+			want: false,
+		},
+		{
+			name: "One false",
+			v:    []bool{false},
+			want: false,
+		},
+	}
+
+	// Iterate over each test case
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Call the function `All` and check if the output is as expected.
+			if got := All(tt.v...); got != tt.want {
+				t.Errorf("All() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 // TestAll tests the All function.
 func TestAll(t *testing.T) {
 	// Define a list of test cases as anonymous struct.
@@ -188,6 +240,58 @@ func TestAll(t *testing.T) {
 			// Call the function `All` and check if the output is as expected.
 			if got := All(input...); got != tt.want {
 				t.Errorf("All() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+// TestAnyBool tests the Any function with bool.
+func TestAnyBool(t *testing.T) {
+	// Define a list of test cases as anonymous struct.
+	minLoadPerGoroutine = 20
+	tests := []struct {
+		name string
+		v    []bool
+		want bool
+	}{
+		{
+			name: "Empty",
+			v:    []bool{},
+			want: false,
+		},
+		{
+			name: "One true",
+			v:    []bool{true},
+			want: true,
+		},
+		{
+			name: "Many true",
+			v:    []bool{true, true, true},
+			want: true,
+		},
+		{
+			name: "Mix true and false",
+			v:    []bool{true, false, true},
+			want: true,
+		},
+		{
+			name: "Many false",
+			v:    []bool{false, false, false},
+			want: false,
+		},
+		{
+			name: "One false",
+			v:    []bool{false},
+			want: false,
+		},
+	}
+
+	// Iterate over each test case
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Call the function `All` and check if the output is as expected.
+			if got := Any(tt.v...); got != tt.want {
+				t.Errorf("Any() = %v, want %v", got, tt.want)
 			}
 		})
 	}
