@@ -316,6 +316,12 @@ func partitionDesc[T Verifiable](v []T, low, high int) int {
 //	// the function will return an empty string:
 //	s1, s2, s3 := "", "", ""
 //	fmt.Println(g.Value(s1, s2, s3)) // Output: ""
+//
+// Warning: the function checks the list as the whole object, that is:
+//
+//	l := []int{0, 1, 2, 3}
+//	g.Value(l)    // Returns: []int{0, 1, 2, 3}, list is not empty object
+//	g.Value(l...) // Returns: 1, because 1 is the first not empty value
 func Value[T any](v ...T) T {
 	if len(v) != 0 {
 		for _, val := range v {

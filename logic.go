@@ -89,6 +89,14 @@ func If[L bool | trit.Trit, T any](e L, t, f T, u ...T) T {
 //
 //	empty := g.All()
 //	fmt.Println(empty) // Output: false
+//
+// Warning: the function checks the list as the whole object, that is:
+//
+//	l := []bool{false, false, false}
+//	g.All(l)    // Returns: true, because list is not an empty
+//	            // and not an empty list is true
+//	g.All(l...) // Returns: false, because not all elements
+//	            // of the list are true
 func All[T any](v ...T) bool {
 	var wg sync.WaitGroup
 
@@ -149,6 +157,15 @@ func All[T any](v ...T) bool {
 	return found.GetValue()
 }
 
+// AllList is a synonym for the All function that accepts
+// a set of elements as a slice.
+//
+// This function prevents accidentally passing a slice
+// as a value (whole object).
+func AllList[T any](v []T) bool {
+	return All(v...)
+}
+
 // Any returns true if at least one value in the provided slice
 // is not a zero value for its type.
 //
@@ -172,6 +189,14 @@ func All[T any](v ...T) bool {
 //	bools := []bool{false, false, true, false}
 //	resultB := g.Any(bools...)
 //	fmt.Println(resultB) // Output: true
+//
+// Warning: the function checks the list as the whole object, that is:
+//
+//	l := []bool{false, false, false}
+//	g.Any(l)    // Returns: true, because list is not an empty
+//	            // and not an empty list is true
+//	g.Any(l...) // Returns: false, because not all elements
+//	            // of the list are true
 func Any[T any](v ...T) bool {
 	var wg sync.WaitGroup
 
@@ -232,6 +257,15 @@ func Any[T any](v ...T) bool {
 	return found.GetValue()
 }
 
+// AnyList is a synonym for the Any function that accepts
+// a set of elements as a slice.
+//
+// This function prevents accidentally passing a slice
+// as a value (whole object).
+func AnyList[T any](v []T) bool {
+	return Any(v...)
+}
+
 // IsEmpty checks if the  v of any type T is "zero value" for that type.
 //
 // Zero values in Go are values that the variables of respective types hold
@@ -278,6 +312,12 @@ func IsEmpty[T any](v T) bool {
 		return val.IsUnknown()
 	}
 
+	// For slices and arrays we check if the length is zero.
+	kind := t.Kind()
+	if kind == reflect.Slice || kind == reflect.Array {
+		return reflect.ValueOf(v).Len() == 0
+	}
+
 	zero := reflect.Zero(t).Interface()
 	return reflect.DeepEqual(v, zero)
 }
@@ -297,6 +337,12 @@ func IsFalse[T any](v T) bool {
 		// Anything that is not a true is a false, when converting
 		// three-valued object to a boolean object the Unknown is False.
 		return !val.IsTrue()
+	}
+
+	// For slices and arrays we check if the length is zero.
+	kind := t.Kind()
+	if kind == reflect.Slice || kind == reflect.Array {
+		return reflect.ValueOf(v).Len() == 0
 	}
 
 	zero := reflect.Zero(t).Interface()

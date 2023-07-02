@@ -103,7 +103,6 @@ func TestIfTrit(t *testing.T) {
 // TestAllBool tests the All function with bool.
 func TestAllBool(t *testing.T) {
 	// Define a list of test cases as anonymous struct.
-	minLoadPerGoroutine = 20
 	tests := []struct {
 		name string
 		v    []bool
@@ -137,6 +136,57 @@ func TestAllBool(t *testing.T) {
 		{
 			name: "One false",
 			v:    []bool{false},
+			want: false,
+		},
+	}
+
+	// Iterate over each test case
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Call the function `All` and check if the output is as expected.
+			if got := All(tt.v...); got != tt.want {
+				t.Errorf("All() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+// TestAllBoolList tests the All function with bool lits.
+func TestAllBoolList(t *testing.T) {
+	// Define a list of test cases as anonymous struct.
+	tests := []struct {
+		name string
+		v    [][]bool
+		want bool
+	}{
+		{
+			name: "Empty list",
+			v:    [][]bool{},
+			want: false,
+		},
+		{
+			name: "One true list",
+			v:    [][]bool{{true, false}},
+			want: true,
+		},
+		{
+			name: "Many true list",
+			v:    [][]bool{{true, true}, {true}},
+			want: true,
+		},
+		{
+			name: "Mix true and false",
+			v:    [][]bool{{}, {true, false, true}},
+			want: false,
+		},
+		{
+			name: "Many false",
+			v:    [][]bool{{}, {}},
+			want: false,
+		},
+		{
+			name: "One false",
+			v:    [][]bool{{}},
 			want: false,
 		},
 	}
@@ -289,9 +339,60 @@ func TestAnyBool(t *testing.T) {
 	// Iterate over each test case
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Call the function `All` and check if the output is as expected.
+			// Call the function `Any` and check if the output is as expected.
 			if got := Any(tt.v...); got != tt.want {
 				t.Errorf("Any() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+// TestAnyBoolList tests the Any function with bool lits.
+func TestAnyBoolList(t *testing.T) {
+	// Define a list of test cases as anonymous struct.
+	tests := []struct {
+		name string
+		v    [][]bool
+		want bool
+	}{
+		{
+			name: "Empty list",
+			v:    [][]bool{},
+			want: false,
+		},
+		{
+			name: "One true list",
+			v:    [][]bool{{true, false}},
+			want: true,
+		},
+		{
+			name: "Many true list",
+			v:    [][]bool{{true, true}, {true}},
+			want: true,
+		},
+		{
+			name: "Mix true and false",
+			v:    [][]bool{{}, {true, false, true}},
+			want: true,
+		},
+		{
+			name: "Many false",
+			v:    [][]bool{{}, {}},
+			want: false,
+		},
+		{
+			name: "One false",
+			v:    [][]bool{{}},
+			want: false,
+		},
+	}
+
+	// Iterate over each test case
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Call the function `Any` and check if the output is as expected.
+			if got := Any(tt.v...); got != tt.want {
+				t.Errorf("any() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -391,6 +492,8 @@ func TestIsEmpty(t *testing.T) {
 		{"Non-nil pointer", new(int), false},
 		{"Zero complex", complex(0, 0), true},
 		{"Non-zero complex", complex(1, 1), false},
+		{"Empty slice", []bool{}, true},
+		{"Not empty slice", []bool{false}, false},
 	}
 
 	for _, tt := range tests {
@@ -410,29 +513,39 @@ func TestIsFalse(t *testing.T) {
 		want bool
 	}{
 		{
-			name: "value is nil",
+			name: "Value is nil",
 			v:    nil,
 			want: true,
 		},
 		{
-			name: "value is zero",
+			name: "Value is zero",
 			v:    0,
 			want: true,
 		},
 		{
-			name: "value is Trit with true state",
+			name: "Value is Trit with true state",
 			v:    trit.True,
 			want: false,
 		},
 		{
-			name: "value is Trit with false state",
+			name: "Value is Trit with false state",
 			v:    trit.False,
 			want: true,
 		},
 		{
-			name: "value is Trit with unknown state",
+			name: "Value is Trit with unknown state",
 			v:    trit.Unknown,
 			want: true,
+		},
+		{
+			name: "Value is empty slice",
+			v:    []bool{},
+			want: true,
+		},
+		{
+			name: "Value is not empty slice",
+			v:    []bool{false},
+			want: false,
 		},
 	}
 
@@ -458,24 +571,34 @@ func TestIsTrue(t *testing.T) {
 			want: false,
 		},
 		{
-			name: "value is zero",
+			name: "Value is zero",
 			v:    0,
 			want: false,
 		},
 		{
-			name: "value is Trit with true state",
+			name: "Value is Trit with true state",
 			v:    trit.True,
 			want: true,
 		},
 		{
-			name: "value is Trit with false state",
+			name: "Value is Trit with false state",
 			v:    trit.False,
 			want: false,
 		},
 		{
-			name: "value is Trit with unknown state",
+			name: "Value is Trit with unknown state",
 			v:    trit.Unknown,
 			want: false,
+		},
+		{
+			name: "Value is empty slice",
+			v:    []bool{},
+			want: false,
+		},
+		{
+			name: "Value is not empty slice",
+			v:    []bool{false},
+			want: true,
 		},
 	}
 

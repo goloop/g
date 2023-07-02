@@ -300,6 +300,15 @@ func TestValue(t *testing.T) {
 			}
 		})
 	}
+
+	// Object as liist.
+	if got := Value([]int{1, 2, 3}); !reflect.DeepEqual(got, []int{1, 2, 3}) {
+		t.Errorf("Value() = %v, want %v", got, []int{1, 2, 3})
+	}
+
+	if got := Value([]int{}); len(got) != 0 {
+		t.Errorf("Value() = %v, want %v", got, []int{})
+	}
 }
 
 // TestZip tests the Zip function.
