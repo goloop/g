@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/goloop/trit"
 )
 
 // TestContains tests the Contains function.
@@ -308,6 +310,53 @@ func TestValue(t *testing.T) {
 
 	if got := Value([]int{}); len(got) != 0 {
 		t.Errorf("Value() = %v, want %v", got, []int{})
+	}
+}
+
+// TestValueTrit tests the Value function for Trit objects.
+func TestValueTrit(t *testing.T) {
+	// Define test cases.
+	tests := []struct {
+		name string
+		v    []trit.Trit
+		want trit.Trit
+	}{
+		{
+			name: "Trit unknown",
+			v:    []trit.Trit{trit.Unknown, trit.Unknown},
+			want: trit.Unknown,
+		},
+		{
+			name: "Trit false",
+			v:    []trit.Trit{trit.Unknown, trit.False},
+			want: trit.False,
+		},
+		{
+			name: "Trit true",
+			v:    []trit.Trit{trit.Unknown, trit.True},
+			want: trit.True,
+		},
+		{
+			name: "Trit false from false and true",
+			v:    []trit.Trit{trit.False, trit.True},
+			want: trit.False,
+		},
+	}
+
+	// Iterate over each test case.
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			// Check if output is as expected.
+			if got := Value(tt.v...); got != tt.want {
+				t.Errorf("Value() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+
+	// Empty slice.
+	if got := Value[trit.Trit](); got != trit.Unknown {
+		t.Errorf("Value[trit.Trit]() = %v, want trit.Unknown", got)
 	}
 }
 
