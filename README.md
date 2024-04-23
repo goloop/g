@@ -2,7 +2,6 @@
 
 # G
 
-
 The **g** package is a comprehensive utility library for the Go programming language, augmenting Go's functionality with a collection of efficient helper functions aimed at simplifying and streamlining software development tasks. It robustly employs Go's generics, introduced in Go 1.18+, to provide versatile and type-safe functions capable of operating across a plethora of data types.
 
 
@@ -182,6 +181,10 @@ This package offers a collection of functions, each with comprehensive documenta
 - **Product**[T Numerable](v ...T) T
 
   The Product function calculates the product of all numeric values in the input slice.
+
+- **Ptr**[T any](v ...T) *T
+
+  Ptr creates a pointer from a literal or defaults to a pointer to a zero value of T if no arguments are given.
 
 - **Random**[T Numerable](v ...T) T
 
