@@ -70,34 +70,48 @@ func Ptr[T any](v ...T) *T {
 //
 // Example usage:
 //
-//	// The function to build a WHERE clause for a SQL query.
-//	func where(isActive, isStaff *bool) string {
-//	    check := [...]struct {
-//	        ext  *bool
-//	        name string
-//	    }{
-//	        {isActive, "is_active"},
-//	        {isStaff, "is_staff"},
-//	    }
+//	// where returns a WHERE clause for a SQL query based on the provided
+//	// boolean values. It accepts three boolean pointers: isActive, isStaff,
+//	// and isSuperuser. If any of these pointers are nil, the corresponding
+//	// condition is not included in the WHERE clause.
+//	func where(isActive, isStaff, isSuperuser *bool) string {
+//		check := [...]struct {
+//			name  string
+//			value *bool
+//		}{
+//			{name: "is_active", value: isActive},
+//			{name: "is_staff", value: isStaff},
+//			{name: "is_superuser", value: isSuperuser},
+//		}
 //
 //	    and := make([]string, 0, len(check))
-//	    for _, w := range check {
-//	        if w.ext != nil {
-//	            and = append(and, fmt.Sprintf("%s=%t", w.name, *w.ext))
-//	        }
+//	    for _, m := range check {
+//	    	if m.value != nil {
+//	    		and = append(and, fmt.Sprintf("%s=%t", m.name, *m.value))
+//	    	}
 //	    }
 //
-//	    if len(and) > 0 {
-//	        return "WHERE " + strings.Join(and, " AND ")
+//	    if len(and) != 0 {
+//	    	return "WHERE " + strings.Join(and, ", ")
 //	    }
 //
-//	    return ""
+//		return ""
 //	}
 //
-//	// Using PtrIf to conditionally pass pointers based on query parameters.
+//	// Some data is stored in map.
+//	argsMap := make(map[string]bool)
+//	argsMap["isActive"] = true
+//	argsMap["isStaff"] = false
+//
+//	// Using PtrIf to conditionally pass pointers.
 //	isActive, isActiveOk := argsMap["isActive"]
 //	isStaff, isStaffOk := argsMap["isStaff"]
-//	w := where(g.PtrIf(isActiveOk, isActive), g.PtrIf(isStaffOk, isStaff))
+//	isSuperuser, isSuperuserOk := argsMap["isSuperuser"]
+//	query := where(
+//	    g.PtrIf(isActiveOk, isActive),
+//	    g.PtrIf(isStaffOk, isStaff),
+//	    g.PtrIf(isSuperuserOk, isSuperuser), // nil pointer
+//	) // Result: "WHERE is_active=true, is_staff=false"
 func PtrIf[T any](exp bool, v ...T) *T {
 	if !exp {
 		return nil
