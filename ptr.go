@@ -49,3 +49,59 @@ func Ptr[T any](v ...T) *T {
 	r := any(v[0]).(T)
 	return &r
 }
+
+// PtrIf conditionally creates a pointer to a given value or returns nil
+// based on a boolean expression. This function simplifies pointer
+// management in conditional logic, avoiding the need for temporary
+// variables or manual pointer handling.
+//
+// Parameters:
+//
+//	exp bool - A boolean expression that determines whether a pointer
+//	           is returned or nil.
+//	v ...T   - An optional variable of type T from which to create a
+//	           pointer. If the expression is false, or no value is
+//	           provided, the function returns nil.
+//
+// Returns:
+//
+//	*T - A pointer to the value of T if the expression is true and a value
+//	     is provided, otherwise nil.
+//
+// Example usage:
+//
+//	// The function to build a WHERE clause for a SQL query.
+//	func where(isActive, isStaff *bool) string {
+//	    check := [...]struct {
+//	        ext  *bool
+//	        name string
+//	    }{
+//	        {isActive, "is_active"},
+//	        {isStaff, "is_staff"},
+//	    }
+//
+//	    and := make([]string, 0, len(check))
+//	    for _, w := range check {
+//	        if w.ext != nil {
+//	            and = append(and, fmt.Sprintf("%s=%t", w.name, *w.ext))
+//	        }
+//	    }
+//
+//	    if len(and) > 0 {
+//	        return "WHERE " + strings.Join(and, " AND ")
+//	    }
+//
+//	    return ""
+//	}
+//
+//	// Using PtrIf to conditionally pass pointers based on query parameters.
+//	isActive, isActiveOk := argsMap["isActive"]
+//	isStaff, isStaffOk := argsMap["isStaff"]
+//	w := where(g.PtrIf(isActiveOk, isActive), g.PtrIf(isStaffOk, isStaff))
+func PtrIf[T any](exp bool, v ...T) *T {
+	if !exp {
+		return nil
+	}
+
+	return Ptr[T](v...)
+}

@@ -636,7 +636,7 @@ func TestIsPointer(t *testing.T) {
 
 // TestIsNumber tests the IsNumber function.
 func TestIsNumber(t *testing.T) {
-	// Numeric values
+	// Numeric values.
 	num := 10
 	if !IsNumber(num) {
 		t.Errorf("%v should be a number", num)
@@ -661,5 +661,57 @@ func TestIsNumber(t *testing.T) {
 	slice := []int{1}
 	if IsNumber(slice) {
 		t.Errorf("%v should not be a number", slice)
+	}
+}
+
+// TestAnyList tests the AnyList function.
+func TestAnyList(t *testing.T) {
+	tests := []struct {
+		name string
+		v    []interface{}
+		want bool
+	}{
+		{"All false", []interface{}{false, false, false}, false},
+		{"One true", []interface{}{false, true, false}, true},
+		{"All true", []interface{}{true, true, true}, true},
+		{"All false and true", []interface{}{true, false, true}, true},
+		{"Empty slice", []interface{}{}, false},
+	}
+
+	// Iterate over each test case
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Call the function `AnyList` and check
+			// if the output is as expected.
+			if got := AnyList(tt.v); got != tt.want {
+				t.Errorf("AnyList() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+// TestAllList tests the AllList function.
+func TestAllList(t *testing.T) {
+	tests := []struct {
+		name string
+		v    []interface{}
+		want bool
+	}{
+		{"All false", []interface{}{false, false, false}, false},
+		{"One true", []interface{}{false, true, false}, false},
+		{"All true", []interface{}{true, true, true}, true},
+		{"All false and true", []interface{}{true, false, true}, false},
+		{"Empty slice", []interface{}{}, false},
+	}
+
+	// Iterate over each test case.
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Call the function `AllList` and check
+			// if the output is as expected.
+			if got := AllList(tt.v); got != tt.want {
+				t.Errorf("AllList() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
