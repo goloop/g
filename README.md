@@ -52,6 +52,16 @@ This package offers a collection of functions, each with comprehensive documenta
 
   The Average function calculates the average of a variable number of values that are of a type satisfying the Numerable interface. It computes the sum of all the values and divides it by the number of values to get the average. If no values are provided, it returns 0. This function returns the average as a float64, regardless of the input type.
 
+- **BoolToString**(v bool) string
+
+  The BoolToString function converts a boolean value to a string. It returns "true" for true values and "false" for false values.
+
+  **Example Usage**:
+    ```go
+    s := BoolToString(true) // "true"
+    s := BoolToString(false) // "false"
+    ```
+
 - **CartesianProduct**[T any](a []T, b []T) [][2]T
 
   The CartesianProduct function returns all possible pairs from two slices. It generates a slice of pairs, where each pair consists of an element from the first input slice and an element from the second input slice. The length of the returned slice is equal to the product of the lengths of the input slices. This function is generic and can work with any type T. Note that this function does not preserve the order of elements.
@@ -92,6 +102,16 @@ This package offers a collection of functions, each with comprehensive documenta
 
   Filter applies a predicate function to each element in a slice and returns a new slice containing only the elements for which the predicate function returned true.
 
+- **FloatToString**[T constraints.Float](v T) string
+
+  The FloatToString function converts a floating-point value of any type that satisfies the constraints.Float interface to a string. It works for different float types such as float32 and float64.
+
+  **Example Usage**:
+    ```go
+    s := FloatToString(123.45) // "123.45"
+    s := FloatToString(float32(123.45)) // "123.45"
+    ```
+
 - **HLookup**[T comparable, U any](v T, lookup []T, result []U, def U) U
 
   HLookup function looks up and retrieves data from a specific row in a table. It takes a search value, a slice of lookup values, a slice of result values, and an optional default value. If the search value is found in the lookup slice, it returns the corresponding value from the result slice, otherwise it returns the default value.
@@ -103,6 +123,17 @@ This package offers a collection of functions, each with comprehensive documenta
 - **Index**[T comparable](vs []T, v T) int
 
   The Index function returns the index of the first occurrence of the provided element in the given slice, or -1 if the element is not present.
+
+- **IntToString**[T constraints.Integer](v T) string
+
+  The IntToString function converts an integer value of any type that satisfies the constraints.Integer interface to a string. It works for different integer types such as int, int64, int32, uint, uint64, uint32, etc.
+
+  **Example Usage**:
+    ```go
+    s := IntToString(123) // "123"
+    s := IntToString(int64(123)) // "123"
+    s := IntToString(uint(123)) // "123"
+    ```
 
 - **Intersection**[T comparable](a []T, b []T) []T
 
@@ -233,21 +264,60 @@ This package offers a collection of functions, each with comprehensive documenta
 
   Reverse changes slice with elements in reverse order.
 
-- **Shuffle**[T any](v []T)
+- **Sdiff**[T comparable](a []T, b []T) []T
 
-  The Shuffle function rearranges the elements of the slice in a random order.
+  Sdiff is an alias for the SymmetricDifference function.
 
 - **SetTimeZone**(t time.Time, timezone string) (time.Time, error)
 
   The SetTimeZone changes the time zone, and changes the local time according to the new time zone.
 
+- **Shuffle**[T any](v []T)
+
+  The Shuffle function rearranges the elements of the slice in a random order.
+
 - **Sort**[T Numerable](v []T, inverse ...bool)
 
   The Sort function sorts a slice in ascending or descending order, depending on the value of the 'inverse' parameter.
 
+- **StringToBool**(v string, def ...bool) (bool, error)
+
+  The StringToBool function converts a string to a boolean value. It supports common boolean representations such as `true`, `false`, `yes`, `no`, `on`, `off`, and their uppercase variants. If the conversion fails and a default value is provided, it returns the default value. If no default value is provided, it returns an error.
+
+  **Example Usage**:
+    ```go
+    b, err := StringToBool("true") // true, nil
+    b, err := StringToBool("yes") // true, nil
+    b, err := StringToBool("off") // false, nil
+    b, err := StringToBool("unknown", false) // false, error
+    b, err := StringToBool("") // false, error (no default provided)
+    ```
+
 - **StringToDate**(s string, patterns ...string) (time.Time, error)
 
   The StringToDate converts a string to a time.Time object using the provided formats. If no format is given, it uses default date-time formats. Supports both Golang and Python style formatting.
+
+- **StringToFloat**(v string, def ...float64) (float64, error)
+
+  The StringToFloat function converts a string to a float64 value. If the conversion fails and a default value is provided, it returns the default value. If no default value is provided, it returns an error. An empty string will use the default value if one is provided, otherwise it returns an error.
+
+  **Example Usage**:
+    ```go
+    f, err := StringToFloat("123.45") // 123.45, nil
+    f, err := StringToFloat("abc", 0.0) // 0.0, error
+    f, err := StringToFloat("") // 0.0, error (no default provided)
+    ```
+
+- **StringToInt**(v string, def ...int) (int, error)
+
+  The StringToInt function converts a string to an integer. If the conversion fails and a default value is provided, it returns the default value. If no default value is provided, it returns an error. An empty string will use the default value if one is provided, otherwise it returns an error.
+
+  **Example Usage**:
+    ```go
+    i, err := StringToInt("123") // 123, nil
+    i, err := StringToInt("abc", 7) // 7, error
+    i, err := StringToInt("") // 0, error (no default provided)
+    ```
 
 - **Sum**[T Numerable](v ...T) T
 
@@ -256,10 +326,6 @@ This package offers a collection of functions, each with comprehensive documenta
 - **SymmetricDifference**[T comparable](a []T, b []T) []T
 
   The SymmetricDifference function takes two slices and returns a new slice that contains the items present in one of the slices but not in both. It returns the symmetric difference of the slices. The function is generic and can work with any type T that is comparable. Note that this function does not preserve the order of elements.
-
-- **Sdiff**[T comparable](a []T, b []T) []T
-
-  Sdiff is an alias for the SymmetricDifference function.
 
 - **Trim**(s string, patterns ...string) string
 
