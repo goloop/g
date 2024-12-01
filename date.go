@@ -3,6 +3,8 @@ package g
 import (
 	"context"
 	"errors"
+	"fmt"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -267,7 +269,13 @@ var (
 	}
 )
 
-// The dateFoundValue is a thread-safe value that indicates
+// dateParseError stores information about a date parsing error.
+type dateParseError struct {
+	layout string
+	err    error
+}
+
+// dateFoundValue is a thread-safe value that indicates
 // whether a date was found in a string.
 type dateFoundValue struct {
 	m     sync.Mutex
@@ -362,8 +370,8 @@ func pythonToGolangFormat(format string) string {
 //	fmt.Println(t)
 func StringToDate(s string, patterns ...string) (time.Time, error) {
 	var (
-		wg      sync.WaitGroup
 		formats []string
+		wg      sync.WaitGroup
 	)
 
 	for _, pattern := range patterns {
@@ -378,61 +386,67 @@ func StringToDate(s string, patterns ...string) (time.Time, error) {
 		formats = dataTimeFormats
 	}
 
-	// Will use context to stop the rest of the goroutines
-	// if the value has already been found.
+	errorChan := make(chan dateParseError, len(formats))
+	resultChan := make(chan time.Time, 1)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	p := parallelTasks
-	found := &dateFoundValue{found: false, value: time.Time{}}
+	sem := make(chan struct{}, runtime.GOMAXPROCS(0)) // limit goroutines
 
-	// If the length of the slice is less than or equal to
-	// the minLoadPerGoroutine, then we do not need
-	// to use goroutines.
-	if l := len(formats); l/p < minLoadPerGoroutine {
-		for _, format := range formats {
-			t, err := time.Parse(format, s)
-			if err == nil {
-				return t, nil
-			}
-		}
-
-		return found.GetValue()
-	}
-
-	chunkSize := len(formats) / p
-	for i := 0; i < p; i++ {
+	for _, format := range formats {
 		wg.Add(1)
-
-		start := i * chunkSize
-		end := start + chunkSize
-		if i == p-1 {
-			end = len(formats)
-		}
-
-		go func(start, end int) {
+		sem <- struct{}{} // acquire a spot in the semaphore
+		go func(layout string) {
 			defer wg.Done()
+			defer func() { <-sem }() // release the spot in the semaphore
 
-			for _, layout := range formats[start:end] {
-				// Check if the context has been cancelled.
-				select {
-				case <-ctx.Done():
-					return
-				default:
-				}
-
-				t, err := time.Parse(layout, s)
-				if err == nil {
-					found.SetValue(true, t)
-					cancel() // stop all other goroutines
-					return
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				if t, err := time.Parse(layout, s); err == nil {
+					select {
+					case resultChan <- t:
+					default:
+					}
+					cancel()
+				} else {
+					errorChan <- dateParseError{layout, err}
 				}
 			}
-		}(start, end)
+		}(format)
 	}
 
-	wg.Wait()
-	return found.GetValue()
+	// Close the error channel when all goroutines are done.
+	go func() {
+		wg.Wait()
+		close(errorChan)
+	}()
+
+	// Get result from channels.
+	var errorsList []error
+	for {
+		select {
+		case t := <-resultChan:
+			return t, nil
+		case parseErr, ok := <-errorChan:
+			if ok {
+				errorsList = append(
+					errorsList,
+					fmt.Errorf("format %s: %w", parseErr.layout, parseErr.err),
+				)
+			} else {
+				// If the channel is closed and there are no more errors.
+				if len(errorsList) > 0 {
+					return time.Time{}, fmt.Errorf(
+						"failed to parse date: %v",
+						errorsList,
+					)
+				}
+				return time.Time{}, fmt.Errorf("failed to parse date")
+			}
+		}
+	}
 }
 
 // DateToString converts a Date to a string based on the provided format.

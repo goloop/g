@@ -738,56 +738,7 @@ func TestRange(t *testing.T) {
 	}
 }
 
-/*
 // TestRangef tests the Rangef function.
-
-	func TestRangef(t *testing.T) {
-		// Define the apple factory function
-		appleFactory := func(i int) string {
-			appleVarieties := []string{
-				"Gala",
-				"Fuji",
-				"Honeycrisp",
-				"Red Delicious",
-				"Granny Smith",
-				"Golden Delicious",
-				"Pink Lady",
-				"Braeburn",
-				"McIntosh",
-				"Jazz",
-			}
-
-			if i >= 0 && i < len(appleVarieties) {
-				return appleVarieties[i]
-			}
-			return "-"
-		}
-
-		// Single parameter.
-		result := Rangef(appleFactory, 3)
-		expected := []string{"Gala", "Fuji", "Honeycrisp"}
-		if fmt.Sprint(result) != fmt.Sprint(expected) {
-			t.Errorf("Test case 1 failed: Expected %v, but got %v",
-				expected, result)
-		}
-
-		// Two parameters.
-		result = Rangef(appleFactory, 4, 7)
-		expected = []string{"Granny Smith", "Golden Delicious", "Pink Lady"}
-		if fmt.Sprint(result) != fmt.Sprint(expected) {
-			t.Errorf("Test case 2 failed: Expected %v, but got %v",
-				expected, result)
-		}
-
-		// Three parameters.
-		result = Rangef(appleFactory, 7, 12, 2)
-		expected = []string{"Braeburn", "Jazz", "-"}
-		if fmt.Sprint(result) != fmt.Sprint(expected) {
-			t.Errorf("Test case 3 failed: Expected %v, but got %v",
-				expected, result)
-		}
-	}
-*/
 func TestRangef(t *testing.T) {
 	tests := []struct {
 		name string

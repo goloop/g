@@ -1,9 +1,10 @@
 package g
 
 import (
+	"fmt"
 	"math"
 	"reflect"
-	"sync"
+	"runtime"
 )
 
 // Abs returns the absolute value of a numeric input value.
@@ -86,18 +87,18 @@ func Median[T Numerable](v ...T) float64 {
 		return 0
 	}
 
-	// Sort the values
+	// Sort the values.
 	s := make([]T, len(v))
 	copy(s, v)
 	Sort(s)
 
-	// Calculate the median
+	// Calculate the median.
 	middle := len(s) / 2
 	if len(s)%2 == 0 {
-		// Even number of values, average the two middle values
+		// Even number of values, average the two middle values.
 		return float64(s[middle-1]+s[middle]) / 2.0
 	} else {
-		// Odd number of values, return the middle value
+		// Odd number of values, return the middle value.
 		return float64(s[middle])
 	}
 }
@@ -105,72 +106,62 @@ func Median[T Numerable](v ...T) float64 {
 // The doMiniMax function is used by the Min and Max functions
 // to calculate the minimum and maximum values.
 func doMiniMax[T Verifiable](m bool, v ...T) T {
-	var (
-		wg sync.WaitGroup
-		mu sync.Mutex
-	)
-
-	// Return zero if no values are provided.
 	if len(v) == 0 {
 		return reflect.Zero(reflect.TypeOf((*T)(nil)).Elem()).Interface().(T)
 	}
 
-	p := parallelTasks
-	chunkSize := len(v) / p
-	resultChan := make(chan T, p)
-	for i := 0; i < p; i++ {
-		wg.Add(1)
+	// If the data is small, process sequentially.
+	if len(v) < minLoadPerGoroutine {
+		result := v[0]
+		for _, val := range v[1:] {
+			if m && val > result || !m && val < result {
+				result = val
+			}
+		}
+		return result
+	}
 
+	numGoroutines := runtime.GOMAXPROCS(0)
+	chunkSize := (len(v) + numGoroutines - 1) / numGoroutines
+	resultChan := make(chan T, numGoroutines)
+
+	// Track the actual number of active goroutines.
+	activeGoroutines := 0
+
+	for i := 0; i < numGoroutines; i++ {
 		start := i * chunkSize
 		end := start + chunkSize
-		if i == p-1 {
+		if end > len(v) {
 			end = len(v)
 		}
 
-		go func(c []T) {
-			defer wg.Done()
-			if len(c) == 0 {
-				return
-			}
+		// Skip empty chunks.
+		if start >= end {
+			continue
+		}
 
-			r := c[0]
-			for _, val := range c[1:] {
-				if m {
-					if val > r {
-						r = val
-					}
-				} else {
-					if val < r {
-						r = val
-					}
+		activeGoroutines++
+		go func(chunk []T) {
+			localResult := chunk[0]
+			for _, val := range chunk[1:] {
+				if m && val > localResult || !m && val < localResult {
+					localResult = val
 				}
 			}
-
-			mu.Lock()
-			resultChan <- r
-			mu.Unlock()
+			resultChan <- localResult
 		}(v[start:end])
 	}
 
-	go func() {
-		wg.Wait()
-		close(resultChan)
-	}()
-
-	r := v[0]
-	for val := range resultChan {
-		if m {
-			if val > r {
-				r = val
-			}
-		} else {
-			if val < r {
-				r = val
-			}
+	// Collect results from active goroutines.
+	result := v[0]
+	for i := 0; i < activeGoroutines; i++ {
+		val := <-resultChan
+		if m && val > result || !m && val < result {
+			result = val
 		}
 	}
 
-	return r
+	return result
 }
 
 // Max returns the largest value among all input values.
@@ -275,68 +266,186 @@ func MinList[T Verifiable](v []T, defaults ...T) T {
 	return If(len(v) != 0, Min(v...), Min(defaults...))
 }
 
+// SafeSum returns the sum of all values with overflow checking.
+//
+// This function performs addition with overflow detection for integer types.
+// If an overflow occurs, it returns an error. For floating-point types,
+// it sums the values without overflow checking.
+//
+// Example usage:
+//
+//	// Safe sum with integers.
+//	values := []int{math.MaxInt, 1}
+//	sum, err := SafeSum(values...)
+//	if err != nil {
+//	    fmt.Println("Error:", err)  // Output: Error: integer overflow occurred
+//	} else {
+//	    fmt.Println("Sum:", sum)
+//	}
+//
+//	// Safe sum with floats.
+//	floatValues := []float64{1.1, 2.2, 3.3}
+//	sum, err = SafeSum(floatValues...)
+//	if err != nil {
+//	    fmt.Println("Error:", err)
+//	} else {
+//	    fmt.Println("Sum:", sum)  // Output: Sum: 6.6
+//	}
+func SafeSum[T Numerable](v ...T) (T, error) {
+	if len(v) != 0 {
+		switch any(v[0]).(type) {
+		case int:
+			var tmp int
+			for _, val := range v {
+				intVal := any(val).(int)
+				if (intVal > 0 && tmp > math.MaxInt-intVal) ||
+					(intVal < 0 && tmp < math.MinInt-intVal) {
+					return *new(T), fmt.Errorf("integer overflow occurred")
+				}
+				tmp += intVal
+			}
+			return T(tmp), nil
+		case int8:
+			var tmp int8
+			for _, val := range v {
+				intVal := any(val).(int8)
+				if (intVal > 0 && tmp > math.MaxInt8-intVal) ||
+					(intVal < 0 && tmp < math.MinInt8-intVal) {
+					return *new(T), fmt.Errorf("int8 overflow occurred")
+				}
+				tmp += intVal
+			}
+			return T(tmp), nil
+		case int16:
+			var tmp int16
+			for _, val := range v {
+				intVal := any(val).(int16)
+				if (intVal > 0 && tmp > math.MaxInt16-intVal) ||
+					(intVal < 0 && tmp < math.MinInt16-intVal) {
+					return *new(T), fmt.Errorf("int16 overflow occurred")
+				}
+				tmp += intVal
+			}
+			return T(tmp), nil
+		case int32:
+			var tmp int32
+			for _, val := range v {
+				intVal := any(val).(int32)
+				if (intVal > 0 && tmp > math.MaxInt32-intVal) ||
+					(intVal < 0 && tmp < math.MinInt32-intVal) {
+					return *new(T), fmt.Errorf("int32 overflow occurred")
+				}
+				tmp += intVal
+			}
+			return T(tmp), nil
+		case int64:
+			var tmp int64
+			for _, val := range v {
+				intVal := any(val).(int64)
+				if (intVal > 0 && tmp > math.MaxInt64-intVal) ||
+					(intVal < 0 && tmp < math.MinInt64-intVal) {
+					return *new(T), fmt.Errorf("int64 overflow occurred")
+				}
+				tmp += intVal
+			}
+			return T(tmp), nil
+		case uint:
+			var tmp uint
+			for _, val := range v {
+				uintVal := any(val).(uint)
+				if tmp > math.MaxUint-uintVal {
+					return *new(T), fmt.Errorf("uint overflow occurred")
+				}
+				tmp += uintVal
+			}
+			return T(tmp), nil
+		case uint8:
+			var tmp uint8
+			for _, val := range v {
+				uintVal := any(val).(uint8)
+				if tmp > math.MaxUint8-uintVal {
+					return *new(T), fmt.Errorf("uint8 overflow occurred")
+				}
+				tmp += uintVal
+			}
+			return T(tmp), nil
+		case uint16:
+			var tmp uint16
+			for _, val := range v {
+				uintVal := any(val).(uint16)
+				if tmp > math.MaxUint16-uintVal {
+					return *new(T), fmt.Errorf("uint16 overflow occurred")
+				}
+				tmp += uintVal
+			}
+			return T(tmp), nil
+		case uint32:
+			var tmp uint32
+			for _, val := range v {
+				uintVal := any(val).(uint32)
+				if tmp > math.MaxUint32-uintVal {
+					return *new(T), fmt.Errorf("uint32 overflow occurred")
+				}
+				tmp += uintVal
+			}
+			return T(tmp), nil
+		case uint64:
+			var tmp uint64
+			for _, val := range v {
+				uintVal := any(val).(uint64)
+				if tmp > math.MaxUint64-uintVal {
+					return *new(T), fmt.Errorf("uint64 overflow occurred")
+				}
+				tmp += uintVal
+			}
+			return T(tmp), nil
+		case float32:
+			var tmp float32
+			for _, val := range v {
+				tmp += any(val).(float32)
+				if math.IsInf(float64(tmp), 0) || math.IsNaN(float64(tmp)) {
+					return *new(T), fmt.Errorf("float32 overflow occurred")
+				}
+			}
+			return T(tmp), nil
+		case float64:
+			var tmp float64
+			for _, val := range v {
+				tmp += any(val).(float64)
+				if math.IsInf(tmp, 0) || math.IsNaN(tmp) {
+					return *new(T), fmt.Errorf("float64 overflow occurred")
+				}
+			}
+			return T(tmp), nil
+		default:
+			return *new(T), fmt.Errorf("unsupported type for SafeSum")
+		}
+	}
+
+	return *new(T), nil
+}
+
 // Sum returns the sum of all values.
 //
-// Note: this function does not handle overflow. If the sum of the input
-// values exceeds the maximum value that can be stored in type T, the
-// result will wrap around, due to how Go handles overflow.
+// Note: This function does not handle overflow. If the sum of the input
+// values exceeds the maximum value that can be stored in type T,
+// the function returns the zero value of type T.
 //
 // Example usage:
 //
 //	values := []int{3, 5, 7, 1, 9, 2}
-//	sum := g.Sum(values...)
+//	sum := Sum(values...)
 //	fmt.Println(sum)  // Output: 27
 //
 //	floats := []float64{1.1, 2.2, 3.3, 4.4, 5.5}
-//	sum = g.Sum(floats...)
+//	sum = Sum(floats...)
 //	fmt.Println(sum)  // Output: 16.5
 func Sum[T Numerable](v ...T) T {
-	var (
-		wg sync.WaitGroup
-		mu sync.Mutex
-	)
-
-	if len(v) == 0 {
-		return T(0)
+	if r, err := SafeSum(v...); err == nil {
+		return r
 	}
 
-	p := parallelTasks
-	chunkSize := len(v) / p
-	resultChan := make(chan T, p)
-	for i := 0; i < p; i++ {
-		wg.Add(1)
-
-		start := i * chunkSize
-		end := start + chunkSize
-		if i == p-1 {
-			end = len(v)
-		}
-
-		go func(c []T) {
-			defer wg.Done()
-
-			r := T(0)
-			for _, val := range c {
-				r += val
-			}
-
-			mu.Lock()
-			resultChan <- r
-			mu.Unlock()
-		}(v[start:end])
-	}
-
-	go func() {
-		wg.Wait()
-		close(resultChan)
-	}()
-
-	r := T(0)
-	for val := range resultChan {
-		r += val
-	}
-
-	return r
+	return *new(T)
 }
 
 // IsEven checks if a value is an even number.

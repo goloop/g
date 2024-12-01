@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// Допоміжні функції для генерації тестових даних
+// Helper functions/
 func generateIntSlice(size int) []int {
 	slice := make([]int, size)
 	for i := 0; i < size; i++ {
@@ -32,7 +32,7 @@ func generateStringSlice(size int) []string {
 	return slice
 }
 
-// Бенчмарки для функцій сортування
+// Sort function benchmarks.
 func BenchmarkSort(b *testing.B) {
 	sizes := []int{100, 1000, 10000, 100000}
 
@@ -69,7 +69,7 @@ func BenchmarkSort(b *testing.B) {
 	}
 }
 
-// Бенчмарки для StringToDate
+// StringToDate function benchmarks.
 func BenchmarkStringToDate(b *testing.B) {
 	dates := []string{
 		"2023-12-01",
@@ -89,7 +89,7 @@ func BenchmarkStringToDate(b *testing.B) {
 	}
 }
 
-// Бенчмарки для In функції
+// In function benchmarks.
 func BenchmarkIn(b *testing.B) {
 	sizes := []int{100, 1000, 10000, 100000}
 
@@ -114,7 +114,7 @@ func BenchmarkIn(b *testing.B) {
 	}
 }
 
-// Бенчмарки для Range
+// Range function benchmarks.
 func BenchmarkRange(b *testing.B) {
 	sizes := []int{100, 1000, 10000, 100000}
 
@@ -133,7 +133,7 @@ func BenchmarkRange(b *testing.B) {
 	}
 }
 
-// Бенчмарки для Set операцій
+// Set operation benchmarks.
 func BenchmarkSetOperations(b *testing.B) {
 	sizes := []int{100, 1000, 10000}
 
@@ -167,9 +167,10 @@ func BenchmarkSetOperations(b *testing.B) {
 	}
 }
 
-// Бенчмарки для String операцій
+// String operation benchmarks.
 func BenchmarkStringOperations(b *testing.B) {
-	testString := "Hello, World! This is a test string with some numbers: 12345 and symbols: @#$%"
+	testString := "Hello, World! This is a test string with some " +
+		"numbers: 12345 and symbols: @#$%"
 
 	b.Run("Weed", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
@@ -190,7 +191,7 @@ func BenchmarkStringOperations(b *testing.B) {
 	})
 }
 
-// Бенчмарки для математичних операцій
+// Math operation benchmarks.
 func BenchmarkMathOperations(b *testing.B) {
 	sizes := []int{100, 1000, 10000, 100000}
 
@@ -221,7 +222,7 @@ func BenchmarkMathOperations(b *testing.B) {
 	}
 }
 
-// Бенчмарки для Random операцій
+// Random operation benchmarks.
 func BenchmarkRandomOperations(b *testing.B) {
 	sizes := []int{100, 1000, 10000}
 
@@ -242,7 +243,7 @@ func BenchmarkRandomOperations(b *testing.B) {
 	}
 }
 
-// Бенчмарки для конвертації типів
+// Conversion operation benchmarks.
 func BenchmarkTypeConversion(b *testing.B) {
 	// StringToInt
 	b.Run("StringToInt", func(b *testing.B) {
@@ -271,7 +272,7 @@ func BenchmarkTypeConversion(b *testing.B) {
 	})
 }
 
-// Бенчмарки для Zip операції
+// Zip operation benchmarks.
 func BenchmarkZip(b *testing.B) {
 	sizes := []int{100, 1000, 10000}
 
