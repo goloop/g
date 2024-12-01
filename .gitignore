@@ -1,1 +1,9 @@
+.vscode
+
+# Benchmark comparison files
+old_benchmarks.txt
+new_benchmarks.txt
+
+# Coverage output
 coverage.out
+coverage.html
