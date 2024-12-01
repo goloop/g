@@ -3,8 +3,141 @@ package g
 import (
 	"math"
 	"reflect"
+	"runtime"
 	"testing"
 )
+
+// TestDoMiniMaxInt tests the doMiniMax function with integer values.
+func TestDoMiniMaxInt(t *testing.T) {
+	// Test case where m is true (finding maximum)
+	values := []int{1, 3, 2, 5, 4}
+	expectedMax := 5
+	result := doMiniMax(true, values...)
+	if result != expectedMax {
+		t.Errorf("Expected max %d, got %d", expectedMax, result)
+	}
+
+	// Test case where m is false (finding minimum)
+	expectedMin := 1
+	result = doMiniMax(false, values...)
+	if result != expectedMin {
+		t.Errorf("Expected min %d, got %d", expectedMin, result)
+	}
+}
+
+// Test with float64 values
+func TestDoMiniMaxFloat64(t *testing.T) {
+	// Test case where m is true (finding maximum)
+	values := []float64{1.1, 3.3, 2.2, 5.5, 4.4}
+	expectedMax := 5.5
+	result := doMiniMax(true, values...)
+	if result != expectedMax {
+		t.Errorf("Expected max %f, got %f", expectedMax, result)
+	}
+
+	// Test case where m is false (finding minimum)
+	expectedMin := 1.1
+	result = doMiniMax(false, values...)
+	if result != expectedMin {
+		t.Errorf("Expected min %f, got %f", expectedMin, result)
+	}
+}
+
+// Test with a single element
+func TestDoMiniMaxSingleElement(t *testing.T) {
+	value := []int{42}
+	expected := 42
+	result := doMiniMax(true, value...)
+	if result != expected {
+		t.Errorf("Expected %d, got %d", expected, result)
+	}
+	result = doMiniMax(false, value...)
+	if result != expected {
+		t.Errorf("Expected %d, got %d", expected, result)
+	}
+}
+
+// Test with an empty slice
+func TestDoMiniMaxEmptySlice(t *testing.T) {
+	var values []int
+	var expected int // Zero value of int
+	result := doMiniMax(true, values...)
+	if result != expected {
+		t.Errorf("Expected zero value %d, got %d", expected, result)
+	}
+	result = doMiniMax(false, values...)
+	if result != expected {
+		t.Errorf("Expected zero value %d, got %d", expected, result)
+	}
+}
+
+// Test with all elements equal
+func TestDoMiniMaxEqualElements(t *testing.T) {
+	values := []int{2, 2, 2, 2}
+	expected := 2
+	result := doMiniMax(true, values...)
+	if result != expected {
+		t.Errorf("Expected %d, got %d", expected, result)
+	}
+	result = doMiniMax(false, values...)
+	if result != expected {
+		t.Errorf("Expected %d, got %d", expected, result)
+	}
+}
+
+// Test with negative values
+func TestDoMiniMaxNegativeValues(t *testing.T) {
+	values := []int{-1, -3, -2, -5, -4}
+	expectedMax := -1
+	expectedMin := -5
+	result := doMiniMax(true, values...)
+	if result != expectedMax {
+		t.Errorf("Expected max %d, got %d", expectedMax, result)
+	}
+	result = doMiniMax(false, values...)
+	if result != expectedMin {
+		t.Errorf("Expected min %d, got %d", expectedMin, result)
+	}
+}
+
+// Test with large data to trigger parallel execution
+func TestDoMiniMaxLargeData(t *testing.T) {
+	size := minLoadPerGoroutine * 2
+	values := make([]int, size)
+	for i := 0; i < size; i++ {
+		values[i] = i
+	}
+	expectedMax := size - 1
+	expectedMin := 0
+	result := doMiniMax(true, values...)
+	if result != expectedMax {
+		t.Errorf("Expected max %d, got %d", expectedMax, result)
+	}
+	result = doMiniMax(false, values...)
+	if result != expectedMin {
+		t.Errorf("Expected min %d, got %d", expectedMin, result)
+	}
+}
+
+// Test when the number of elements isn't a multiple of the number of goroutines
+func TestDoMiniMaxChunkBoundary(t *testing.T) {
+	numGoroutines := runtime.GOMAXPROCS(0)
+	size := numGoroutines*10 + 3 // Not a multiple of numGoroutines
+	values := make([]int, size)
+	for i := 0; i < size; i++ {
+		values[i] = i
+	}
+	expectedMax := size - 1
+	expectedMin := 0
+	result := doMiniMax(true, values...)
+	if result != expectedMax {
+		t.Errorf("Expected max %d, got %d", expectedMax, result)
+	}
+	result = doMiniMax(false, values...)
+	if result != expectedMin {
+		t.Errorf("Expected min %d, got %d", expectedMin, result)
+	}
+}
 
 // TestAbs tests the Abs function.
 func TestAbs(t *testing.T) {
