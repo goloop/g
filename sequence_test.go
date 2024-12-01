@@ -718,13 +718,13 @@ func TestRange(t *testing.T) {
 			name:     "Incorrect range",
 			n:        10,
 			opt:      []int{20, -1},
-			expected: []int{},
+			expected: nil,
 		},
 		{
 			name:     "Large range",
 			n:        MaxRangeSize + 100,
 			opt:      []int{},
-			expected: []int{},
+			expected: nil,
 		},
 	}
 
@@ -750,19 +750,19 @@ func TestRangef(t *testing.T) {
 			name: "Step Size 0",
 			a:    3,
 			opt:  []int{0},
-			want: []string{},
+			want: nil,
 		},
 		{
 			name: "Negative Step Size and n <= m",
 			a:    2,
 			opt:  []int{5, -1},
-			want: []string{},
+			want: nil,
 		},
 		{
 			name: "Positive Step Size and n >= m",
 			a:    5,
 			opt:  []int{2, 1},
-			want: []string{},
+			want: nil,
 		},
 	}
 

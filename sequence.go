@@ -601,6 +601,7 @@ func In[T Verifiable](v T, list ...T) bool {
 }
 
 // Range generates a slice of integers based on the provided parameters.
+// Returns nil if the parameters are invalid.
 //
 //   - If a single parameter is passed (Range(n)), the function returns
 //     a slice from 0 to n-1.
@@ -608,6 +609,12 @@ func In[T Verifiable](v T, list ...T) bool {
 //     a slice from n to m-1.
 //   - If three parameters are passed (Range(n, m, s)), the function returns
 //     a slice from n to m-1 with a step size of s.
+//
+// The function returns nil if:
+//   - The step size is zero
+//   - The range is decreasing but step is positive
+//   - The range is increasing but step is negative
+//   - The resulting sequence would exceed MaxRangeSize
 //
 // The maximum size of the generated slice is set by the MaxRangeSize constant.
 //
@@ -624,6 +631,12 @@ func In[T Verifiable](v T, list ...T) bool {
 //
 //	result := g.Range(10, 0, -1)
 //	// Output: [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
+//
+//	result := g.Range(1, 10, 0)
+//	// Output: nil - step size cannot be zero
+//
+//	result := g.Range(10, 1, 1)
+//	// Output: nil - decreasing range with positive step
 func Range(a int, opt ...int) []int {
 	var n, m, s int = 0, a, 1
 
@@ -640,14 +653,18 @@ func Range(a int, opt ...int) []int {
 
 	// Ignore incorrect parameters.
 	if s == 0 || s < 0 && n <= m || s > 0 && n >= m {
-		return []int{}
+		return nil
 	}
 
 	// Calculate the number of steps and create the slice of this size.
 	steps := Abs(int(math.Ceil(float64(m-n) / float64(s))))
-	steps = If(steps >= MaxRangeSize, 0, steps) // limit the size of the slice
-	result := make([]int, steps)
 
+	// Limit the size of the slice.
+	if steps >= MaxRangeSize {
+		return nil
+	}
+
+	result := make([]int, steps)
 	for i := 0; i < steps; i++ {
 		result[i] = n + i*s
 	}
@@ -657,6 +674,7 @@ func Range(a int, opt ...int) []int {
 
 // Rangef generates a slice of values based on the provided parameters
 // and a given function as func(int) T.
+// Returns nil if the parameters are invalid.
 //
 //   - If a single parameter is passed (Range(fn, n)), the function returns
 //     a slice from 0 to n-1 and pass it in fn.
@@ -665,38 +683,47 @@ func Range(a int, opt ...int) []int {
 //   - If three parameters are passed (Range(fn,  n, m, s)), the function
 //     returns a slice from n to m-1 with a step size of s, and pass it in fn.
 //
+// The function returns nil if:
+//   - The step size is zero
+//   - The range is decreasing but step is positive
+//   - The range is increasing but step is negative
+//   - The resulting sequence would exceed MaxRangeSize
+//
 // Example usage:
 //
 //	func appleFactory() func(int) string {
-//		var appleVarieties = []string{
-//			"Gala",
-//			"Fuji",
-//			"Honeycrisp",
-//			"Red Delicious",
-//			"Granny Smith",
-//			"Golden Delicious",
-//			"Pink Lady",
-//			"Braeburn",
-//			"McIntosh",
-//			"Jazz",
-//		}
+//	    var appleVarieties = []string{
+//	        "Gala",
+//	        "Fuji",
+//	        "Honeycrisp",
+//	        "Red Delicious",
+//	        "Granny Smith",
+//	        "Golden Delicious",
+//	        "Pink Lady",
+//	        "Braeburn",
+//	        "McIntosh",
+//	        "Jazz",
+//	    }
 //
-//		return func(i int) string {
-//			if i >= 0 && i < len(appleVarieties) {
-//				return appleVarieties[i]
-//			}
-//			return "-"
-//		}
+//	    return func(i int) string {
+//	        if i >= 0 && i < len(appleVarieties) {
+//	            return appleVarieties[i]
+//	        }
+//	        return "-"
+//	    }
 //	}
 //
-//	g.Rangef(appleFactory(), 3)
-//	// Output:  [Gala Fuji Honeycrisp]
+//	result := g.Rangef(appleFactory(), 3)
+//	// Output: [Gala Fuji Honeycrisp]
 //
-//	g.Rangef(appleFactory(), 4, 7)
+//	result := g.Rangef(appleFactory(), 4, 7)
 //	// Output: [Granny Smith Golden Delicious Pink Lady]
 //
-//	g.Rangef(appleFactory(), 7, 12, 2)
+//	result := g.Rangef(appleFactory(), 7, 12, 2)
 //	// Output: [Braeburn Jazz -]
+//
+//	result := g.Rangef(appleFactory(), 1, 10, 0)
+//	// Output: nil - step size cannot be zero
 func Rangef[T any](fn func(int) T, a int, opt ...int) []T {
 	var n, m, s int = 0, a, 1
 
@@ -713,7 +740,7 @@ func Rangef[T any](fn func(int) T, a int, opt ...int) []T {
 
 	// Ignore incorrect parameters.
 	if s == 0 || s < 0 && n <= m || s > 0 && n >= m {
-		return []T{}
+		return nil
 	}
 
 	// Calculate the number of steps and create the slice of this size.
