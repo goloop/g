@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-
-	"golang.org/x/exp/constraints"
 )
 
 // StringToFloat converts a string to a float.
@@ -37,6 +35,6 @@ func StringToFloat(v string, def ...float64) (float64, error) {
 
 // FloatToString converts a float to a string.
 // It handles different floating-point types such as float32 and float64.
-func FloatToString[T constraints.Float](v T) string {
+func FloatToString[T ~float32 | ~float64](v T) string {
 	return fmt.Sprintf("%v", v)
 }

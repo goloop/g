@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-
-	"golang.org/x/exp/constraints"
 )
 
 // StringToInt converts a string to an integer.
@@ -38,6 +36,6 @@ func StringToInt(v string, def ...int) (int, error) {
 // IntToString converts an integer to a string.
 // It handles different integer types such as int, int64, int32,
 // uint, uint64,uint32, etc.
-func IntToString[T constraints.Integer](v T) string {
+func IntToString[T Integer](v T) string {
 	return fmt.Sprintf("%v", v)
 }

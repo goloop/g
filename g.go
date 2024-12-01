@@ -14,29 +14,6 @@ type Pair[T, U any] struct {
 	Second U
 }
 
-// Numerable is an interface type that is satisfied by all numeric types
-// in Go, both integer and floating point. This includes int, int8, int16,
-// int32, int64, uint, uint8, uint16, uint32, uint64, float32, and float64.
-// It allows functions to operate on any of these types where numerical
-// operations such as addition, subtraction, multiplication, and division
-// are needed. It enables generic programming techniques for numeric types.
-type Numerable interface {
-	int | int8 | int16 | int32 | int64 |
-		uint | uint8 | uint16 | uint32 | uint64 |
-		float32 | float64
-}
-
-// Verifiable is an interface type that is satisfied by classical types
-// like numeric types and strings in Go.
-//
-// The purpose of the Verifiable interface is to enable generic programming
-// techniques for numeric types and strings. Functions can use this interface
-// as a constraint to operate on any of these types where numerical operations
-// or string operations are needed.
-type Verifiable interface {
-	Numerable | string | rune
-}
-
 // MaxRangeSize is the maximum size for range generation
 // by the Range function.
 const MaxRangeSize = 100_000_000
