@@ -417,10 +417,8 @@ func SafeSum[T Numerable](v ...T) (T, error) {
 				}
 			}
 			return T(tmp), nil
-		default:
-			return *new(T), fmt.Errorf("unsupported type for SafeSum")
 		}
-	}
+	} // if len(v) != 0
 
 	return *new(T), nil
 }

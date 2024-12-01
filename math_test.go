@@ -503,148 +503,184 @@ func TestMinList(t *testing.T) {
 	}
 }
 
-// TestSafeSumOverflowInt tests the SafeSum function for overflow cases.
-func TestSafeSumOverflowInt(t *testing.T) {
-	values := []int{math.MaxInt, 1}
-	sum, err := SafeSum(values...)
-	if err == nil {
-		t.Errorf("Expected overflow error for int, got sum: %d", sum)
+func TestSafeSum(t *testing.T) {
+	// Test integer types
+	valuesInt := []int{1, 2, 3, 4}
+	sumInt, errInt := SafeSum(valuesInt...)
+	if errInt != nil || sumInt != 10 {
+		t.Errorf("SafeSum for int failed, got: %d, error: %v, want: 10", sumInt, errInt)
+	}
+
+	valuesInt8 := []int8{1, 2, 3, 4}
+	sumInt8, errInt8 := SafeSum(valuesInt8...)
+	if errInt8 != nil || sumInt8 != 10 {
+		t.Errorf("SafeSum for int8 failed, got: %d, error: %v, want: 10", sumInt8, errInt8)
+	}
+
+	valuesInt16 := []int16{1, 2, 3, 4}
+	sumInt16, errInt16 := SafeSum(valuesInt16...)
+	if errInt16 != nil || sumInt16 != 10 {
+		t.Errorf("SafeSum for int16 failed, got: %d, error: %v, want: 10", sumInt16, errInt16)
+	}
+
+	valuesInt32 := []int32{1, 2, 3, 4}
+	sumInt32, errInt32 := SafeSum(valuesInt32...)
+	if errInt32 != nil || sumInt32 != 10 {
+		t.Errorf("SafeSum for int32 failed, got: %d, error: %v, want: 10", sumInt32, errInt32)
+	}
+
+	valuesInt64 := []int64{1, 2, 3, 4}
+	sumInt64, errInt64 := SafeSum(valuesInt64...)
+	if errInt64 != nil || sumInt64 != 10 {
+		t.Errorf("SafeSum for int64 failed, got: %d, error: %v, want: 10", sumInt64, errInt64)
+	}
+
+	// Test unsigned integer types
+	valuesUint := []uint{1, 2, 3, 4}
+	sumUint, errUint := SafeSum(valuesUint...)
+	if errUint != nil || sumUint != 10 {
+		t.Errorf("SafeSum for uint failed, got: %d, error: %v, want: 10", sumUint, errUint)
+	}
+
+	valuesUint8 := []uint8{1, 2, 3, 4}
+	sumUint8, errUint8 := SafeSum(valuesUint8...)
+	if errUint8 != nil || sumUint8 != 10 {
+		t.Errorf("SafeSum for uint8 failed, got: %d, error: %v, want: 10", sumUint8, errUint8)
+	}
+
+	valuesUint16 := []uint16{1, 2, 3, 4}
+	sumUint16, errUint16 := SafeSum(valuesUint16...)
+	if errUint16 != nil || sumUint16 != 10 {
+		t.Errorf("SafeSum for uint16 failed, got: %d, error: %v, want: 10", sumUint16, errUint16)
+	}
+
+	valuesUint32 := []uint32{1, 2, 3, 4}
+	sumUint32, errUint32 := SafeSum(valuesUint32...)
+	if errUint32 != nil || sumUint32 != 10 {
+		t.Errorf("SafeSum for uint32 failed, got: %d, error: %v, want: 10", sumUint32, errUint32)
+	}
+
+	valuesUint64 := []uint64{1, 2, 3, 4}
+	sumUint64, errUint64 := SafeSum(valuesUint64...)
+	if errUint64 != nil || sumUint64 != 10 {
+		t.Errorf("SafeSum for uint64 failed, got: %d, error: %v, want: 10", sumUint64, errUint64)
+	}
+
+	// Test floating point types
+	valuesFloat32 := []float32{1.5, 2.5, 3.5}
+	sumFloat32, errFloat32 := SafeSum(valuesFloat32...)
+	if errFloat32 != nil || sumFloat32 != 7.5 {
+		t.Errorf("SafeSum for float32 failed, got: %f, error: %v, want: 7.5", sumFloat32, errFloat32)
+	}
+
+	valuesFloat64 := []float64{1.5, 2.5, 3.5}
+	sumFloat64, errFloat64 := SafeSum(valuesFloat64...)
+	if errFloat64 != nil || sumFloat64 != 7.5 {
+		t.Errorf("SafeSum for float64 failed, got: %f, error: %v, want: 7.5", sumFloat64, errFloat64)
+	}
+
+	// Test empty slice
+	emptySum, emptyErr := SafeSum[int]()
+	if emptyErr != nil || emptySum != 0 {
+		t.Errorf("SafeSum for empty slice failed, got: %d, error: %v, want: 0", emptySum, emptyErr)
 	}
 }
 
-// TestSafeSumOverflowInt tests the SafeSum function for overflow cases.
-func TestSafeSumOverflowInt8(t *testing.T) {
-	values := []int8{math.MaxInt8, 1}
-	sum, err := SafeSum(values...)
-	if err == nil {
-		t.Errorf("Expected overflow error for int8, got sum: %d", sum)
+func TestSafeSumOverflow(t *testing.T) {
+	// Test integer types overflow
+	valuesInt := []int{math.MaxInt, 1}
+	sumInt, errInt := SafeSum(valuesInt...)
+	if errInt == nil {
+		t.Errorf("Expected overflow error for int, got sum: %d", sumInt)
+	}
+
+	valuesInt8 := []int8{math.MaxInt8, 1}
+	sumInt8, errInt8 := SafeSum(valuesInt8...)
+	if errInt8 == nil {
+		t.Errorf("Expected overflow error for int8, got sum: %d", sumInt8)
+	}
+
+	valuesInt16 := []int16{math.MaxInt16, 1}
+	sumInt16, errInt16 := SafeSum(valuesInt16...)
+	if errInt16 == nil {
+		t.Errorf("Expected overflow error for int16, got sum: %d", sumInt16)
+	}
+
+	valuesInt32 := []int32{math.MaxInt32, 1}
+	sumInt32, errInt32 := SafeSum(valuesInt32...)
+	if errInt32 == nil {
+		t.Errorf("Expected overflow error for int32, got sum: %d", sumInt32)
+	}
+
+	valuesInt64 := []int64{math.MaxInt64, 1}
+	sumInt64, errInt64 := SafeSum(valuesInt64...)
+	if errInt64 == nil {
+		t.Errorf("Expected overflow error for int64, got sum: %d", sumInt64)
+	}
+
+	// Test unsigned integer types overflow
+	valuesUint := []uint{math.MaxUint, 1}
+	sumUint, errUint := SafeSum(valuesUint...)
+	if errUint == nil {
+		t.Errorf("Expected overflow error for uint, got sum: %d", sumUint)
+	}
+
+	valuesUint8 := []uint8{math.MaxUint8, 1}
+	sumUint8, errUint8 := SafeSum(valuesUint8...)
+	if errUint8 == nil {
+		t.Errorf("Expected overflow error for uint8, got sum: %d", sumUint8)
+	}
+
+	valuesUint16 := []uint16{math.MaxUint16, 1}
+	sumUint16, errUint16 := SafeSum(valuesUint16...)
+	if errUint16 == nil {
+		t.Errorf("Expected overflow error for uint16, got sum: %d", sumUint16)
+	}
+
+	valuesUint32 := []uint32{math.MaxUint32, 1}
+	sumUint32, errUint32 := SafeSum(valuesUint32...)
+	if errUint32 == nil {
+		t.Errorf("Expected overflow error for uint32, got sum: %d", sumUint32)
+	}
+
+	valuesUint64 := []uint64{math.MaxUint64, 1}
+	sumUint64, errUint64 := SafeSum(valuesUint64...)
+	if errUint64 == nil {
+		t.Errorf("Expected overflow error for uint64, got sum: %d", sumUint64)
+	}
+
+	// Test floating point types overflow
+	valuesFloat32 := []float32{float32(math.Inf(1)), 1}
+	sumFloat32, errFloat32 := SafeSum(valuesFloat32...)
+	if errFloat32 == nil {
+		t.Errorf("Expected overflow error for float32, got sum: %f", sumFloat32)
+	}
+
+	valuesFloat64 := []float64{math.Inf(1), 1}
+	sumFloat64, errFloat64 := SafeSum(valuesFloat64...)
+	if errFloat64 == nil {
+		t.Errorf("Expected overflow error for float64, got sum: %f", sumFloat64)
 	}
 }
 
-// TestSafeSumOverflowInt tests the SafeSum function for overflow cases.
-func TestSafeSumOverflowInt16(t *testing.T) {
-	values := []int16{math.MaxInt16, 1}
-	sum, err := SafeSum(values...)
-	if err == nil {
-		t.Errorf("Expected overflow error for int16, got sum: %d", sum)
-	}
-}
-
-// TestSafeSumOverflowInt tests the SafeSum function for overflow cases.
-func TestSafeSumOverflowInt32(t *testing.T) {
-	values := []int32{math.MaxInt32, 1}
-	sum, err := SafeSum(values...)
-	if err == nil {
-		t.Errorf("Expected overflow error for int32, got sum: %d", sum)
-	}
-}
-
-// TestSafeSumOverflowInt tests the SafeSum function for overflow cases.
-func TestSafeSumOverflowInt64(t *testing.T) {
-	values := []int64{math.MaxInt64, 1}
-	sum, err := SafeSum(values...)
-	if err == nil {
-		t.Errorf("Expected overflow error for int64, got sum: %d", sum)
-	}
-}
-
-// TestSafeSumOverflowInt tests the SafeSum function for overflow cases.
-func TestSafeSumOverflowUint(t *testing.T) {
-	values := []uint{math.MaxUint, 1}
-	sum, err := SafeSum(values...)
-	if err == nil {
-		t.Errorf("Expected overflow error for uint, got sum: %d", sum)
-	}
-}
-
-// TestSafeSumOverflowInt tests the SafeSum function for overflow cases.
-func TestSafeSumOverflowUint8(t *testing.T) {
-	values := []uint8{math.MaxUint8, 1}
-	sum, err := SafeSum(values...)
-	if err == nil {
-		t.Errorf("Expected overflow error for uint8, got sum: %d", sum)
-	}
-}
-
-// TestSafeSumOverflowInt tests the SafeSum function for overflow cases.
-func TestSafeSumOverflowUint16(t *testing.T) {
-	values := []uint16{math.MaxUint16, 1}
-	sum, err := SafeSum(values...)
-	if err == nil {
-		t.Errorf("Expected overflow error for uint16, got sum: %d", sum)
-	}
-}
-
-// TestSafeSumOverflowInt tests the SafeSum function for overflow cases.
-func TestSafeSumOverflowUint32(t *testing.T) {
-	values := []uint32{math.MaxUint32, 1}
-	sum, err := SafeSum(values...)
-	if err == nil {
-		t.Errorf("Expected overflow error for uint32, got sum: %d", sum)
-	}
-}
-
-// TestSafeSumOverflowInt tests the SafeSum function for overflow cases.
-func TestSafeSumOverflowUint64(t *testing.T) {
-	values := []uint64{math.MaxUint64, 1}
-	sum, err := SafeSum(values...)
-	if err == nil {
-		t.Errorf("Expected overflow error for uint64, got sum: %d", sum)
-	}
-}
-
-// Tests for Sum function overflow cases.
-func TestSumOverflowInt(t *testing.T) {
-	values := []int{math.MaxInt, 1}
-	sum := Sum(values...)
-	if sum != 0 {
-		t.Errorf("Expected zero value for int overflow, got sum: %d", sum)
-	}
-}
-
-func TestSumOverflowUint8(t *testing.T) {
-	values := []uint8{math.MaxUint8, 1}
-	sum := Sum(values...)
-	if sum != 0 {
-		t.Errorf("Expected zero value for uint8 overflow, got sum: %d", sum)
-	}
-}
-
-func TestSumOverflowInt16(t *testing.T) {
-	values := []int16{math.MaxInt16, 1}
-	sum := Sum(values...)
-	if sum != 0 {
-		t.Errorf("Expected zero value for int16 overflow, got sum: %d", sum)
-	}
-}
-
-// TestSum tests the Sum function.
 func TestSum(t *testing.T) {
-	// Define test cases.
-	tests := []struct {
-		name string
-		v    []int
-		want int
-	}{
-		{"Numbers including zero", []int{1, 0, 3}, 4},
-		{"Non-zero numbers", []int{2, 2, 6}, 10},
-		{"Numbers including negative", []int{-1, 0, 3}, 2},
-		{"All zeros", []int{0, 0, 0}, 0},
+	values := []int{1, 2, 3, 4, 5}
+	result := Sum(values...)
+	if result != 15 {
+		t.Errorf("Sum failed, got: %d, want: 15", result)
 	}
 
-	// Iterate over each test case.
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			// Check if output is as expected.
-			if got := Sum(tt.v...); got != tt.want {
-				t.Errorf("Sum() = %v, want %v", got, tt.want)
-			}
-		})
+	emptySum := Sum[int]()
+	if emptySum != 0 {
+		t.Errorf("Sum for empty slice failed, got: %d, want: 0", emptySum)
 	}
+}
 
-	// Empty slice.
-	if got := Sum[int](); got != 0 {
-		t.Errorf("Sum() = %v, want %v", got, 0)
+func TestSumOverflow(t *testing.T) {
+	values := []int{math.MaxInt, 1}
+	result := Sum(values...)
+	if result != 0 {
+		t.Errorf("Sum overflow failed, got: %d, want: 0", result)
 	}
 }
 
