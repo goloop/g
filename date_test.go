@@ -1,9 +1,8 @@
 package g
 
 import (
+	"errors"
 	"reflect"
-	"strings"
-	"sync"
 	"testing"
 	"time"
 )
@@ -20,110 +19,20 @@ func TestFindDuplicatesDateTimeFormats(t *testing.T) {
 	}
 }
 
-func TestStringToDate_ImpossibleState(t *testing.T) {
+// TestStringToDate_Error verifies that an unparseable input returns an error
+// wrapping the ErrParseDate sentinel and echoing the offending input.
+func TestStringToDate_Error(t *testing.T) {
 	_, err := StringToDate("invalid date")
-
-	if err.Error() == "failed to parse date" {
-		t.Error("Got impossible error state: " +
-			"'failed to parse date' without error list")
-	}
-
-	if !strings.Contains(err.Error(), "failed to parse date:") {
-		t.Errorf("Expected error with parse errors list, got: %v", err)
-	}
-}
-
-// TestDateFoundValue_SetValue tests SetValue method of dateFoundValue.
-func TestDateFoundValue_SetValue(t *testing.T) {
-	dfv := &dateFoundValue{}
-	expectedTime := time.Date(2023, 12, 1, 15, 30, 45, 0, time.UTC)
-
-	// Test setting true with time
-	dfv.SetValue(true, expectedTime)
-	if !dfv.found {
-		t.Error("Expected found to be true")
-	}
-	if dfv.value != expectedTime {
-		t.Errorf("Expected time to be %v, got %v", expectedTime, dfv.value)
-	}
-
-	// Test setting false with zero time
-	zeroTime := time.Time{}
-	dfv.SetValue(false, zeroTime)
-	if dfv.found {
-		t.Error("Expected found to be false")
-	}
-	if dfv.value != zeroTime {
-		t.Errorf("Expected time to be %v, got %v", zeroTime, dfv.value)
-	}
-}
-
-func TestDateFoundValue_GetValue(t *testing.T) {
-	dfv := &dateFoundValue{}
-	expectedTime := time.Date(2023, 12, 1, 15, 30, 45, 0, time.UTC)
-
-	// Test getting value when not found
-	_, err := dfv.GetValue()
 	if err == nil {
-		t.Error("Expected error when value not found")
+		t.Fatal("expected an error for unparseable input, got nil")
 	}
-	if err.Error() != "date and time could not be recognized" {
-		t.Errorf(
-			"Expected error message 'date and time could not be "+
-				"recognized',got '%s'", err.Error())
-	}
-
-	// Test getting value when found
-	dfv.SetValue(true, expectedTime)
-	value, err := dfv.GetValue()
-	if err != nil {
-		t.Errorf("Unexpected error: %v", err)
-	}
-	if value != expectedTime {
-		t.Errorf("Expected time to be %v, got %v", expectedTime, value)
-	}
-}
-
-func TestDateFoundValue_Concurrent(t *testing.T) {
-	dfv := &dateFoundValue{}
-	expectedTime := time.Date(2023, 12, 1, 15, 30, 45, 0, time.UTC)
-	concurrentAccess := 100
-	var wg sync.WaitGroup
-
-	// Test concurrent access
-	for i := 0; i < concurrentAccess; i++ {
-		wg.Add(2)
-
-		// Concurrent SetValue
-		go func() {
-			defer wg.Done()
-			dfv.SetValue(true, expectedTime)
-		}()
-
-		// Concurrent GetValue
-		go func() {
-			defer wg.Done()
-			dfv.GetValue()
-		}()
-	}
-
-	wg.Wait()
-
-	// Verify final state
-	value, err := dfv.GetValue()
-	if err != nil {
-		t.Errorf("Unexpected error after concurrent access: %v", err)
-	}
-	if value != expectedTime {
-		t.Errorf("Expected time to be %v after concurrent access, got %v",
-			expectedTime, value)
+	if !errors.Is(err, ErrParseDate) {
+		t.Errorf("error %v does not wrap ErrParseDate", err)
 	}
 }
 
 // TestStringToDate tests StringToDate function.
 func TestStringToDate(t *testing.T) {
-	minLoadPerGoroutine = 4
-	ParallelTasks(2)
 	tests := []struct {
 		input    string
 		patterns []string

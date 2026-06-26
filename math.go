@@ -1,11 +1,16 @@
 package g
 
 import (
+	"errors"
 	"fmt"
 	"math"
-	"reflect"
-	"runtime"
+	"math/rand/v2"
+	"slices"
 )
+
+// ErrOverflow is returned by SafeSum when a numeric overflow occurs.
+// It can be tested with errors.Is.
+var ErrOverflow = errors.New("g: numeric overflow")
 
 // Abs returns the absolute value of a numeric input value.
 //
@@ -37,12 +42,10 @@ func Abs[T Numerable](v T) T {
 // Average calculates the average of a variable number
 // of values of type Numerable.
 //
-// It first computes the sum of all the values, and then divides
-// by the number of values to get the average.
-
-// If no values are provided, it returns 0.
-// Note: this function returns the average as a float64,
-// regardless of the input type.
+// The values are accumulated in float64, so the result is correct even
+// when the integer sum of the inputs would overflow type T. If no values
+// are provided, it returns 0. Note: this function returns the average as
+// a float64, regardless of the input type.
 //
 // Example usage:
 //
@@ -58,7 +61,11 @@ func Average[T Numerable](v ...T) float64 {
 		return 0
 	}
 
-	sum := float64(Sum(v...))
+	var sum float64
+	for _, x := range v {
+		sum += float64(x)
+	}
+
 	return sum / float64(len(v))
 }
 
@@ -71,7 +78,8 @@ func Average[T Numerable](v ...T) float64 {
 // The median is the middle value of a sorted list of values.
 // If the number of values is odd, the median is the middle value.
 // If the number of values is even, the median is the average of
-// the two middle values.
+// the two middle values. The averaging is performed in float64,
+// so it does not overflow type T.
 //
 // Example usage:
 //
@@ -87,88 +95,30 @@ func Median[T Numerable](v ...T) float64 {
 		return 0
 	}
 
-	// Sort the values.
+	// Sort a copy so the caller's slice is left intact.
 	s := make([]T, len(v))
 	copy(s, v)
-	Sort(s)
+	slices.Sort(s)
 
-	// Calculate the median.
 	middle := len(s) / 2
 	if len(s)%2 == 0 {
-		// Even number of values, average the two middle values.
-		return float64(s[middle-1]+s[middle]) / 2.0
-	} else {
-		// Odd number of values, return the middle value.
-		return float64(s[middle])
-	}
-}
-
-// The doMiniMax function is used by the Min and Max functions
-// to calculate the minimum and maximum values.
-func doMiniMax[T Verifiable](m bool, v ...T) T {
-	if len(v) == 0 {
-		return reflect.Zero(reflect.TypeOf((*T)(nil)).Elem()).Interface().(T)
+		// Even number of values, average the two middle values
+		// in float64 to avoid overflowing type T.
+		return (float64(s[middle-1]) + float64(s[middle])) / 2.0
 	}
 
-	// If the data is small, process sequentially.
-	if len(v) < minLoadPerGoroutine {
-		result := v[0]
-		for _, val := range v[1:] {
-			if m && val > result || !m && val < result {
-				result = val
-			}
-		}
-		return result
-	}
-
-	numGoroutines := runtime.GOMAXPROCS(0)
-	chunkSize := (len(v) + numGoroutines - 1) / numGoroutines
-	resultChan := make(chan T, numGoroutines)
-
-	// Track the actual number of active goroutines.
-	activeGoroutines := 0
-
-	for i := 0; i < numGoroutines; i++ {
-		start := i * chunkSize
-		end := start + chunkSize
-		if end > len(v) {
-			end = len(v)
-		}
-
-		// Skip empty chunks.
-		if start >= end {
-			continue
-		}
-
-		activeGoroutines++
-		go func(chunk []T) {
-			localResult := chunk[0]
-			for _, val := range chunk[1:] {
-				if m && val > localResult || !m && val < localResult {
-					localResult = val
-				}
-			}
-			resultChan <- localResult
-		}(v[start:end])
-	}
-
-	// Collect results from active goroutines.
-	result := v[0]
-	for i := 0; i < activeGoroutines; i++ {
-		val := <-resultChan
-		if m && val > result || !m && val < result {
-			result = val
-		}
-	}
-
-	return result
+	// Odd number of values, return the middle value.
+	return float64(s[middle])
 }
 
 // Max returns the largest value among all input values.
 //
-// The function iterates through all the passed values
-// and returns the largest one. The type must be Verifiable
-// and support the greater than (>) operator.
+// The type must be Verifiable and support the greater than (>) operator.
+// If no values are provided, the zero value of type T is returned; use
+// MaxOk to distinguish the empty case explicitly.
+//
+// For floating-point types NaN propagates: if any value is NaN the result
+// is NaN, regardless of its position. This makes the result deterministic.
 //
 // Example usage:
 //
@@ -177,10 +127,34 @@ func doMiniMax[T Verifiable](m bool, v ...T) T {
 //	fmt.Println(maxI)  // Output: 9
 //
 //	floats := []float64{1.1, 2.2, 3.3, 4.4, 5.5}
-//	maxF: = g.Max(floats...)
+//	maxF := g.Max(floats...)
 //	fmt.Println(maxF)  // Output: 5.5
 func Max[T Verifiable](v ...T) T {
-	return doMiniMax(true, v...)
+	if len(v) == 0 {
+		var zero T
+		return zero
+	}
+	return slices.Max(v)
+}
+
+// MaxOk returns the largest value among all input values and a boolean
+// that reports whether any value was provided.
+//
+// If the input is empty, it returns the zero value of T and false; otherwise
+// it returns the maximum and true. This removes the ambiguity of Max, where
+// the zero value may also be a legitimate result.
+//
+// Example usage:
+//
+//	if m, ok := g.MaxOk(values...); ok {
+//	    fmt.Println(m)
+//	}
+func MaxOk[T Verifiable](v ...T) (T, bool) {
+	if len(v) == 0 {
+		var zero T
+		return zero, false
+	}
+	return slices.Max(v), true
 }
 
 // MaxList returns the largest value among all input values in a list.
@@ -192,8 +166,8 @@ func Max[T Verifiable](v ...T) T {
 // If the input list is empty:
 //   - If defaults are provided, the maximum value among
 //     the defaults is returned.
-//   - If no defaults are provided, the function returns
-//     the minimal value for the Verifiable type.
+//   - If no defaults are provided, the zero value of type T is returned;
+//     use MaxListOk to detect this case explicitly.
 //
 // Example usage:
 //
@@ -201,23 +175,38 @@ func Max[T Verifiable](v ...T) T {
 //	max := g.MaxList(values)
 //	fmt.Println(max)  // Output: 9
 //
-//	floats := []float64{1.1, 2.2, 3.3, 4.4, 5.5}
-//	max = g.MaxList(floats)
-//	fmt.Println(max)  // Output: 5.5
-//
 //	empty := []int{}
 //	defaults := []int{4, 5, 6}
 //	max = g.MaxList(empty, defaults...)
 //	fmt.Println(max)  // Output: 6
 func MaxList[T Verifiable](v []T, defaults ...T) T {
-	return If(len(v) != 0, Max(v...), Max(defaults...))
+	m, _ := MaxListOk(v, defaults...)
+	return m
+}
+
+// MaxListOk returns the largest value in the list (falling back to defaults
+// when the list is empty) and a boolean reporting whether any value existed.
+//
+// It returns false only when both the list and the defaults are empty.
+func MaxListOk[T Verifiable](v []T, defaults ...T) (T, bool) {
+	if len(v) != 0 {
+		return slices.Max(v), true
+	}
+	if len(defaults) != 0 {
+		return slices.Max(defaults), true
+	}
+	var zero T
+	return zero, false
 }
 
 // Min returns the smallest value among all input values.
 //
-// The function iterates through all the passed values
-// and returns the smallest one. The type must be Verifiable
-// and support the less than (<) operator.
+// The type must be Verifiable and support the less than (<) operator.
+// If no values are provided, the zero value of type T is returned; use
+// MinOk to distinguish the empty case explicitly.
+//
+// For floating-point types NaN propagates: if any value is NaN the result
+// is NaN, regardless of its position. This makes the result deterministic.
 //
 // Example usage:
 //
@@ -225,28 +214,47 @@ func MaxList[T Verifiable](v []T, defaults ...T) T {
 //	minI := g.Min(values...)
 //	fmt.Println(minI)  // Output: 1
 //
-//	floats := []float64{1.1, 2.2, 3.3, 4.4, 5.5}
-//	minF = g.Min(floats...)
-//	fmt.Println(minF)  // Output: 1.1
-//
 //	strings := []string{"z", "a", "m", "c", "y"}
-//	minS = g.Min(strings...)
+//	minS := g.Min(strings...)
 //	fmt.Println(minS)  // Output: a
 func Min[T Verifiable](v ...T) T {
-	return doMiniMax(false, v...)
+	if len(v) == 0 {
+		var zero T
+		return zero
+	}
+	return slices.Min(v)
+}
+
+// MinOk returns the smallest value among all input values and a boolean
+// that reports whether any value was provided.
+//
+// If the input is empty, it returns the zero value of T and false; otherwise
+// it returns the minimum and true.
+//
+// Example usage:
+//
+//	if m, ok := g.MinOk(values...); ok {
+//	    fmt.Println(m)
+//	}
+func MinOk[T Verifiable](v ...T) (T, bool) {
+	if len(v) == 0 {
+		var zero T
+		return zero, false
+	}
+	return slices.Min(v), true
 }
 
 // MinList returns the smallest value among all input values in a list.
 //
 // This function requires a list of values of a type that satisfies
-// the Numerable interface. It also accepts optional default values,
+// the Verifiable interface. It also accepts optional default values,
 // which are used when the input list is empty.
 //
 // If the input list is empty:
 //   - If defaults are provided, the minimum value among
 //     the defaults is returned.
-//   - If no defaults are provided, the function returns
-//     the minimum value for the Verifiable type.
+//   - If no defaults are provided, the zero value of type T is returned;
+//     use MinListOk to detect this case explicitly.
 //
 // Example usage:
 //
@@ -254,267 +262,175 @@ func Min[T Verifiable](v ...T) T {
 //	minI := g.MinList(values)
 //	fmt.Println(minI)  // Output: 1
 //
-//	floats := []float64{1.1, 2.2, 3.3, 4.4, 5.5}
-//	minF = g.MinList(floats)
-//	fmt.Println(minF)  // Output: 1.1
-//
 //	empty := []int{}
 //	defaults := []int{4, 5, 6}
 //	minD := g.MinList(empty, defaults...)
 //	fmt.Println(minD)  // Output: 4
 func MinList[T Verifiable](v []T, defaults ...T) T {
-	return If(len(v) != 0, Min(v...), Min(defaults...))
+	m, _ := MinListOk(v, defaults...)
+	return m
+}
+
+// MinListOk returns the smallest value in the list (falling back to defaults
+// when the list is empty) and a boolean reporting whether any value existed.
+//
+// It returns false only when both the list and the defaults are empty.
+func MinListOk[T Verifiable](v []T, defaults ...T) (T, bool) {
+	if len(v) != 0 {
+		return slices.Min(v), true
+	}
+	if len(defaults) != 0 {
+		return slices.Min(defaults), true
+	}
+	var zero T
+	return zero, false
+}
+
+// Clamp constrains a value to the inclusive range [lo, hi].
+//
+// If v is less than lo, lo is returned; if v is greater than hi, hi is
+// returned; otherwise v is returned unchanged. If the bounds are given in
+// the wrong order (lo > hi) they are swapped, so Clamp never panics on
+// reversed bounds.
+//
+// Example usage:
+//
+//	g.Clamp(15, 0, 10) // Output: 10
+//	g.Clamp(-3, 0, 10) // Output: 0
+//	g.Clamp(7, 0, 10)  // Output: 7
+func Clamp[T Ordered](v, lo, hi T) T {
+	if lo > hi {
+		lo, hi = hi, lo
+	}
+	if v < lo {
+		return lo
+	}
+	if v > hi {
+		return hi
+	}
+	return v
 }
 
 // SafeSum returns the sum of all values with overflow checking.
 //
-// This function performs addition with overflow detection for integer types.
-// If an overflow occurs, it returns an error. For floating-point types,
-// it sums the values without overflow checking.
+// For integer types it detects overflow (signed and unsigned alike) via
+// two's-complement wraparound, which Go defines for all integer types, and
+// returns an error wrapping ErrOverflow. For floating-point types it checks
+// the result for Inf/NaN. On overflow the zero value and an error are
+// returned; the error can be tested with errors.Is(err, g.ErrOverflow).
 //
 // Example usage:
 //
 //	// Safe sum with integers.
-//	values := []int{math.MaxInt, 1}
-//	sum, err := SafeSum(values...)
-//	if err != nil {
-//	    fmt.Println("Error:", err)  // Output: Error: integer overflow occurred
+//	sum, err := g.SafeSum(math.MaxInt, 1)
+//	if errors.Is(err, g.ErrOverflow) {
+//	    fmt.Println("overflow")
 //	} else {
 //	    fmt.Println("Sum:", sum)
 //	}
 //
 //	// Safe sum with floats.
-//	floatValues := []float64{1.1, 2.2, 3.3}
-//	sum, err = SafeSum(floatValues...)
-//	if err != nil {
-//	    fmt.Println("Error:", err)
-//	} else {
-//	    fmt.Println("Sum:", sum)  // Output: Sum: 6.6
-//	}
+//	sum, err = g.SafeSum(1.1, 2.2, 3.3)
+//	fmt.Println(sum) // Output: 6.6
 func SafeSum[T Numerable](v ...T) (T, error) {
-	if len(v) != 0 {
-		switch any(v[0]).(type) {
-		case int:
-			var tmp int
-			for _, val := range v {
-				intVal := any(val).(int)
-				if (intVal > 0 && tmp > math.MaxInt-intVal) ||
-					(intVal < 0 && tmp < math.MinInt-intVal) {
-					return *new(T), fmt.Errorf("integer overflow occurred")
-				}
-				tmp += intVal
-			}
-			return T(tmp), nil
-		case int8:
-			var tmp int8
-			for _, val := range v {
-				intVal := any(val).(int8)
-				if (intVal > 0 && tmp > math.MaxInt8-intVal) ||
-					(intVal < 0 && tmp < math.MinInt8-intVal) {
-					return *new(T), fmt.Errorf("int8 overflow occurred")
-				}
-				tmp += intVal
-			}
-			return T(tmp), nil
-		case int16:
-			var tmp int16
-			for _, val := range v {
-				intVal := any(val).(int16)
-				if (intVal > 0 && tmp > math.MaxInt16-intVal) ||
-					(intVal < 0 && tmp < math.MinInt16-intVal) {
-					return *new(T), fmt.Errorf("int16 overflow occurred")
-				}
-				tmp += intVal
-			}
-			return T(tmp), nil
-		case int32:
-			var tmp int32
-			for _, val := range v {
-				intVal := any(val).(int32)
-				if (intVal > 0 && tmp > math.MaxInt32-intVal) ||
-					(intVal < 0 && tmp < math.MinInt32-intVal) {
-					return *new(T), fmt.Errorf("int32 overflow occurred")
-				}
-				tmp += intVal
-			}
-			return T(tmp), nil
-		case int64:
-			var tmp int64
-			for _, val := range v {
-				intVal := any(val).(int64)
-				if (intVal > 0 && tmp > math.MaxInt64-intVal) ||
-					(intVal < 0 && tmp < math.MinInt64-intVal) {
-					return *new(T), fmt.Errorf("int64 overflow occurred")
-				}
-				tmp += intVal
-			}
-			return T(tmp), nil
-		case uint:
-			var tmp uint
-			for _, val := range v {
-				uintVal := any(val).(uint)
-				if tmp > math.MaxUint-uintVal {
-					return *new(T), fmt.Errorf("uint overflow occurred")
-				}
-				tmp += uintVal
-			}
-			return T(tmp), nil
-		case uint8:
-			var tmp uint8
-			for _, val := range v {
-				uintVal := any(val).(uint8)
-				if tmp > math.MaxUint8-uintVal {
-					return *new(T), fmt.Errorf("uint8 overflow occurred")
-				}
-				tmp += uintVal
-			}
-			return T(tmp), nil
-		case uint16:
-			var tmp uint16
-			for _, val := range v {
-				uintVal := any(val).(uint16)
-				if tmp > math.MaxUint16-uintVal {
-					return *new(T), fmt.Errorf("uint16 overflow occurred")
-				}
-				tmp += uintVal
-			}
-			return T(tmp), nil
-		case uint32:
-			var tmp uint32
-			for _, val := range v {
-				uintVal := any(val).(uint32)
-				if tmp > math.MaxUint32-uintVal {
-					return *new(T), fmt.Errorf("uint32 overflow occurred")
-				}
-				tmp += uintVal
-			}
-			return T(tmp), nil
-		case uint64:
-			var tmp uint64
-			for _, val := range v {
-				uintVal := any(val).(uint64)
-				if tmp > math.MaxUint64-uintVal {
-					return *new(T), fmt.Errorf("uint64 overflow occurred")
-				}
-				tmp += uintVal
-			}
-			return T(tmp), nil
-		case float32:
-			var tmp float32
-			for _, val := range v {
-				tmp += any(val).(float32)
-				if math.IsInf(float64(tmp), 0) || math.IsNaN(float64(tmp)) {
-					return *new(T), fmt.Errorf("float32 overflow occurred")
-				}
-			}
-			return T(tmp), nil
-		case float64:
-			var tmp float64
-			for _, val := range v {
-				tmp += any(val).(float64)
-				if math.IsInf(tmp, 0) || math.IsNaN(tmp) {
-					return *new(T), fmt.Errorf("float64 overflow occurred")
-				}
-			}
-			return T(tmp), nil
-		}
-	} // if len(v) != 0
+	var s T
 
-	return *new(T), nil
+	switch any(s).(type) {
+	case float32, float64:
+		for _, x := range v {
+			s += x
+		}
+		if f := float64(s); math.IsInf(f, 0) || math.IsNaN(f) {
+			return 0, fmt.Errorf("g: floating-point overflow: %w", ErrOverflow)
+		}
+		return s, nil
+	default:
+		// Integer types. On two's-complement wraparound the running sum
+		// crosses past the addend's direction: adding a positive value
+		// must not make the result smaller, adding a negative value must
+		// not make it larger. For unsigned types the second clause is
+		// never reached (values are never negative).
+		for _, x := range v {
+			n := s + x
+			if (x > 0 && n < s) || (x < 0 && n > s) {
+				return 0, fmt.Errorf("g: integer overflow: %w", ErrOverflow)
+			}
+			s = n
+		}
+		return s, nil
+	}
 }
 
 // Sum returns the sum of all values.
 //
-// Note: This function does not handle overflow. If the sum of the input
-// values exceeds the maximum value that can be stored in type T,
-// the function returns the zero value of type T.
+// Sum behaves exactly like the + operator applied in sequence: for integer
+// types it wraps around on overflow (two's complement), and for
+// floating-point types it follows IEEE-754. It never reports an error.
+// When you need overflow detection, use SafeSum.
 //
 // Example usage:
 //
 //	values := []int{3, 5, 7, 1, 9, 2}
-//	sum := Sum(values...)
+//	sum := g.Sum(values...)
 //	fmt.Println(sum)  // Output: 27
 //
 //	floats := []float64{1.1, 2.2, 3.3, 4.4, 5.5}
-//	sum = Sum(floats...)
+//	sum = g.Sum(floats...)
 //	fmt.Println(sum)  // Output: 16.5
 func Sum[T Numerable](v ...T) T {
-	if r, err := SafeSum(v...); err == nil {
-		return r
+	var s T
+	for _, x := range v {
+		s += x
 	}
-
-	return *new(T)
+	return s
 }
 
 // IsEven checks if a value is an even number.
 //
-// The function accepts a value of any type T that satisfies
-// the Numerable interface. If the `f` argument is provided
-// and set to true, the function ignores the fractional part
-// of the value when checking for evenness. For integer types,
-// it checks if the value is divisible by 2 without a remainder.
-// For floating-point types, it considers only the integer part
-// of the value and determines the parity of the integer part.
-// If the value has a non-zero fractional part and `f` is true,
-// it returns false since an even number cannot have a fractional part.
+// The function accepts a value of any type T that satisfies the Numerable
+// interface. The check is performed in float64 without converting to int,
+// so it stays correct for very large or negative values that do not fit
+// into int. For floating-point values it considers only the integer part:
+// if the value has a non-zero fractional part it is neither even nor odd,
+// so IsEven returns false. If the optional argument f is true, the
+// fractional part is ignored and only the integer part's parity is checked.
 //
 // Example usage:
 //
-//	even := g.IsEven(6)
-//	fmt.Println(even)  // Output: true
-//
-//	odd := g.IsEven(7)
-//	fmt.Println(odd)  // Output: false
-//
-//	floatingPoint := g.IsEven(6.6)
-//	fmt.Println(floatingPoint)  // Output: false
-//
-//	floatingPoint = g.IsEven(6.6, true)
-//	fmt.Println(floatingPoint)  // Output: true
+//	g.IsEven(6)        // Output: true
+//	g.IsEven(7)        // Output: false
+//	g.IsEven(6.6)      // Output: false
+//	g.IsEven(6.6, true) // Output: true
 func IsEven[T Numerable](v T, f ...bool) bool {
-	if All(f...) {
-		// Ignore the fact that the number is a float
-		// and determine the parity of the left side only.
-		return int(v)%2 == 0
+	ip, frac := math.Modf(float64(v))
+	if frac != 0 && !All(f...) {
+		return false
 	}
-
-	return If(IsWhole(v), int(v)%2 == 0, false)
+	return math.Mod(ip, 2) == 0
 }
 
 // IsOdd checks if a value is an odd number.
 //
-// The function accepts a value of any type T that satisfies
-// the Numerable interface. If the `f` argument is provided
-// and set to true, the function ignores the fractional part
-// of the value when checking for oddness. For integer types,
-// it checks if the value is not divisible by 2 without a remainder.
-// For floating-point types, it considers only the integer part
-// of the value and determines the parity of the integer part.
-// If the value has a non-zero fractional part and `f` is true,
-// it returns true since an odd number cannot have a fractional part.
-// Otherwise, it returns the negation of the IsEven function.
+// The function accepts a value of any type T that satisfies the Numerable
+// interface. Like IsEven, the check is performed in float64 to stay correct
+// for values outside the int range. For floating-point values it considers
+// only the integer part: if the value has a non-zero fractional part it is
+// neither even nor odd, so IsOdd returns false. If the optional argument f
+// is true, the fractional part is ignored and only the integer part's
+// parity is checked.
 //
 // Example usage:
 //
-//	odd := g.IsOdd(7)
-//	fmt.Println(odd)  // Output: true
-//
-//	even := g.IsOdd(6)
-//	fmt.Println(even)  // Output: false
-//
-//	floatingPoint := g.IsOdd(7.7)
-//	fmt.Println(floatingPoint)  // Output: false
-//
-//	floatingPoint = g.IsOdd(7.7, true)
-//	fmt.Println(floatingPoint)  // Output: true
+//	g.IsOdd(7)        // Output: true
+//	g.IsOdd(6)        // Output: false
+//	g.IsOdd(7.7)      // Output: false
+//	g.IsOdd(7.7, true) // Output: true
 func IsOdd[T Numerable](v T, f ...bool) bool {
-	if All(f...) {
-		// Ignore the fact that the number is a float
-		// and determine the parity of the left side only.
-		return int(v)%2 != 0
+	ip, frac := math.Modf(float64(v))
+	if frac != 0 && !All(f...) {
+		return false
 	}
-
-	return If(IsWhole(v), int(v)%2 != 0, false)
+	return math.Mod(ip, 2) != 0
 }
 
 // IsWhole checks if a value is a whole number.
@@ -527,17 +443,10 @@ func IsOdd[T Numerable](v T, f ...bool) bool {
 //
 // Example usage:
 //
-//	whole := g.IsWhole(5)
-//	fmt.Println(whole)  // Output: true
-//
-//	notWhole := g.IsWhole(5.5)
-//	fmt.Println(notWhole)  // Output: false
-//
-//	zero := g.IsWhole(0)
-//	fmt.Println(zero)  // Output: true
-//
-//	negative := g.IsWhole(-3)
-//	fmt.Println(negative)  // Output: true
+//	g.IsWhole(5)    // Output: true
+//	g.IsWhole(5.5)  // Output: false
+//	g.IsWhole(0)    // Output: true
+//	g.IsWhole(-3)   // Output: true
 func IsWhole[T Numerable](v T) bool {
 	_, fraction := math.Modf(float64(v))
 	return fraction == 0
@@ -545,59 +454,59 @@ func IsWhole[T Numerable](v T) bool {
 
 // Random generates a random value of type T based on provided arguments:
 //
-//   - When called without any arguments, it returns 0.
-//   - When called with one argument, it returns a random value from 0 to n-1.
-//   - When called with two arguments, it returns a random value from a to b-1.
-//   - When called with more than two arguments, it returns a randomly selected
-//     value from the provided arguments.
+//   - When called without any arguments, it returns the zero value of T.
+//   - When called with one argument n, it returns a random value in [0, n).
+//     If n <= 0 the range is empty and the zero value is returned.
+//   - When called with two arguments a and b, it returns a random value in
+//     [a, b); the bounds may be given in any order. If a == b that value is
+//     returned.
+//   - When called with more than two arguments, it returns a randomly
+//     selected value from the provided arguments.
 //
-// The function uses the time in nanoseconds as a seed for the random
-// number generator.
+// The generator is the concurrency-safe, automatically seeded source from
+// math/rand/v2, so Random never panics on degenerate ranges and needs no
+// manual seeding.
 //
 // Example usage:
 //
-//	rand0 := g.Random[int]()
-//	fmt.Println(rand0)  // Output: 0
-//
-//	rand1 := g.Random[int](5)
-//	fmt.Println(rand1)  // Output: a random int from 0 to 4
-//
-//	rand2 := g.Random[int](1, 5)
-//	fmt.Println(rand2)  // Output: a random int from 1 to 4
-//
-//	rand3 := g.Random[int](1, 2, 3)
-//	fmt.Println(rand3)  // Output: 1, 2, or 3
+//	g.Random[int]()        // Output: 0
+//	g.Random[int](5)       // Output: a random int in [0, 5)
+//	g.Random[int](1, 5)    // Output: a random int in [1, 5)
+//	g.Random[int](1, 2, 3) // Output: 1, 2, or 3
 func Random[T Numerable](v ...T) T {
 	switch len(v) {
 	case 0:
-		return reflect.Zero(reflect.TypeOf((*T)(nil)).Elem()).Interface().(T)
+		var zero T
+		return zero
 	case 1:
 		return randomValue(0, v[0])
 	case 2:
-		min := v[0]
-		max := v[1]
-		if min == max {
-			return min
-		} else if min > max {
-			min, max = max, min
+		lo, hi := v[0], v[1]
+		if lo == hi {
+			return lo
+		} else if lo > hi {
+			lo, hi = hi, lo
 		}
-		return randomValue(min, max)
+		return randomValue(lo, hi)
 	default:
-		return v[randomGenerator.Intn(len(v))]
+		return v[rand.IntN(len(v))]
 	}
 }
 
-// The randomValue function generates a random value of type T
-// based on provided arguments:
-func randomValue[T Numerable](min, max T) T {
-	var t interface{} = min
-	_, ok32 := t.(float32)
-	_, ok64 := t.(float64)
-	if ok32 || ok64 {
-		return T(float64(min) + randomGenerator.Float64()*float64(max-min))
+// The randomValue function generates a random value of type T in the
+// half-open range [lo, hi). For an empty or invalid span it returns lo,
+// which keeps Random panic-free for degenerate inputs.
+func randomValue[T Numerable](lo, hi T) T {
+	switch any(lo).(type) {
+	case float32, float64:
+		return T(float64(lo) + rand.Float64()*float64(hi-lo))
 	}
 
-	return T(randomGenerator.Intn(int(max-min)) + int(min))
+	span := int64(hi - lo)
+	if span <= 0 {
+		return lo
+	}
+	return T(rand.Int64N(span) + int64(lo))
 }
 
 // RandomList returns a random element from the given list.
@@ -614,9 +523,10 @@ func randomValue[T Numerable](min, max T) T {
 //	fmt.Println(value)  // Output: ""
 func RandomList[T any](v []T) T {
 	if len(v) == 0 {
-		return reflect.Zero(reflect.TypeOf((*T)(nil)).Elem()).Interface().(T)
+		var zero T
+		return zero
 	}
-	return v[randomGenerator.Intn(len(v))]
+	return v[rand.IntN(len(v))]
 }
 
 // RandomMap returns a random value from the given map.
@@ -624,30 +534,29 @@ func RandomList[T any](v []T) T {
 //
 // Example usage:
 //
-//	myMap := map[string]int{
-//	    "apple":  1,
-//	    "banana": 2,
-//	    "cherry": 3,
-//	}
+//	myMap := map[string]int{"apple": 1, "banana": 2, "cherry": 3}
 //	value := g.RandomMap(myMap)
 //	fmt.Println(value)  // Output: a random value from the map
 //
 //	emptyMap := map[string]bool{}
 //	value := g.RandomMap(emptyMap)
-//	fmt.Println(value)  // Output: zero value for T type (false)
+//	fmt.Println(value)  // Output: false
 func RandomMap[K comparable, T any](m map[K]T) T {
-	var keys []K
-	for k := range m {
-		keys = append(keys, k)
+	var zero T
+	if len(m) == 0 {
+		return zero
 	}
 
-	if len(keys) != 0 {
-		if v, ok := m[keys[randomGenerator.Intn(len(keys))]]; ok {
-			return v
+	n := rand.IntN(len(m))
+	i := 0
+	for _, val := range m {
+		if i == n {
+			return val
 		}
+		i++
 	}
 
-	return reflect.Zero(reflect.TypeOf((*T)(nil)).Elem()).Interface().(T)
+	return zero
 }
 
 // RandomListPlural returns a slice of n random elements from the given list v.
@@ -661,9 +570,6 @@ func RandomMap[K comparable, T any](m map[K]T) T {
 //
 //	emptyList := []string{}
 //	values := g.RandomListPlural(2, emptyList)
-//	fmt.Println(values)  // Output: []
-//
-//	values := g.RandomListPlural(0, list)
 //	fmt.Println(values)  // Output: []
 func RandomListPlural[T any](n int, v []T) []T {
 	if n <= 0 || len(v) == 0 {
@@ -683,19 +589,12 @@ func RandomListPlural[T any](n int, v []T) []T {
 //
 // Example usage:
 //
-//	myMap := map[string]int{
-//	    "apple":  1,
-//	    "banana": 2,
-//	    "cherry": 3,
-//	}
+//	myMap := map[string]int{"apple": 1, "banana": 2, "cherry": 3}
 //	values := g.RandomMapPlural(2, myMap)
 //	fmt.Println(values)  // Output: a slice of 2 random values from the map
 //
 //	emptyMap := map[string]bool{}
 //	values := g.RandomMapPlural(3, emptyMap)
-//	fmt.Println(values)  // Output: []
-//
-//	values := g.RandomMapPlural(0, myMap)
 //	fmt.Println(values)  // Output: []
 func RandomMapPlural[K comparable, T any](n int, m map[K]T) []T {
 	if n <= 0 || len(m) == 0 {

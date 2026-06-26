@@ -1,8 +1,12 @@
-// Package g is a comprehensive utility library for Go 1.20+ that provides
+// Package g is a comprehensive utility library for Go 1.24+ that provides
 // a rich set of generic, type-safe helper functions to streamline common
 // programming tasks. Built with modern Go features, particularly generics,
 // this package offers efficient, reliable, and easy-to-use solutions for
 // everyday development challenges.
+//
+// This is the v2 module (github.com/goloop/g/v2). Import it as:
+//
+//	import g "github.com/goloop/g/v2"
 //
 // # Core Features
 //
@@ -26,7 +30,8 @@
 //   - Element ranking and lookup
 //
 // Mathematical Operations:
-//   - Basic arithmetic with overflow protection
+//   - Basic arithmetic; Sum wraps like the + operator, SafeSum detects overflow
+//   - Value clamping to a range (Clamp)
 //   - Statistical functions (Average, Median)
 //   - Random number generation
 //   - Range generation with custom steps
@@ -56,13 +61,15 @@
 //   - Verifiable: Interface for comparable types
 //   - Pair: Generic struct for paired values
 //
-// # Performance Features
+// # Performance and Reliability
 //
-// The package implements various performance optimizations:
-//   - Concurrent processing for large datasets
-//   - Efficient memory management
-//   - Optimized algorithms for common operations
-//   - Thread-safe implementations where necessary
+// The package favours correctness and predictable performance:
+//   - Hot paths delegate to the standard library (slices, maps, cmp) for
+//     well-tested, O(n log n) algorithms instead of bespoke ones
+//   - Randomness uses the concurrency-safe, auto-seeded math/rand/v2 source
+//   - No hidden goroutines: the helpers are simple, allocation-aware loops
+//   - Edge cases (empty input, NaN, overflow, degenerate ranges) are handled
+//     deterministically rather than left to panic
 //
 // # Example Usage
 //

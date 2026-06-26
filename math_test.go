@@ -1,141 +1,94 @@
 package g
 
 import (
+	"errors"
 	"math"
 	"reflect"
-	"runtime"
 	"testing"
 )
 
-// TestDoMiniMaxInt tests the doMiniMax function with integer values.
-func TestDoMiniMaxInt(t *testing.T) {
-	// Test case where m is true (finding maximum)
-	values := []int{1, 3, 2, 5, 4}
-	expectedMax := 5
-	result := doMiniMax(true, values...)
-	if result != expectedMax {
-		t.Errorf("Expected max %d, got %d", expectedMax, result)
+// TestMinMaxBasic exercises Min/Max on integers, floats, single elements,
+// equal elements, and negative values.
+func TestMinMaxBasic(t *testing.T) {
+	ints := []int{1, 3, 2, 5, 4}
+	if got := Max(ints...); got != 5 {
+		t.Errorf("Max(ints) = %d, want 5", got)
+	}
+	if got := Min(ints...); got != 1 {
+		t.Errorf("Min(ints) = %d, want 1", got)
 	}
 
-	// Test case where m is false (finding minimum)
-	expectedMin := 1
-	result = doMiniMax(false, values...)
-	if result != expectedMin {
-		t.Errorf("Expected min %d, got %d", expectedMin, result)
+	floats := []float64{1.1, 3.3, 2.2, 5.5, 4.4}
+	if got := Max(floats...); got != 5.5 {
+		t.Errorf("Max(floats) = %f, want 5.5", got)
+	}
+	if got := Min(floats...); got != 1.1 {
+		t.Errorf("Min(floats) = %f, want 1.1", got)
+	}
+
+	if got := Max(42); got != 42 {
+		t.Errorf("Max(42) = %d, want 42", got)
+	}
+	if got := Min(42); got != 42 {
+		t.Errorf("Min(42) = %d, want 42", got)
+	}
+
+	eq := []int{2, 2, 2, 2}
+	if got := Max(eq...); got != 2 {
+		t.Errorf("Max(eq) = %d, want 2", got)
+	}
+	if got := Min(eq...); got != 2 {
+		t.Errorf("Min(eq) = %d, want 2", got)
+	}
+
+	neg := []int{-1, -3, -2, -5, -4}
+	if got := Max(neg...); got != -1 {
+		t.Errorf("Max(neg) = %d, want -1", got)
+	}
+	if got := Min(neg...); got != -5 {
+		t.Errorf("Min(neg) = %d, want -5", got)
 	}
 }
 
-// Test with float64 values
-func TestDoMiniMaxFloat64(t *testing.T) {
-	// Test case where m is true (finding maximum)
-	values := []float64{1.1, 3.3, 2.2, 5.5, 4.4}
-	expectedMax := 5.5
-	result := doMiniMax(true, values...)
-	if result != expectedMax {
-		t.Errorf("Expected max %f, got %f", expectedMax, result)
+// TestMinMaxEmpty verifies the documented zero-value behaviour on empty input
+// and the explicit *Ok variants.
+func TestMinMaxEmpty(t *testing.T) {
+	var empty []int
+	if got := Max(empty...); got != 0 {
+		t.Errorf("Max(empty) = %d, want 0", got)
+	}
+	if got := Min(empty...); got != 0 {
+		t.Errorf("Min(empty) = %d, want 0", got)
 	}
 
-	// Test case where m is false (finding minimum)
-	expectedMin := 1.1
-	result = doMiniMax(false, values...)
-	if result != expectedMin {
-		t.Errorf("Expected min %f, got %f", expectedMin, result)
+	if _, ok := MaxOk(empty...); ok {
+		t.Error("MaxOk(empty) ok = true, want false")
+	}
+	if _, ok := MinOk(empty...); ok {
+		t.Error("MinOk(empty) ok = true, want false")
+	}
+
+	if v, ok := MaxOk(3, 1, 2); !ok || v != 3 {
+		t.Errorf("MaxOk(3,1,2) = (%d, %v), want (3, true)", v, ok)
+	}
+	if v, ok := MinOk(3, 1, 2); !ok || v != 1 {
+		t.Errorf("MinOk(3,1,2) = (%d, %v), want (1, true)", v, ok)
 	}
 }
 
-// Test with a single element
-func TestDoMiniMaxSingleElement(t *testing.T) {
-	value := []int{42}
-	expected := 42
-	result := doMiniMax(true, value...)
-	if result != expected {
-		t.Errorf("Expected %d, got %d", expected, result)
-	}
-	result = doMiniMax(false, value...)
-	if result != expected {
-		t.Errorf("Expected %d, got %d", expected, result)
-	}
-}
-
-// Test with an empty slice
-func TestDoMiniMaxEmptySlice(t *testing.T) {
-	var values []int
-	var expected int // Zero value of int
-	result := doMiniMax(true, values...)
-	if result != expected {
-		t.Errorf("Expected zero value %d, got %d", expected, result)
-	}
-	result = doMiniMax(false, values...)
-	if result != expected {
-		t.Errorf("Expected zero value %d, got %d", expected, result)
-	}
-}
-
-// Test with all elements equal
-func TestDoMiniMaxEqualElements(t *testing.T) {
-	values := []int{2, 2, 2, 2}
-	expected := 2
-	result := doMiniMax(true, values...)
-	if result != expected {
-		t.Errorf("Expected %d, got %d", expected, result)
-	}
-	result = doMiniMax(false, values...)
-	if result != expected {
-		t.Errorf("Expected %d, got %d", expected, result)
-	}
-}
-
-// Test with negative values
-func TestDoMiniMaxNegativeValues(t *testing.T) {
-	values := []int{-1, -3, -2, -5, -4}
-	expectedMax := -1
-	expectedMin := -5
-	result := doMiniMax(true, values...)
-	if result != expectedMax {
-		t.Errorf("Expected max %d, got %d", expectedMax, result)
-	}
-	result = doMiniMax(false, values...)
-	if result != expectedMin {
-		t.Errorf("Expected min %d, got %d", expectedMin, result)
-	}
-}
-
-// Test with large data to trigger parallel execution
-func TestDoMiniMaxLargeData(t *testing.T) {
-	size := minLoadPerGoroutine * 2
+// TestMinMaxLargeData checks correctness on a large slice (formerly the
+// "parallel" path, now a plain linear scan).
+func TestMinMaxLargeData(t *testing.T) {
+	const size = 200_000
 	values := make([]int, size)
 	for i := 0; i < size; i++ {
 		values[i] = i
 	}
-	expectedMax := size - 1
-	expectedMin := 0
-	result := doMiniMax(true, values...)
-	if result != expectedMax {
-		t.Errorf("Expected max %d, got %d", expectedMax, result)
+	if got := Max(values...); got != size-1 {
+		t.Errorf("Max(large) = %d, want %d", got, size-1)
 	}
-	result = doMiniMax(false, values...)
-	if result != expectedMin {
-		t.Errorf("Expected min %d, got %d", expectedMin, result)
-	}
-}
-
-// Test when the number of elements isn't a multiple of the number of goroutines
-func TestDoMiniMaxChunkBoundary(t *testing.T) {
-	numGoroutines := runtime.GOMAXPROCS(0)
-	size := numGoroutines*10 + 3 // Not a multiple of numGoroutines
-	values := make([]int, size)
-	for i := 0; i < size; i++ {
-		values[i] = i
-	}
-	expectedMax := size - 1
-	expectedMin := 0
-	result := doMiniMax(true, values...)
-	if result != expectedMax {
-		t.Errorf("Expected max %d, got %d", expectedMax, result)
-	}
-	result = doMiniMax(false, values...)
-	if result != expectedMin {
-		t.Errorf("Expected min %d, got %d", expectedMin, result)
+	if got := Min(values...); got != 0 {
+		t.Errorf("Min(large) = %d, want 0", got)
 	}
 }
 
@@ -676,11 +629,23 @@ func TestSum(t *testing.T) {
 	}
 }
 
+// TestSumOverflow documents the v2 contract: Sum wraps like the + operator
+// on integer overflow (it never silently returns 0). Use SafeSum to detect
+// overflow instead.
 func TestSumOverflow(t *testing.T) {
-	values := []int{math.MaxInt, 1}
-	result := Sum(values...)
-	if result != 0 {
-		t.Errorf("Sum overflow failed, got: %d, want: 0", result)
+	if got := Sum(math.MaxInt, 1); got != math.MinInt {
+		t.Errorf("Sum(MaxInt,1) = %d, want %d (two's-complement wrap)",
+			got, math.MinInt)
+	}
+
+	// int8 wraps within its own width: 127 + 1 == -128.
+	if got := Sum[int8](127, 1); got != -128 {
+		t.Errorf("Sum[int8](127,1) = %d, want -128", got)
+	}
+
+	// SafeSum is the overflow-aware counterpart.
+	if _, err := SafeSum(math.MaxInt, 1); !errors.Is(err, ErrOverflow) {
+		t.Errorf("SafeSum(MaxInt,1) err = %v, want ErrOverflow", err)
 	}
 }
 

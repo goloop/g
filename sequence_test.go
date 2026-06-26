@@ -5,7 +5,6 @@ import (
 	"math/rand"
 	"reflect"
 	"testing"
-	"time"
 
 	"github.com/goloop/trit"
 )
@@ -612,10 +611,8 @@ func TestIn(t *testing.T) {
 
 // TestIn tests the In function for int values.
 func TestInWithInt(t *testing.T) {
-	minLoadPerGoroutine = 20
 	generateIntSlice := func(size int) []int {
 		slice := make([]int, size)
-		rand.Seed(time.Now().UnixNano())
 		for i := range slice {
 			slice[i] = rand.Intn(100) - 50 // negative and positive integers
 		}
@@ -639,7 +636,6 @@ func TestInWithInt(t *testing.T) {
 func TestInWithFloat(t *testing.T) {
 	generateFloatSlice := func(size int) []float64 {
 		slice := make([]float64, size)
-		rand.Seed(time.Now().UnixNano())
 		for i := range slice {
 			slice[i] = rand.Float64()*100 - 50 // negative and positive floats
 		}

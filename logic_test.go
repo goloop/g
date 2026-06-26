@@ -205,7 +205,6 @@ func TestAllBoolList(t *testing.T) {
 // TestAll tests the All function.
 func TestAll(t *testing.T) {
 	// Define a list of test cases as anonymous struct.
-	minLoadPerGoroutine = 20
 	tests := []struct {
 		name string
 		v    []interface{}
@@ -298,7 +297,6 @@ func TestAll(t *testing.T) {
 // TestAnyBool tests the Any function with bool.
 func TestAnyBool(t *testing.T) {
 	// Define a list of test cases as anonymous struct.
-	minLoadPerGoroutine = 20
 	tests := []struct {
 		name string
 		v    []bool
@@ -401,7 +399,6 @@ func TestAnyBoolList(t *testing.T) {
 // TestAny tests the Any function.
 func TestAny(t *testing.T) {
 	// Define test cases.
-	minLoadPerGoroutine = 20
 	tests := []struct {
 		name string
 		v    []interface{}

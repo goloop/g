@@ -2,43 +2,17 @@ package g
 
 import "testing"
 
-// TestParallelTasks tests the ParallelTasks function.
-func TestParallelTasks(t *testing.T) {
-	maxParallelTasks = 10 // set to whatever value you need
-	parallelTasks = 1     // initialize to a default value
-
-	tests := []struct {
-		name     string
-		input    []int
-		expected int
-	}{
-		{
-			name:     "No parameters",
-			input:    nil,
-			expected: 1, // should return the default value
-		},
-		{
-			name:     "Zero sum",
-			input:    []int{-5, 5},
-			expected: 1, // should return minimum value of 1
-		},
-		{
-			name:     "Positive sum less than max",
-			input:    []int{3, 2},
-			expected: 5, // should return the sum
-		},
-		{
-			name:     "Positive sum greater than max",
-			input:    []int{15, 10},
-			expected: 10, // should return maxParallelTasks
-		},
+// TestPair verifies the generic Pair container holds both fields.
+func TestPair(t *testing.T) {
+	p := Pair[int, string]{First: 7, Second: "seven"}
+	if p.First != 7 || p.Second != "seven" {
+		t.Errorf("Pair = %+v, want {7 seven}", p)
 	}
+}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := ParallelTasks(tt.input...); got != tt.expected {
-				t.Errorf("ParallelTasks() = %v, want %v", got, tt.expected)
-			}
-		})
+// TestMaxRangeSize guards the documented range guard constant.
+func TestMaxRangeSize(t *testing.T) {
+	if MaxRangeSize != 100_000_000 {
+		t.Errorf("MaxRangeSize = %d, want 100000000", MaxRangeSize)
 	}
 }

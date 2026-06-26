@@ -1,39 +1,10 @@
 package g
 
 import (
-	"context"
 	"math"
-	"math/rand"
-	"reflect"
-	"sync"
-	"time"
+	"math/rand/v2"
+	"slices"
 )
-
-// The logicFoundValue is a helper struct that holds a boolean value
-// and a Mutex to protect it from concurrent access.
-//
-// They are used in the In function to detect the desired result
-// in a separate goroutine.
-type logicFoundValue struct {
-	m     sync.Mutex
-	value bool
-}
-
-// SetValue sets a new value for the Found. It locks the Mutex before
-// changing the value and unlocks it after the change is complete.
-func (f *logicFoundValue) SetValue(value bool) {
-	f.m.Lock()
-	defer f.m.Unlock()
-	f.value = value
-}
-
-// GetValue retrieves the current value of the Found. It locks the Mutex
-// before reading the value and unlocks it after the read is complete.
-func (f *logicFoundValue) GetValue() bool {
-	f.m.Lock()
-	defer f.m.Unlock()
-	return f.value
-}
 
 // Contains checks if a slice contains a specific element.
 //
@@ -113,13 +84,7 @@ func Filter[T any](vs []T, f func(T) bool) []T {
 //	idx := g.Index(nums, 11)
 //	fmt.Println(idx) // Output: -1
 func Index[T comparable](vs []T, v T) int {
-	for i, item := range vs {
-		if item == v {
-			return i
-		}
-	}
-
-	return -1
+	return slices.Index(vs, v)
 }
 
 // Map applies a function to all items in an input slice and returns
@@ -200,7 +165,9 @@ func Reduce[T any, U any](vs []T, f func(U, T) U, init U) U {
 // are sorted in descending order. Otherwise, the values are sorted
 // in ascending order.
 //
-// The function uses the quicksort algorithm to sort the values.
+// Sorting is delegated to the standard library, which guarantees
+// O(n log n) behaviour and avoids the quadratic worst case of a naive
+// quicksort on already-sorted input.
 //
 // Example usage:
 //
@@ -222,69 +189,10 @@ func Reduce[T any, U any](vs []T, f func(U, T) U, init U) U {
 //	g.Sort(floats)
 //	fmt.Println(floats) // Output: [1.1 2.2 5.5 7.7 8.8 9.9]
 func Sort[T Verifiable](v []T, inverse ...bool) {
-	inv := All(inverse...)
-
-	if inv {
-		quicksortDesc(v, 0, len(v)-1)
-	} else {
-		quicksortAsc(v, 0, len(v)-1)
+	slices.Sort(v)
+	if All(inverse...) {
+		slices.Reverse(v)
 	}
-}
-
-// The quicksortAsc is a helper function that performs the quicksort
-// algorithm on a slice in ascending order.
-func quicksortAsc[T Verifiable](v []T, low, high int) {
-	if low < high {
-		pivotIndex := partitionAsc(v, low, high)
-		quicksortAsc(v, low, pivotIndex-1)
-		quicksortAsc(v, pivotIndex+1, high)
-	}
-}
-
-// The quicksortDesc is a helper function that performs the quicksort
-// algorithm on a slice in descending order.
-func quicksortDesc[T Verifiable](v []T, low, high int) {
-	if low < high {
-		pivotIndex := partitionDesc(v, low, high)
-		quicksortDesc(v, low, pivotIndex-1)
-		quicksortDesc(v, pivotIndex+1, high)
-	}
-}
-
-// The partitionAsc is a helper function that selects a pivot and partitions
-// the slice around it in ascending order.
-func partitionAsc[T Verifiable](v []T, low, high int) int {
-	pivot := v[high]
-	i := low - 1
-
-	for j := low; j < high; j++ {
-		if v[j] < pivot {
-			i++
-			v[i], v[j] = v[j], v[i]
-		}
-	}
-
-	v[i+1], v[high] = v[high], v[i+1]
-
-	return i + 1
-}
-
-// The partitionDesc is a helper function that selects a pivot and partitions
-// the slice around it in descending order.
-func partitionDesc[T Verifiable](v []T, low, high int) int {
-	pivot := v[high]
-	i := low - 1
-
-	for j := low; j < high; j++ {
-		if v[j] > pivot {
-			i++
-			v[i], v[j] = v[j], v[i]
-		}
-	}
-
-	v[i+1], v[high] = v[high], v[i+1]
-
-	return i + 1
 }
 
 // Value returns the first non-zero value from the parameters.
@@ -323,15 +231,14 @@ func partitionDesc[T Verifiable](v []T, low, high int) int {
 //	g.Value(l)    // Returns: []int{0, 1, 2, 3}, list is not empty object
 //	g.Value(l...) // Returns: 1, because 1 is the first not empty value
 func Value[T any](v ...T) T {
-	if len(v) != 0 {
-		for _, val := range v {
-			if !IsEmpty(val) {
-				return val
-			}
+	for _, val := range v {
+		if !IsEmpty(val) {
+			return val
 		}
 	}
 
-	return reflect.Zero(reflect.TypeOf((*T)(nil)).Elem()).Interface().(T)
+	var zero T
+	return zero
 }
 
 // Zip takes two slices and returns a slice of pairs.
@@ -403,17 +310,17 @@ func Zip[T, U any](a []T, b []U) []Pair[T, U] {
 //	uniqueWords := g.Distinct(words)
 //	fmt.Println(uniqueWords)  // Output: ["hello" "world" "gophers"]
 func Distinct[T comparable](v []T) []T {
-	uniqueMap := make(map[T]bool)
-	uniqueValues := make([]T, 0)
+	seen := make(map[T]struct{}, len(v))
+	result := make([]T, 0, len(v))
 
 	for _, item := range v {
-		if !uniqueMap[item] {
-			uniqueMap[item] = true
-			uniqueValues = append(uniqueValues, item)
+		if _, ok := seen[item]; !ok {
+			seen[item] = struct{}{}
+			result = append(result, item)
 		}
 	}
 
-	return uniqueValues
+	return result
 }
 
 // Shuffle randomly shuffles the elements in the input slice.
@@ -432,18 +339,15 @@ func Distinct[T comparable](v []T) []T {
 //	// Prints the slice numbers in a random order, e.g., [3 1 5 2 4]
 //
 //	// This function also works with slices of other types, like strings:
-//	words := []string{"hello", "world", "gophers", "Go", "OpenAI"}
+//	words := []string{"hello", "world", "gophers", "Go", "stdlib"}
 //	g.Shuffle(words)
 //	fmt.Println(words)
 //	// Prints the slice words in a random order, e.g.,
-//	// ["Go" "gophers" "hello" "OpenAI" "world"]
+//	// ["Go" "gophers" "hello" "stdlib" "world"]
 func Shuffle[T any](v []T) {
-	rand.Seed(time.Now().UnixNano())
-
-	for i := len(v) - 1; i > 0; i-- {
-		j := rand.Intn(i + 1)
+	rand.Shuffle(len(v), func(i, j int) {
 		v[i], v[j] = v[j], v[i]
-	}
+	})
 }
 
 // Product calculates the product of all numeric values in the input slice.
@@ -511,19 +415,9 @@ func Merge[T Verifiable](a []T, b []T, sort ...bool) []T {
 	return merged
 }
 
-// In is a generic function that checks if a given value 'v' of type 'T' exists
-// in a variadic parameter list of 'T'. The function uses the 'Verifiable' type
-// constraint which allows it to operate on numeric types and strings.
-//
-// This function leverages goroutines for concurrent computation when the size
-// of the list is large. It splits the list into chunks (based on the number
-// of CPU cores) and checks each chunk in a separate goroutine. This allows the
-// function to take advantage of multi-core processors and improves performance
-// on large data sets.
-//
-// A 'sync.WaitGroup' is used to ensure all goroutines have completed, and a
-// thread-safe structure 'Found' is used to safely access the shared 'found'
-// variable across goroutines.
+// In reports whether a given value v of type T exists in a variadic
+// parameter list of T. The Verifiable constraint allows it to operate on
+// numeric types and strings.
 //
 // Usage:
 //
@@ -541,63 +435,7 @@ func Merge[T Verifiable](a []T, b []T, sort ...bool) []T {
 //	exists = g.In("date", words...)
 //	fmt.Println(exists)  // Output: true
 func In[T Verifiable](v T, list ...T) bool {
-	var wg sync.WaitGroup
-
-	// Will use context to stop the rest of the goroutines
-	// if the value has already been found.
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	p := parallelTasks
-	found := &logicFoundValue{}
-
-	// If the length of the slice is less than or equal to
-	// the minLoadPerGoroutine, then we do not need
-	// to use goroutines.
-	if l := len(list); l == 0 {
-		return false
-	} else if l/p < minLoadPerGoroutine {
-		for _, b := range list {
-			if b == v {
-				return true
-			}
-		}
-
-		return false
-	}
-
-	chunkSize := len(list) / p
-	for i := 0; i < p; i++ {
-		wg.Add(1)
-
-		start := i * chunkSize
-		end := start + chunkSize
-		if i == p-1 {
-			end = len(list)
-		}
-
-		go func(start, end int) {
-			defer wg.Done()
-
-			for _, b := range list[start:end] {
-				// Check if the context has been cancelled.
-				select {
-				case <-ctx.Done():
-					return
-				default:
-				}
-
-				if b == v {
-					found.SetValue(true)
-					cancel() // stop all other goroutines
-					return
-				}
-			}
-		}(start, end)
-	}
-
-	wg.Wait()
-	return found.GetValue()
+	return slices.Contains(list, v)
 }
 
 // Range generates a slice of integers based on the provided parameters.
@@ -745,9 +583,13 @@ func Rangef[T any](fn func(int) T, a int, opt ...int) []T {
 
 	// Calculate the number of steps and create the slice of this size.
 	steps := Abs(int(math.Ceil(float64(m-n) / float64(s))))
-	steps = If(steps >= MaxRangeSize, 0, steps) // limit the size of the slice
-	result := make([]T, steps)
 
+	// Limit the size of the slice (nil, consistent with Range).
+	if steps >= MaxRangeSize {
+		return nil
+	}
+
+	result := make([]T, steps)
 	for i := 0; i < steps; i++ {
 		result[i] = fn(n + i*s)
 	}

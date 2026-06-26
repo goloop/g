@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math/rand"
 	"testing"
-	"time"
 )
 
 // Helper functions/
@@ -286,8 +285,4 @@ func BenchmarkZip(b *testing.B) {
 			}
 		})
 	}
-}
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
 }

@@ -42,35 +42,29 @@ package g
 //	result = g.Rank(9, []float64{1, 5, 2, 3, 7, 8}, true)
 //	fmt.Println(result) // Output: -1
 func Rank[T Verifiable](number T, array []T, ascending ...bool) int {
-	var removed int
+	// The rank equals the number of elements that are strictly "better"
+	// than number: greater for descending order, smaller for ascending.
+	// Equal values therefore share the same rank, and the next rank skips
+	// by the number of ties — matching the spreadsheet RANK behaviour.
+	// A single pass keeps this O(n) regardless of duplicates.
+	asc := All(ascending...)
 
-	// Method remove sample element from array and returns
-	// number of removed elements and new array.
-	remove := func(array []T, sample T) (removed int, result []T) {
-		for _, v := range array {
-			if v == sample {
-				removed++
-			} else {
-				result = append(result, v)
-			}
+	found := false
+	better := 0
+	for _, v := range array {
+		switch {
+		case v == number:
+			found = true
+		case asc && v < number, !asc && v > number:
+			better++
 		}
-
-		return
 	}
 
-	rank := 0
-	inverse := All(ascending...)
-	for len(array) != 0 {
-		var value T = If(inverse, MinList(array), MaxList(array))
-		if value == number {
-			return int(rank)
-		}
-
-		removed, array = remove(array, value)
-		rank += removed
+	if !found {
+		return -1
 	}
 
-	return -1
+	return better
 }
 
 // HLookup looks up and retrieves data from a specific row in a table.

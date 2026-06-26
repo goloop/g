@@ -1,9 +1,7 @@
 package g
 
 import (
-	"context"
 	"reflect"
-	"sync"
 
 	"github.com/goloop/trit"
 )
@@ -51,6 +49,13 @@ import (
 //
 //	max := g.If(trit.Unknown, 3, 2, 1, 5, 7)  // Output: 1 and 5, 7 are ignored
 //	min := g.If(3 > 2, 3, 2, 1, 5, 7)  // Output: 3 and 1, 5, 7 are ignored
+//
+// Important: Go is not a lazy language, so both branches t and f are
+// fully evaluated at the call site before If runs. This is unlike a real
+// ternary operator. For example, g.If(p != nil, *p, 0) dereferences p
+// even when p is nil, which panics. When a branch is expensive or unsafe
+// to evaluate unconditionally, use IfFunc, which evaluates only the
+// chosen branch.
 func If[L bool | trit.Trit, T any](e L, t, f T, u ...T) T {
 	switch val := interface{}(e).(type) {
 	case trit.Tritter:
@@ -66,6 +71,34 @@ func If[L bool | trit.Trit, T any](e L, t, f T, u ...T) T {
 	}
 
 	return f
+}
+
+// IfFunc is a lazy variant of If: it evaluates only the branch it returns.
+//
+// Unlike If, which (because Go is not lazy) evaluates both branch values
+// at the call site, IfFunc takes the branches as thunks and calls exactly
+// one of them. This makes it safe and cheap when a branch is expensive or
+// must not run unless selected.
+//
+// Example usage:
+//
+//	// Only parse(s) runs when s is non-empty; fallback() never runs.
+//	v := g.IfFunc(s != "",
+//	    func() int { return parse(s) },
+//	    func() int { return fallback() },
+//	)
+//
+//	// Safe nil-guard: *p is dereferenced only when p != nil.
+//	val := g.IfFunc(p != nil,
+//	    func() int { return *p },
+//	    func() int { return 0 },
+//	)
+func IfFunc[T any](cond bool, t, f func() T) T {
+	if cond {
+		return t()
+	}
+
+	return f()
 }
 
 // All returns true if all values in the provided slice
@@ -98,63 +131,17 @@ func If[L bool | trit.Trit, T any](e L, t, f T, u ...T) T {
 //	g.All(l...) // Returns: false, because not all elements
 //	            // of the list are true
 func All[T any](v ...T) bool {
-	var wg sync.WaitGroup
-
-	// Will use context to stop the rest of the goroutines
-	// if the value has already been found.
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	p := parallelTasks
-	found := &logicFoundValue{value: true}
-
-	// If the length of the slice is less than or equal to
-	// the minLoadPerGoroutine, then we do not need
-	// to use goroutines.
-	if l := len(v); l == 0 {
+	if len(v) == 0 {
 		return false
-	} else if l/p < minLoadPerGoroutine {
-		for _, b := range v {
-			if IsFalse(b) {
-				return false
-			}
-		}
-
-		return true
 	}
 
-	chunkSize := len(v) / p
-	for i := 0; i < p; i++ {
-		wg.Add(1)
-
-		start := i * chunkSize
-		end := start + chunkSize
-		if i == p-1 {
-			end = len(v)
+	for _, b := range v {
+		if IsFalse(b) {
+			return false
 		}
-
-		go func(start, end int) {
-			defer wg.Done()
-
-			for _, b := range v[start:end] {
-				// Check if the context has been cancelled.
-				select {
-				case <-ctx.Done():
-					return
-				default:
-				}
-
-				if IsFalse(b) {
-					found.SetValue(false)
-					cancel() // stop all other goroutines
-					return
-				}
-			}
-		}(start, end)
 	}
 
-	wg.Wait()
-	return found.GetValue()
+	return true
 }
 
 // AllList is a synonym for the All function that accepts
@@ -198,63 +185,13 @@ func AllList[T any](v []T) bool {
 //	g.Any(l...) // Returns: false, because not all elements
 //	            // of the list are true
 func Any[T any](v ...T) bool {
-	var wg sync.WaitGroup
-
-	// Will use context to stop the rest of the goroutines
-	// if the value has already been found.
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	p := parallelTasks
-	found := &logicFoundValue{value: false}
-
-	// If the length of the slice is less than or equal to
-	// the minLoadPerGoroutine, then we do not need
-	// to use goroutines.
-	if l := len(v); l == 0 {
-		return false
-	} else if l/p < minLoadPerGoroutine {
-		for _, b := range v {
-			if !IsFalse(b) {
-				return true
-			}
+	for _, b := range v {
+		if !IsFalse(b) {
+			return true
 		}
-
-		return false
 	}
 
-	chunkSize := len(v) / p
-	for i := 0; i < p; i++ {
-		wg.Add(1)
-
-		start := i * chunkSize
-		end := start + chunkSize
-		if i == p-1 {
-			end = len(v)
-		}
-
-		go func(start, end int) {
-			defer wg.Done()
-
-			for _, b := range v[start:end] {
-				// Check if the context has been cancelled.
-				select {
-				case <-ctx.Done():
-					return
-				default:
-				}
-
-				if !IsFalse(b) {
-					found.SetValue(true)
-					cancel() // stop all other goroutines
-					return
-				}
-			}
-		}(start, end)
-	}
-
-	wg.Wait()
-	return found.GetValue()
+	return false
 }
 
 // AnyList is a synonym for the Any function that accepts
@@ -301,55 +238,49 @@ func AnyList[T any](v []T) bool {
 //	result := g.IsEmpty(flag)
 //	fmt.Println(result) // Output: true
 func IsEmpty[T any](v T) bool {
-	t := reflect.TypeOf(v)
-	if t == nil {
-		return true
+	// For Trit the empty state is Unknown only.
+	if t, ok := any(v).(trit.Tritter); ok {
+		return t.IsUnknown()
 	}
 
-	// For Trit empty state is Unknown only.
-	switch val := interface{}(v).(type) {
-	case trit.Tritter:
-		return val.IsUnknown()
+	rv := reflect.ValueOf(v)
+	if !rv.IsValid() {
+		return true // untyped nil interface
 	}
 
 	// For slices and arrays we check if the length is zero.
-	kind := t.Kind()
-	if kind == reflect.Slice || kind == reflect.Array {
-		return reflect.ValueOf(v).Len() == 0
+	if k := rv.Kind(); k == reflect.Slice || k == reflect.Array {
+		return rv.Len() == 0
 	}
 
-	zero := reflect.Zero(t).Interface()
-	return reflect.DeepEqual(v, zero)
+	return rv.IsZero()
 }
 
-// IsFalse checks if the v of any type T is true value for that type.
+// IsFalse checks if the v of any type T is a false (zero) value for that type.
 //
 // P.s. trit.False and trit.Unknown are false values.
 func IsFalse[T any](v T) bool {
-	t := reflect.TypeOf(v)
-	if t == nil {
-		return true
+	// For Trit not true states are: False and Unknown.
+	// Anything that is not true is false: when converting a three-valued
+	// object to a boolean object the Unknown is False.
+	if t, ok := any(v).(trit.Tritter); ok {
+		return !t.IsTrue()
 	}
 
-	// For Trit not true states is: False and Unknown.
-	switch val := interface{}(v).(type) {
-	case trit.Tritter:
-		// Anything that is not a true is a false, when converting
-		// three-valued object to a boolean object the Unknown is False.
-		return !val.IsTrue()
+	rv := reflect.ValueOf(v)
+	if !rv.IsValid() {
+		return true // untyped nil interface
 	}
 
 	// For slices and arrays we check if the length is zero.
-	kind := t.Kind()
-	if kind == reflect.Slice || kind == reflect.Array {
-		return reflect.ValueOf(v).Len() == 0
+	if k := rv.Kind(); k == reflect.Slice || k == reflect.Array {
+		return rv.Len() == 0
 	}
 
-	zero := reflect.Zero(t).Interface()
-	return reflect.DeepEqual(v, zero)
+	return rv.IsZero()
 }
 
-// IsTrue checks if the v of any type T is true value for that type.
+// IsTrue checks if the v of any type T is a true (non-zero) value for that type.
 //
 // P.s. trit.False and trit.Unknown are false values.
 func IsTrue[T any](v T) bool {
@@ -360,9 +291,8 @@ func IsTrue[T any](v T) bool {
 
 // IsPointer checks if a value is a pointer.
 //
-// The function takes an interface{} value `v` and checks if it is
-// a pointer type. It returns true if `v` is a pointer, and false
-// otherwise.
+// The function takes a value v of any type and checks if it is a pointer
+// type. It returns true if v is a pointer, and false otherwise.
 //
 // Example usage:
 //
@@ -379,19 +309,20 @@ func IsTrue[T any](v T) bool {
 //	result = g.IsPointer(10)
 //	fmt.Println(result) // Output: false
 //
-//	// Check if a variable holding nil is a pointer.
+//	// Check if a variable holding a typed nil pointer is a pointer.
 //	var ptr *int
 //	result = g.IsPointer(ptr)
-//	fmt.Println(result) // Output: false
-func IsPointer(v interface{}) bool {
-	return reflect.TypeOf(v).Kind() == reflect.Ptr
+//	fmt.Println(result) // Output: true
+func IsPointer(v any) bool {
+	rv := reflect.ValueOf(v)
+	return rv.IsValid() && rv.Kind() == reflect.Ptr
 }
 
 // IsNumber checks if a value is a numeric type.
 //
-// The function takes an interface{} value `v` and checks if it is
-// of a numeric type, including integer and floating-point types.
-// It returns true if `v` is a numeric type, and false otherwise.
+// The function takes a value v of any type and checks if it is of a numeric
+// type, including integer and floating-point types. It returns true if v
+// is a numeric type, and false otherwise.
 //
 // Example usage:
 //
@@ -419,10 +350,10 @@ func IsPointer(v interface{}) bool {
 //	nums := []int{1, 2, 3}
 //	result = g.IsNumber(nums)
 //	fmt.Println(result) // Output: false
-func IsNumber(v interface{}) bool {
+func IsNumber(v any) bool {
 	switch v.(type) {
 	case int, int8, int16, int32, int64, uint, uint8,
-		uint16, uint32, uint64, float32, float64:
+		uint16, uint32, uint64, uintptr, float32, float64:
 		return true
 	default:
 		return false

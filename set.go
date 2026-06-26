@@ -24,18 +24,17 @@ package g
 //	result := g.Union(a, b)
 //	fmt.Println(result) // Output: [a b c d e]
 func Union[T comparable](a []T, b []T) []T {
-	distinctValues := map[T]bool{}
+	seen := make(map[T]struct{}, len(a)+len(b))
 
 	for _, val := range a {
-		distinctValues[val] = true
+		seen[val] = struct{}{}
 	}
-
 	for _, val := range b {
-		distinctValues[val] = true
+		seen[val] = struct{}{}
 	}
 
-	result := make([]T, 0, len(distinctValues))
-	for val := range distinctValues {
+	result := make([]T, 0, len(seen))
+	for val := range seen {
 		result = append(result, val)
 	}
 
@@ -67,20 +66,22 @@ func Union[T comparable](a []T, b []T) []T {
 //	result := g.Intersection(a, b)
 //	fmt.Println(result) // Output: [c]
 func Intersection[T comparable](a []T, b []T) []T {
-	m1 := make(map[T]bool)
-	for _, item := range a {
-		m1[item] = true
-	}
-	m2 := make(map[T]bool)
+	setB := make(map[T]struct{}, len(b))
 	for _, item := range b {
-		m2[item] = true
+		setB[item] = struct{}{}
 	}
 
+	seen := make(map[T]struct{}, len(a))
 	result := make([]T, 0)
-	for item := range m1 {
-		if m2[item] {
-			result = append(result, item)
+	for _, item := range a {
+		if _, ok := setB[item]; !ok {
+			continue
 		}
+		if _, dup := seen[item]; dup {
+			continue
+		}
+		seen[item] = struct{}{}
+		result = append(result, item)
 	}
 
 	return result
@@ -111,20 +112,22 @@ func Intersection[T comparable](a []T, b []T) []T {
 //	result := g.Difference(a, b)
 //	fmt.Println(result) // Output: ["a", "b"]
 func Difference[T comparable](a []T, b []T) []T {
-	m1 := make(map[T]bool)
-	for _, item := range a {
-		m1[item] = true
-	}
-	m2 := make(map[T]bool)
+	setB := make(map[T]struct{}, len(b))
 	for _, item := range b {
-		m2[item] = true
+		setB[item] = struct{}{}
 	}
 
+	seen := make(map[T]struct{}, len(a))
 	result := make([]T, 0)
-	for item := range m1 {
-		if !m2[item] {
-			result = append(result, item)
+	for _, item := range a {
+		if _, inB := setB[item]; inB {
+			continue
 		}
+		if _, dup := seen[item]; dup {
+			continue
+		}
+		seen[item] = struct{}{}
+		result = append(result, item)
 	}
 
 	return result
@@ -160,23 +163,23 @@ func Diff[T comparable](a []T, b []T) []T {
 //	result := g.SymmetricDifference(a, b)
 //	fmt.Println(result) // Output: ["a", "b", "d", "e"]
 func SymmetricDifference[T comparable](a []T, b []T) []T {
-	m1 := make(map[T]bool)
+	setA := make(map[T]struct{}, len(a))
 	for _, item := range a {
-		m1[item] = true
+		setA[item] = struct{}{}
 	}
-	m2 := make(map[T]bool)
+	setB := make(map[T]struct{}, len(b))
 	for _, item := range b {
-		m2[item] = true
+		setB[item] = struct{}{}
 	}
 
 	result := make([]T, 0)
-	for item := range m1 {
-		if !m2[item] {
+	for item := range setA {
+		if _, ok := setB[item]; !ok {
 			result = append(result, item)
 		}
 	}
-	for item := range m2 {
-		if !m1[item] {
+	for item := range setB {
+		if _, ok := setA[item]; !ok {
 			result = append(result, item)
 		}
 	}
@@ -214,14 +217,14 @@ func Sdiff[T comparable](a []T, b []T) []T {
 //	result := g.Complement(a, u)
 //	fmt.Println(result) // Output: ["d", "e"]
 func Complement[T comparable](a []T, b []T) []T {
-	m1 := make(map[T]bool)
+	setA := make(map[T]struct{}, len(a))
 	for _, item := range a {
-		m1[item] = true
+		setA[item] = struct{}{}
 	}
 
 	result := make([]T, 0)
 	for _, item := range b {
-		if !m1[item] {
+		if _, ok := setA[item]; !ok {
 			result = append(result, item)
 		}
 	}

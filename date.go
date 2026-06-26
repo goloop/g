@@ -1,14 +1,16 @@
 package g
 
 import (
-	"context"
 	"errors"
 	"fmt"
-	"runtime"
 	"strings"
-	"sync"
 	"time"
 )
+
+// ErrParseDate is returned by StringToDate when the input string cannot be
+// recognized by any of the candidate layouts. It can be tested with
+// errors.Is.
+var ErrParseDate = errors.New("g: date and time could not be recognized")
 
 var (
 	// The dataTimeFormats is predefined layouts for use
@@ -269,43 +271,6 @@ var (
 	}
 )
 
-// dateParseError stores information about a date parsing error.
-type dateParseError struct {
-	layout string
-	err    error
-}
-
-// dateFoundValue is a thread-safe value that indicates
-// whether a date was found in a string.
-type dateFoundValue struct {
-	m     sync.Mutex
-	found bool
-	value time.Time
-}
-
-// SetValue sets a new value for the found object. It locks the Mutex
-// before changing the value and unlocks it after the change is complete.
-func (f *dateFoundValue) SetValue(found bool, value time.Time) {
-	f.m.Lock()
-	defer f.m.Unlock()
-
-	f.value = value
-	f.found = found
-}
-
-// GetValue retrieves the current value of the Found. It locks the Mutex
-// before reading the value and unlocks it after the read is complete.
-func (f *dateFoundValue) GetValue() (time.Time, error) {
-	f.m.Lock()
-	defer f.m.Unlock()
-
-	if f.found {
-		return f.value, nil
-	}
-
-	return time.Time{}, errors.New("date and time could not be recognized")
-}
-
 // The pythonToGolangFormat converts a Python date format specifier to a
 // GoLang date format specifier.
 func pythonToGolangFormat(format string) string {
@@ -335,10 +300,9 @@ func pythonToGolangFormat(format string) string {
 // StringToDate converts a string to a time.Time object using the provided
 // formats. If no format is given, it uses default date-time formats.
 //
-// This function leverages goroutines to parse the string concurrently
-// using different formats. When the first successful parsing occurs,
-// the function stops all other goroutines and returns the result.
-// If no parsing is successful, the function returns an error.
+// The candidate layouts are tried in order and the first one that parses
+// the input wins. If none match, the function returns an error that wraps
+// ErrParseDate (testable with errors.Is).
 //
 // Example usage:
 //
@@ -369,11 +333,7 @@ func pythonToGolangFormat(format string) string {
 //	}
 //	fmt.Println(t)
 func StringToDate(s string, patterns ...string) (time.Time, error) {
-	var (
-		formats []string
-		wg      sync.WaitGroup
-	)
-
+	formats := make([]string, 0, len(patterns))
 	for _, pattern := range patterns {
 		if strings.Contains(pattern, "%") {
 			formats = append(formats, pythonToGolangFormat(pattern))
@@ -386,67 +346,13 @@ func StringToDate(s string, patterns ...string) (time.Time, error) {
 		formats = dataTimeFormats
 	}
 
-	errorChan := make(chan dateParseError, len(formats))
-	resultChan := make(chan time.Time, 1)
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	sem := make(chan struct{}, runtime.GOMAXPROCS(0)) // limit goroutines
-
-	for _, format := range formats {
-		wg.Add(1)
-		sem <- struct{}{} // acquire a spot in the semaphore
-		go func(layout string) {
-			defer wg.Done()
-			defer func() { <-sem }() // release the spot in the semaphore
-
-			select {
-			case <-ctx.Done():
-				return
-			default:
-				if t, err := time.Parse(layout, s); err == nil {
-					select {
-					case resultChan <- t:
-					default:
-					}
-					cancel()
-				} else {
-					errorChan <- dateParseError{layout, err}
-				}
-			}
-		}(format)
-	}
-
-	// Close the error channel when all goroutines are done.
-	go func() {
-		wg.Wait()
-		close(errorChan)
-	}()
-
-	// Get result from channels.
-	var errorsList []error
-	for {
-		select {
-		case t := <-resultChan:
+	for _, layout := range formats {
+		if t, err := time.Parse(layout, s); err == nil {
 			return t, nil
-		case parseErr, ok := <-errorChan:
-			if ok {
-				errorsList = append(
-					errorsList,
-					fmt.Errorf("format %s: %w", parseErr.layout, parseErr.err),
-				)
-			} else {
-				// If the channel is closed and there are no more errors.
-				if len(errorsList) > 0 {
-					return time.Time{}, fmt.Errorf(
-						"failed to parse date: %v",
-						errorsList,
-					)
-				}
-				return time.Time{}, fmt.Errorf("failed to parse date")
-			}
 		}
 	}
+
+	return time.Time{}, fmt.Errorf("%w: %q", ErrParseDate, s)
 }
 
 // DateToString converts a Date to a string based on the provided format.

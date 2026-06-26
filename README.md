@@ -9,10 +9,19 @@ The **g** package is a comprehensive utility library for Go that provides a rich
 To install the package, use `go get`:
 
 ```bash
-go get github.com/goloop/g
+go get github.com/goloop/g/v2
 ```
 
-**Note**: This package requires Go 1.20 or later due to its extensive use of generics.
+Import it as:
+
+```go
+import g "github.com/goloop/g/v2"
+```
+
+**Note**: This is the **v2** module and requires **Go 1.24 or later**. It uses
+generics and delegates hot paths to the standard library (`slices`, `maps`,
+`cmp`, `math/rand/v2`). See [What's new in v2](#whats-new-in-v2) for the
+breaking changes from v1.
 
 ## Why This Package?
 
@@ -50,7 +59,7 @@ if a in some_slice:
     # do something
 ```
 
-The `g` package provides an efficient concurrent implementation:
+The `g` package provides a clean, type-safe wrapper:
 
 ```go
 if g.In(a, someSlice...) {
@@ -63,26 +72,28 @@ if g.In(a, someSlice...) {
 ### Type Conversion & Validation
 - String to various types (bool, int, float)
 - Type checking and verification
-- Safe numeric conversions with overflow protection
+- Overflow-aware summation via `SafeSum`
 
 ```go
 // String to int conversion with default value
 num, err := g.StringToInt("123", 0)
 
-// Safe sum with overflow protection
-sum, err := g.SafeSum(1, math.MaxInt64)
+// Overflow-aware sum: returns an error wrapping g.ErrOverflow on overflow
+sum, err := g.SafeSum(math.MaxInt64, 1)
 ```
 
 ### Mathematical Operations
-- Basic arithmetic with overflow protection
+- `Sum` wraps like the `+` operator; `SafeSum` detects overflow
+- Value clamping with `Clamp`
 - Statistical functions (Average, Median)
-- Random number generation
+- Random number generation (never panics on degenerate ranges)
 - Number properties (Even, Odd, Whole)
 
 ```go
 avg := g.Average(1, 2, 3, 4, 5)
 median := g.Median(1, 2, 3, 4, 5)
-random := g.Random(1, 10)
+random := g.Random(1, 10)      // a random int in [1, 10)
+clamped := g.Clamp(15, 0, 10)  // 10
 ```
 
 ### Collection Operations
@@ -136,14 +147,17 @@ value := g.HLookup("key", lookupSlice, resultSlice, defaultValue)
 Here are some key function categories:
 
 ### Basic Operations
-- `If` - Ternary operator alternative
+- `If` - Ternary operator alternative (eager)
+- `IfFunc` - Lazy ternary: evaluates only the chosen branch
 - `In` - Check if element exists in slice
 - `All`/`Any` - Check conditions across values
 - `IsEmpty`/`IsWhole`/`IsEven`/`IsOdd` - Value validation
 
 ### Mathematical
-- `Min`/`Max` - Find extremes
-- `Sum`/`SafeSum` - Addition with optional overflow protection
+- `Min`/`Max` - Find extremes (`MinOk`/`MaxOk` report the empty case)
+- `MinList`/`MaxList` - Extremes of a list with defaults (`*ListOk` variants)
+- `Clamp` - Constrain a value to a range
+- `Sum`/`SafeSum` - Wrapping addition / overflow-aware addition (`ErrOverflow`)
 - `Average`/`Median` - Statistical calculations
 - `Random`/`RandomList` - Random value generation
 
@@ -166,6 +180,43 @@ Here are some key function categories:
 - `HLookup`/`VLookup` - Value lookups
 - `Rank` - Value ranking
 - `Range`/`Rangef` - Range generation
+
+## What's new in v2
+
+v2 modernises the package for Go 1.24 and fixes a number of long-standing
+correctness issues. The import path changes to `github.com/goloop/g/v2`.
+
+**Breaking changes**
+
+- `Sum` now wraps on integer overflow, exactly like the `+` operator, instead
+  of silently returning `0`. Use `SafeSum` when you need overflow detection.
+- The `ParallelTasks` function and the implicit "parallel by default" behaviour
+  of `In`/`All`/`Any`/`Min`/`Max` were removed. These helpers are now simple
+  linear or standard-library-backed operations with predictable performance.
+- `IsPointer` and `IsNumber` take `any` instead of `interface{}` and no longer
+  panic on a `nil` argument.
+
+**Fixes**
+
+- `Random` no longer panics on `Random(0)`, `Random(-1)`, or other degenerate
+  ranges — it returns the zero value / lower bound instead.
+- `IsEven`/`IsOdd` are correct for values outside the `int` range (e.g. `1e19`)
+  because parity is computed in `float64` without an `int` conversion.
+- `Min`/`Max` handle `NaN` deterministically (NaN propagates regardless of
+  position) by delegating to the standard library.
+- `Sort` is guaranteed `O(n log n)` (standard-library introsort) and no longer
+  degrades to `O(n²)` on already-sorted input.
+- `Shuffle` uses the concurrency-safe `math/rand/v2` source and is safe to call
+  from multiple goroutines.
+
+**New API**
+
+- `IfFunc` — lazy `If`.
+- `Clamp` — constrain a value to `[lo, hi]`.
+- `MinOk`/`MaxOk`, `MinListOk`/`MaxListOk` — extremum with an explicit
+  "was there any value?" boolean.
+- `ErrOverflow` — sentinel error returned (wrapped) by `SafeSum`.
+- `ErrParseDate` — sentinel error returned (wrapped) by `StringToDate`.
 
 ## Contributing
 
