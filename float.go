@@ -2,7 +2,6 @@ package g
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 )
 
@@ -34,7 +33,13 @@ func StringToFloat(v string, def ...float64) (float64, error) {
 }
 
 // FloatToString converts a float to a string.
-// It handles different floating-point types such as float32 and float64.
+// It handles different floating-point types such as float32 and float64,
+// using the shortest representation that round-trips for the value's width.
 func FloatToString[T ~float32 | ~float64](v T) string {
-	return fmt.Sprintf("%v", v)
+	bitSize := 64
+	switch any(v).(type) {
+	case float32:
+		bitSize = 32
+	}
+	return strconv.FormatFloat(float64(v), 'g', -1, bitSize)
 }

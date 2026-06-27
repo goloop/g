@@ -8,9 +8,8 @@ package g
 // The function is generic and can work with any type T that
 // is comparable.
 //
-// Note: This function does not preserve the order of elements.
-// The order of elements in the returned slice can be different
-// from the order of elements in the input slices.
+// The result preserves first-seen order: elements appear in the order they
+// are first encountered while scanning a and then b.
 //
 // Example usage:
 //
@@ -25,17 +24,19 @@ package g
 //	fmt.Println(result) // Output: [a b c d e]
 func Union[T comparable](a []T, b []T) []T {
 	seen := make(map[T]struct{}, len(a)+len(b))
+	result := make([]T, 0, len(a)+len(b))
 
 	for _, val := range a {
-		seen[val] = struct{}{}
+		if _, ok := seen[val]; !ok {
+			seen[val] = struct{}{}
+			result = append(result, val)
+		}
 	}
 	for _, val := range b {
-		seen[val] = struct{}{}
-	}
-
-	result := make([]T, 0, len(seen))
-	for val := range seen {
-		result = append(result, val)
+		if _, ok := seen[val]; !ok {
+			seen[val] = struct{}{}
+			result = append(result, val)
+		}
 	}
 
 	return result
@@ -172,7 +173,7 @@ func SymmetricDifference[T comparable](a []T, b []T) []T {
 		setB[item] = struct{}{}
 	}
 
-	result := make([]T, 0)
+	result := make([]T, 0, len(a)+len(b))
 	for item := range setA {
 		if _, ok := setB[item]; !ok {
 			result = append(result, item)
@@ -258,7 +259,7 @@ func Complement[T comparable](a []T, b []T) []T {
 //	result := g.CartesianProduct(x, y)
 //	// Output: [["A", "C"], ["A", "D"], ["B", "C"], ["B", "D"]]
 func CartesianProduct[T any](a []T, b []T) [][2]T {
-	var result [][2]T
+	result := make([][2]T, 0, len(a)*len(b))
 
 	for _, itemA := range a {
 		for _, itemB := range b {

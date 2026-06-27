@@ -20,8 +20,15 @@ is now 1.24. Import it as `import g "github.com/goloop/g/v2"`.
 - `Sort` delegates to the standard library, guaranteeing `O(n log n)` and
   removing the previous `O(n²)` worst case on sorted input.
 - `Min`/`Max` propagate `NaN` deterministically (independent of position).
+- `Rank` is now 1-based (the best value ranks `1`), matching the spreadsheet
+  RANK function it documents. A missing value still returns `-1`.
+- `DateToString`/`DateToStrings` no longer reject layouts that keep only a
+  subset of time fields. They format with the standard library and return a
+  nil error (an unrecognized layout echoes its literal text).
 
 ### Fixed
+- `Random` with a wide range in a narrow type (e.g. `Random[int8](-128, 127)`)
+  no longer collapses to the lower bound; the span is computed in `int64`.
 - `Random` no longer panics on degenerate ranges such as `Random(0)` or
   `Random(-1)`; it returns the zero value / lower bound.
 - `IsEven`/`IsOdd` are correct for values outside the `int` range (parity is
@@ -42,5 +49,6 @@ is now 1.24. Import it as `import g "github.com/goloop/g/v2"`.
 ### Performance
 - `Rank` runs in a single `O(n)` pass instead of `O(n²)`.
 - Set operations and `Distinct` use `map[T]struct{}` with preallocation.
-- Removed `reflect` from hot paths (`Value`, `Random*`, `Min`/`Max`) in favour
-  of plain generics.
+- Removed `reflect` from `Random*`, `Min`/`Max` in favour of plain generics.
+  `IsEmpty`/`IsFalse` (used by `All`/`Any`/`Value`) now take a scalar fast path
+  and only fall back to `reflect` for composite types.

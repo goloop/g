@@ -144,9 +144,14 @@ func TestDateToString(t *testing.T) {
 		t.Errorf("Expected 17-07-2023, got %s", s)
 	}
 
-	s, _ = DateToString(t1, "abc")
-	if s != "" {
-		t.Errorf("Expected an empty string, got %s", s)
+	// A layout with no recognized fields echoes its literal text and never
+	// errors (standard library Format semantics).
+	s, err = DateToString(t1, "abc")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if s != "abc" {
+		t.Errorf("Expected literal 'abc', got %s", s)
 	}
 }
 
@@ -195,13 +200,33 @@ func TestDateToStrings(t *testing.T) {
 		}
 	})
 
-	// Incorrect format.
-	t.Run("Test with incorrect format", func(t *testing.T) {
+	// A layout with no recognized fields echoes its literal text, no error.
+	t.Run("Test with literal-only format", func(t *testing.T) {
 		testTime := time.Date(2023, 6, 16, 0, 0, 0, 0, time.UTC)
-		patterns := []string{"abc"}
-		r, err := DateToStrings(testTime, patterns...)
-		if err == nil {
-			t.Errorf("An error is expected for an invalid format, but %v", r)
+		r, err := DateToStrings(testTime, "abc")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !reflect.DeepEqual(r, []string{"abc"}) {
+			t.Errorf("Expected [abc], got %v", r)
+		}
+	})
+
+	// The headline fix: a date-only layout for a time that has a non-zero
+	// time-of-day and a non-UTC zone must format correctly (BUG-01).
+	t.Run("Test date-only format on non-midnight non-UTC time", func(t *testing.T) {
+		loc, err := time.LoadLocation("America/New_York")
+		if err != nil {
+			t.Skipf("tz database unavailable: %v", err)
+		}
+		ts := time.Date(2023, 7, 17, 13, 45, 30, 0, loc)
+		r, err := DateToStrings(ts, "2006-01-02", "15:04", "2006")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		want := []string{"2023-07-17", "13:45", "2023"}
+		if !reflect.DeepEqual(r, want) {
+			t.Errorf("Expected %v, got %v", want, r)
 		}
 	})
 }

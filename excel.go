@@ -10,8 +10,12 @@ package g
 // ascending argument. To rank values where the largest value is ranked #1,
 // set ascending to false (or leave blank).
 //
-//	g.Rank(7, []float64{1, 5, 2, 3, 7, 8})       // descending, returns  1
-//	g.Rank(7, []float64{1, 5, 2, 3, 7, 8}, true) // ascending, returns 4
+// Ranks are 1-based, matching the spreadsheet RANK function: the best value
+// is ranked 1. A value that is not present in the list yields -1.
+//
+//	g.Rank(8, []float64{1, 5, 2, 3, 7, 8})       // descending, returns 1
+//	g.Rank(7, []float64{1, 5, 2, 3, 7, 8})       // descending, returns 2
+//	g.Rank(7, []float64{1, 5, 2, 3, 7, 8}, true) // ascending,  returns 5
 //
 // Set ascending to false when you want to rank something like top sales,
 // where the largest sales number should rank #1, and to set ascending to
@@ -30,23 +34,23 @@ package g
 //
 // Example usage:
 //
-//	// Rank a number in a descending list.
+//	// Rank a number in a descending list (largest is #1).
 //	result := g.Rank(7, []float64{1, 5, 2, 3, 7, 8})
-//	fmt.Println(result) // Output: 1
+//	fmt.Println(result) // Output: 2
 //
-//	// Rank a number in an ascending list.
+//	// Rank a number in an ascending list (smallest is #1).
 //	result = g.Rank(7, []float64{1, 5, 2, 3, 7, 8}, true)
-//	fmt.Println(result) // Output: 4
+//	fmt.Println(result) // Output: 5
 //
 //	// Rank a number that doesn't exist in the list.
 //	result = g.Rank(9, []float64{1, 5, 2, 3, 7, 8}, true)
 //	fmt.Println(result) // Output: -1
 func Rank[T Verifiable](number T, array []T, ascending ...bool) int {
-	// The rank equals the number of elements that are strictly "better"
-	// than number: greater for descending order, smaller for ascending.
-	// Equal values therefore share the same rank, and the next rank skips
-	// by the number of ties — matching the spreadsheet RANK behaviour.
-	// A single pass keeps this O(n) regardless of duplicates.
+	// The rank equals one plus the number of elements that are strictly
+	// "better" than number: greater for descending order, smaller for
+	// ascending. Equal values therefore share the same rank, and the next
+	// rank skips by the number of ties — matching the spreadsheet RANK
+	// function. A single pass keeps this O(n) regardless of duplicates.
 	asc := All(ascending...)
 
 	found := false
@@ -64,7 +68,7 @@ func Rank[T Verifiable](number T, array []T, ascending ...bool) int {
 		return -1
 	}
 
-	return better
+	return better + 1
 }
 
 // HLookup looks up and retrieves data from a specific row in a table.

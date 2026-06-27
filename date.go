@@ -387,8 +387,9 @@ func DateToString(t time.Time, patterns ...string) (string, error) {
 // a percentage ("%") character, it converts Python strftime format
 // to Go's time format before applying it.
 //
-// It returns an array of the results and an error if there was
-// a problem with the formatting.
+// It returns one formatted string per pattern. Formatting never fails — an
+// unrecognized layout simply echoes its literal text — so the returned error
+// is always nil and kept only for signature compatibility.
 //
 // Example usage:
 //
@@ -424,17 +425,11 @@ func DateToStrings(t time.Time, patterns ...string) ([]string, error) {
 	}
 
 	for _, format := range formats {
-		// Format does not return an error if the formatting data is written
-		// incorrectly. It just leaves the unrecognized fragment as is.
-		s := t.Format(format)
-
-		// The only way to check the correct format - reconstruction of time.
-		t2, err := time.Parse(format, s)
-		if err != nil || t != t2 {
-			return []string{}, errors.New("invalid format")
-		}
-
-		results = append(results, s)
+		// Format never returns an error: unrecognized fragments of the layout
+		// are echoed verbatim (standard library behaviour). A layout that
+		// keeps only a subset of fields (e.g. "2006-01-02" for a date without
+		// the time of day) is a normal, supported use case.
+		results = append(results, t.Format(format))
 	}
 
 	return results, nil

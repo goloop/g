@@ -243,6 +243,47 @@ func IsEmpty[T any](v T) bool {
 		return t.IsUnknown()
 	}
 
+	return isZeroValue(v)
+}
+
+// isZeroValue reports whether v holds the zero value for its type. Common
+// scalar types are handled directly (no reflection); slices and arrays are
+// "zero" when empty; everything else falls back to reflect. The fast path
+// returns exactly what the reflect path would, so behaviour is uniform.
+func isZeroValue[T any](v T) bool {
+	switch x := any(v).(type) {
+	case bool:
+		return !x
+	case string:
+		return x == ""
+	case int:
+		return x == 0
+	case int8:
+		return x == 0
+	case int16:
+		return x == 0
+	case int32:
+		return x == 0
+	case int64:
+		return x == 0
+	case uint:
+		return x == 0
+	case uint8:
+		return x == 0
+	case uint16:
+		return x == 0
+	case uint32:
+		return x == 0
+	case uint64:
+		return x == 0
+	case uintptr:
+		return x == 0
+	case float32:
+		return x == 0
+	case float64:
+		return x == 0
+	}
+
 	rv := reflect.ValueOf(v)
 	if !rv.IsValid() {
 		return true // untyped nil interface
@@ -267,17 +308,7 @@ func IsFalse[T any](v T) bool {
 		return !t.IsTrue()
 	}
 
-	rv := reflect.ValueOf(v)
-	if !rv.IsValid() {
-		return true // untyped nil interface
-	}
-
-	// For slices and arrays we check if the length is zero.
-	if k := rv.Kind(); k == reflect.Slice || k == reflect.Array {
-		return rv.Len() == 0
-	}
-
-	return rv.IsZero()
+	return isZeroValue(v)
 }
 
 // IsTrue checks if the v of any type T is a true (non-zero) value for that type.

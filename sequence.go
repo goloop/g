@@ -48,7 +48,7 @@ func Contains[T Verifiable](v T, vs []T) bool {
 //	longStrings := g.Filter(strs, func(v string) bool { return len(v) > 5 })
 //	fmt.Println(longStrings) // Output: ["banana" "cherry" "elderberry"]
 func Filter[T any](vs []T, f func(T) bool) []T {
-	result := make([]T, 0)
+	result := make([]T, 0, len(vs))
 	for _, v := range vs {
 		if f(v) {
 			result = append(result, v)

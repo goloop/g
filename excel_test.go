@@ -2,57 +2,57 @@ package g
 
 import "testing"
 
-// TestRank tests the Rank function.
+// TestRank tests the Rank function (1-based, spreadsheet semantics).
 func TestRank(t *testing.T) {
-	rank := Rank(7, []int{1, 5, 2, 3, 7, 8})
-	if rank != 1 {
-		t.Errorf("Expected rank 1, but got %d", rank)
-	}
-
-	rank = Rank(7, []int{1, 5, 2, 3, 7, 8}, true)
-	if rank != 4 {
-		t.Errorf("Expected rank 4, but got %d", rank)
-	}
-
-	rank = Rank(9, []int{1, 5, 2, 3, 7, 8})
-	if rank != -1 {
-		t.Errorf("Expected rank -1, but got %d", rank)
-	}
-
-	rank = Rank(7, []int{1, 7, 7, 3, 7, 8})
-	if rank != 1 {
-		t.Errorf("Expected rank 1, but got %d", rank)
-	}
-
-	rank = Rank(7, []int{1, 7, 7, 3, 7, 8}, true)
+	rank := Rank(7, []int{1, 5, 2, 3, 7, 8}) // one value (8) greater
 	if rank != 2 {
 		t.Errorf("Expected rank 2, but got %d", rank)
 	}
 
-	rank = Rank(4.5, []float64{1.2, 3.1, 4.5, 2.8, 4.5, 6.7})
-	if rank != 1 {
-		t.Errorf("Expected rank 1, but got %d", rank)
+	rank = Rank(7, []int{1, 5, 2, 3, 7, 8}, true) // 1,5,2,3 smaller
+	if rank != 5 {
+		t.Errorf("Expected rank 5, but got %d", rank)
 	}
 
-	rank = Rank(4.5, []float64{1.2, 3.1, 4.5, 2.8, 4.5, 6.7}, true)
+	rank = Rank(9, []int{1, 5, 2, 3, 7, 8}) // not present
+	if rank != -1 {
+		t.Errorf("Expected rank -1, but got %d", rank)
+	}
+
+	rank = Rank(7, []int{1, 7, 7, 3, 7, 8}) // only 8 greater
+	if rank != 2 {
+		t.Errorf("Expected rank 2, but got %d", rank)
+	}
+
+	rank = Rank(7, []int{1, 7, 7, 3, 7, 8}, true) // 1,3 smaller
 	if rank != 3 {
 		t.Errorf("Expected rank 3, but got %d", rank)
+	}
+
+	rank = Rank(4.5, []float64{1.2, 3.1, 4.5, 2.8, 4.5, 6.7}) // 6.7 greater
+	if rank != 2 {
+		t.Errorf("Expected rank 2, but got %d", rank)
+	}
+
+	rank = Rank(4.5, []float64{1.2, 3.1, 4.5, 2.8, 4.5, 6.7}, true) // 1.2,3.1,2.8
+	if rank != 4 {
+		t.Errorf("Expected rank 4, but got %d", rank)
 	}
 
 	rank = Rank("Banana", []string{
 		"Apple", "Banana", "Cherry",
 		"Banana", "Dragonfruit", "Elderberry",
-	})
-	if rank != 3 {
-		t.Errorf("Expected rank 3, but got %d", rank)
+	}) // Cherry, Dragonfruit, Elderberry greater
+	if rank != 4 {
+		t.Errorf("Expected rank 4, but got %d", rank)
 	}
 
 	rank = Rank("Banana", []string{
 		"Apple", "Banana", "Cherry",
 		"Banana", "Dragonfruit", "Elderberry",
-	}, true)
-	if rank != 1 {
-		t.Errorf("Expected rank 1, but got %d", rank)
+	}, true) // only Apple smaller
+	if rank != 2 {
+		t.Errorf("Expected rank 2, but got %d", rank)
 	}
 }
 

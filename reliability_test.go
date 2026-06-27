@@ -53,6 +53,54 @@ func TestRandomNeverPanics(t *testing.T) {
 	}
 }
 
+// TestRandomNarrowTypeWideRange covers BUG-02: a wide range in a narrow type
+// must actually vary across the range, not collapse to the lower bound (which
+// happened when the span hi-lo was computed in the element type and overflowed).
+func TestRandomNarrowTypeWideRange(t *testing.T) {
+	// int8 over its full span [-128, 127).
+	seen8 := map[int8]bool{}
+	for i := 0; i < 5000; i++ {
+		v := Random[int8](-128, 127)
+		if v < -128 || v >= 127 {
+			t.Fatalf("Random[int8](-128,127) = %d, out of [-128,127)", v)
+		}
+		seen8[v] = true
+	}
+	if len(seen8) < 64 {
+		t.Errorf("Random[int8] collapsed: only %d distinct values", len(seen8))
+	}
+
+	// int16 over its full span.
+	seen16 := map[int16]bool{}
+	for i := 0; i < 5000; i++ {
+		v := Random[int16](math.MinInt16, math.MaxInt16)
+		seen16[v] = true
+	}
+	if len(seen16) < 256 {
+		t.Errorf("Random[int16] collapsed: only %d distinct values", len(seen16))
+	}
+
+	// uint8 over [0, 255).
+	for i := 0; i < 3000; i++ {
+		v := Random[uint8](0, 255)
+		if v >= 255 {
+			t.Fatalf("Random[uint8](0,255) = %d, out of [0,255)", v)
+		}
+	}
+
+	// int32 over its full span: must not always be MinInt32.
+	allMin := true
+	for i := 0; i < 1000; i++ {
+		if Random[int32](math.MinInt32, math.MaxInt32) != math.MinInt32 {
+			allMin = false
+			break
+		}
+	}
+	if allMin {
+		t.Error("Random[int32] over full range always returned MinInt32")
+	}
+}
+
 // TestSafeSumInt8Exhaustive proves the generic two's-complement overflow
 // detection for every possible pair of signed 8-bit values (BUG-02 contract
 // for SafeSum). This is the strongest guarantee we can give cheaply.
@@ -361,17 +409,17 @@ func TestClamp(t *testing.T) {
 	}
 }
 
-// TestRankTies pins down the tie/skip semantics and ordering of Rank.
+// TestRankTies pins down the 1-based tie/skip semantics of Rank.
 func TestRankTies(t *testing.T) {
 	arr := []float64{1, 5, 2, 3, 7, 8}
-	if got := Rank(7.0, arr); got != 1 { // only 8 is greater
-		t.Errorf("Rank(7, desc) = %d, want 1", got)
+	if got := Rank(8.0, arr); got != 1 { // largest is rank 1
+		t.Errorf("Rank(8, desc) = %d, want 1", got)
 	}
-	if got := Rank(8.0, arr); got != 0 { // nothing greater
-		t.Errorf("Rank(8, desc) = %d, want 0", got)
+	if got := Rank(7.0, arr); got != 2 { // one value (8) is greater
+		t.Errorf("Rank(7, desc) = %d, want 2", got)
 	}
-	if got := Rank(7.0, arr, true); got != 4 { // 1,2,3,5 are smaller
-		t.Errorf("Rank(7, asc) = %d, want 4", got)
+	if got := Rank(7.0, arr, true); got != 5 { // 1,2,3,5 are smaller
+		t.Errorf("Rank(7, asc) = %d, want 5", got)
 	}
 	if got := Rank(9.0, arr, true); got != -1 { // not present
 		t.Errorf("Rank(9, asc) = %d, want -1", got)
@@ -379,14 +427,114 @@ func TestRankTies(t *testing.T) {
 
 	// Duplicates share a rank and the next rank skips by the number of ties.
 	ties := []int{10, 10, 5, 3}
-	if got := Rank(10, ties); got != 0 {
-		t.Errorf("Rank(10, ties) = %d, want 0", got)
+	if got := Rank(10, ties); got != 1 { // top, tied — both rank 1
+		t.Errorf("Rank(10, ties) = %d, want 1", got)
 	}
-	if got := Rank(5, ties); got != 2 { // both 10s are greater
-		t.Errorf("Rank(5, ties) = %d, want 2", got)
+	if got := Rank(5, ties); got != 3 { // two 10s are greater -> rank 3 (skips 2)
+		t.Errorf("Rank(5, ties) = %d, want 3", got)
 	}
-	if got := Rank(3, ties); got != 3 { // 10,10,5 are greater
-		t.Errorf("Rank(3, ties) = %d, want 3", got)
+	if got := Rank(3, ties); got != 4 { // 10,10,5 are greater
+		t.Errorf("Rank(3, ties) = %d, want 4", got)
+	}
+}
+
+// TestIsEmptyIsFalseAllScalars exercises the scalar fast path of isZeroValue
+// for every supported type, proving the fast path agrees with the semantics
+// (zero -> true, non-zero -> false) and that IsEmpty/IsFalse/IsTrue are
+// consistent.
+func TestIsEmptyIsFalseAllScalars(t *testing.T) {
+	check := func(name string, isZero bool, empty, false_ bool) {
+		if empty != isZero {
+			t.Errorf("%s: IsEmpty = %v, want %v", name, empty, isZero)
+		}
+		if false_ != isZero {
+			t.Errorf("%s: IsFalse = %v, want %v", name, false_, isZero)
+		}
+	}
+
+	check("bool false", true, IsEmpty(false), IsFalse(false))
+	check("bool true", false, IsEmpty(true), IsFalse(true))
+	check("string empty", true, IsEmpty(""), IsFalse(""))
+	check("string x", false, IsEmpty("x"), IsFalse("x"))
+
+	check("int 0", true, IsEmpty(0), IsFalse(0))
+	check("int 1", false, IsEmpty(1), IsFalse(1))
+	check("int8 0", true, IsEmpty(int8(0)), IsFalse(int8(0)))
+	check("int8 1", false, IsEmpty(int8(1)), IsFalse(int8(1)))
+	check("int16 0", true, IsEmpty(int16(0)), IsFalse(int16(0)))
+	check("int16 1", false, IsEmpty(int16(1)), IsFalse(int16(1)))
+	check("int32 0", true, IsEmpty(int32(0)), IsFalse(int32(0)))
+	check("int32 1", false, IsEmpty(int32(1)), IsFalse(int32(1)))
+	check("int64 0", true, IsEmpty(int64(0)), IsFalse(int64(0)))
+	check("int64 1", false, IsEmpty(int64(1)), IsFalse(int64(1)))
+
+	check("uint 0", true, IsEmpty(uint(0)), IsFalse(uint(0)))
+	check("uint 1", false, IsEmpty(uint(1)), IsFalse(uint(1)))
+	check("uint8 0", true, IsEmpty(uint8(0)), IsFalse(uint8(0)))
+	check("uint8 1", false, IsEmpty(uint8(1)), IsFalse(uint8(1)))
+	check("uint16 0", true, IsEmpty(uint16(0)), IsFalse(uint16(0)))
+	check("uint16 1", false, IsEmpty(uint16(1)), IsFalse(uint16(1)))
+	check("uint32 0", true, IsEmpty(uint32(0)), IsFalse(uint32(0)))
+	check("uint32 1", false, IsEmpty(uint32(1)), IsFalse(uint32(1)))
+	check("uint64 0", true, IsEmpty(uint64(0)), IsFalse(uint64(0)))
+	check("uint64 1", false, IsEmpty(uint64(1)), IsFalse(uint64(1)))
+	check("uintptr 0", true, IsEmpty(uintptr(0)), IsFalse(uintptr(0)))
+	check("uintptr 1", false, IsEmpty(uintptr(1)), IsFalse(uintptr(1)))
+
+	check("float32 0", true, IsEmpty(float32(0)), IsFalse(float32(0)))
+	check("float32 1", false, IsEmpty(float32(1)), IsFalse(float32(1)))
+	check("float64 0", true, IsEmpty(0.0), IsFalse(0.0))
+	check("float64 1", false, IsEmpty(1.0), IsFalse(1.0))
+
+	// Composite types still go through reflect.
+	check("nil slice", true, IsEmpty([]int(nil)), IsFalse([]int(nil)))
+	check("empty slice", true, IsEmpty([]int{}), IsFalse([]int{}))
+	check("non-empty slice", false, IsEmpty([]int{1}), IsFalse([]int{1}))
+	check("zero struct", true,
+		IsEmpty(struct{ X int }{}), IsFalse(struct{ X int }{}))
+	check("non-zero struct", false,
+		IsEmpty(struct{ X int }{X: 1}), IsFalse(struct{ X int }{X: 1}))
+
+	var p *int
+	check("nil pointer", true, IsEmpty(p), IsFalse(p))
+	x := 5
+	check("non-nil pointer", false, IsEmpty(&x), IsFalse(&x))
+
+	// IsTrue is the negation of IsFalse.
+	if IsTrue(0) || !IsTrue(1) {
+		t.Error("IsTrue inconsistent with IsFalse")
+	}
+}
+
+// TestUnionFirstSeenOrder locks the v2 contract that Union preserves
+// first-seen order (a, then new elements of b).
+func TestUnionFirstSeenOrder(t *testing.T) {
+	got := Union([]int{3, 1, 3, 2}, []int{2, 5, 1, 4})
+	want := []int{3, 1, 2, 5, 4}
+	if !slices.Equal(got, want) {
+		t.Errorf("Union first-seen = %v, want %v", got, want)
+	}
+}
+
+// TestIntFloatToString checks the strconv-based conversions across widths and
+// signedness, including a named unsigned type (exercises the generic
+// sign-detection trick).
+func TestIntFloatToString(t *testing.T) {
+	if got := IntToString(-42); got != "-42" {
+		t.Errorf("IntToString(-42) = %q", got)
+	}
+	if got := IntToString(uint64(18446744073709551615)); got != "18446744073709551615" {
+		t.Errorf("IntToString(MaxUint64) = %q", got)
+	}
+	type MyUint uint32
+	if got := IntToString(MyUint(4000000000)); got != "4000000000" {
+		t.Errorf("IntToString(MyUint) = %q, want 4000000000", got)
+	}
+	if got := FloatToString(float32(1.5)); got != "1.5" {
+		t.Errorf("FloatToString(float32 1.5) = %q", got)
+	}
+	if got := FloatToString(3.14159); got != "3.14159" {
+		t.Errorf("FloatToString(3.14159) = %q", got)
 	}
 }
 

@@ -42,10 +42,13 @@ func Abs[T Numerable](v T) T {
 // Average calculates the average of a variable number
 // of values of type Numerable.
 //
-// The values are accumulated in float64, so the result is correct even
-// when the integer sum of the inputs would overflow type T. If no values
-// are provided, it returns 0. Note: this function returns the average as
-// a float64, regardless of the input type.
+// The values are accumulated in float64, so the result does not overflow
+// type T even when the integer sum of the inputs would. If no values are
+// provided, it returns 0. The average is returned as a float64 regardless of
+// the input type.
+//
+// Precision note: because float64 has a 53-bit mantissa, integer inputs whose
+// magnitude exceeds 2^53 may lose precision during accumulation.
 //
 // Example usage:
 //
@@ -79,7 +82,8 @@ func Average[T Numerable](v ...T) float64 {
 // If the number of values is odd, the median is the middle value.
 // If the number of values is even, the median is the average of
 // the two middle values. The averaging is performed in float64,
-// so it does not overflow type T.
+// so it does not overflow type T (with the usual float64 precision
+// caveat for magnitudes beyond 2^53).
 //
 // Example usage:
 //
@@ -502,7 +506,9 @@ func randomValue[T Numerable](lo, hi T) T {
 		return T(float64(lo) + rand.Float64()*float64(hi-lo))
 	}
 
-	span := int64(hi - lo)
+	// Compute the span in int64 — never as hi-lo in type T, which would
+	// overflow for wide ranges of narrow types (e.g. int8(127)-int8(-128)).
+	span := int64(hi) - int64(lo)
 	if span <= 0 {
 		return lo
 	}
