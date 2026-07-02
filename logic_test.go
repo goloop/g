@@ -3,7 +3,7 @@ package g
 import (
 	"testing"
 
-	"github.com/goloop/trit"
+	"github.com/goloop/trit/v2"
 )
 
 // TestIf tests the If function.

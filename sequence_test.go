@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/goloop/trit"
+	"github.com/goloop/trit/v2"
 )
 
 // TestContains tests the Contains function.

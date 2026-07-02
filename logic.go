@@ -3,7 +3,7 @@ package g
 import (
 	"reflect"
 
-	"github.com/goloop/trit"
+	"github.com/goloop/trit/v2"
 )
 
 // If is a substitute for the ternary operator (?:)
