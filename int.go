@@ -1,13 +1,14 @@
 package g
 
 import (
-	"errors"
 	"strconv"
 )
 
 // StringToInt converts a string to an integer.
-// If the conversion fails and a default value is provided, it
-// returns the default value. Otherwise, it returns an error.
+// On failure it returns the supplied default value (or 0 if none) together
+// with a non-nil error: ErrEmptyString for an empty input, otherwise the
+// strconv error (matchable with errors.Is against strconv.ErrSyntax or
+// strconv.ErrRange).
 //
 // Example Usage:
 //
@@ -21,7 +22,7 @@ func StringToInt(v string, def ...int) (int, error) {
 	}
 
 	if v == "" {
-		return d, errors.New("empty string and no default value")
+		return d, ErrEmptyString
 	}
 
 	i, err := strconv.Atoi(v)

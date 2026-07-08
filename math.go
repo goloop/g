@@ -22,6 +22,11 @@ var ErrOverflow = errors.New("g: numeric overflow")
 // For unsigned integer types, the absolute value is equal to
 // the original value.
 //
+// Overflow: for a signed type the most negative value has no representable
+// absolute value (two's complement), so Abs of the smallest int (e.g.
+// math.MinInt64) returns that same negative value, exactly as -v would. Use
+// AbsOk when this edge matters.
+//
 // Example usage:
 //
 //	var n int = -10
@@ -37,6 +42,26 @@ func Abs[T Numerable](v T) T {
 		return -v
 	}
 	return v
+}
+
+// AbsOk returns the absolute value of v and reports whether it is exact. It is
+// the checked companion of Abs: for the most negative value of a signed type,
+// whose absolute value is not representable (two's complement), it returns that
+// value unchanged and false. Every other input, and every unsigned or
+// floating-point value, yields the absolute value and true.
+//
+// Example usage:
+//
+//	a, ok := g.AbsOk(-10)             // 10, true
+//	b, ok := g.AbsOk(math.MinInt64)   // math.MinInt64, false
+func AbsOk[T Numerable](v T) (T, bool) {
+	if v < 0 {
+		if n := -v; n >= 0 {
+			return n, true
+		}
+		return v, false // -v overflowed: the most negative signed value
+	}
+	return v, true
 }
 
 // Average calculates the average of a variable number
@@ -392,12 +417,13 @@ func Sum[T Numerable](v ...T) T {
 // IsEven checks if a value is an even number.
 //
 // The function accepts a value of any type T that satisfies the Numerable
-// interface. The check is performed in float64 without converting to int,
-// so it stays correct for very large or negative values that do not fit
-// into int. For floating-point values it considers only the integer part:
-// if the value has a non-zero fractional part it is neither even nor odd,
-// so IsEven returns false. If the optional argument f is true, the
-// fractional part is ignored and only the integer part's parity is checked.
+// interface. For integer types the parity is computed in integer arithmetic,
+// so it stays correct across the whole range, including values past 2^53 that
+// a float64 conversion could not represent exactly. For floating-point values
+// it considers only the integer part: if the value has a non-zero fractional
+// part it is neither even nor odd, so IsEven returns false. If the optional
+// argument f is true, the fractional part is ignored and only the integer
+// part's parity is checked.
 //
 // Example usage:
 //
@@ -406,6 +432,12 @@ func Sum[T Numerable](v ...T) T {
 //	g.IsEven(6.6)      // Output: false
 //	g.IsEven(6.6, true) // Output: true
 func IsEven[T Numerable](v T, f ...bool) bool {
+	if !isFloat[T]() {
+		// Integer parity in integer arithmetic: the low bit survives the
+		// uint64 wraparound, so it stays correct past 2^53 where a float64
+		// conversion would round and report the wrong parity.
+		return uint64(v)%2 == 0
+	}
 	ip, frac := math.Modf(float64(v))
 	if frac != 0 && !All(f...) {
 		return false
@@ -416,8 +448,8 @@ func IsEven[T Numerable](v T, f ...bool) bool {
 // IsOdd checks if a value is an odd number.
 //
 // The function accepts a value of any type T that satisfies the Numerable
-// interface. Like IsEven, the check is performed in float64 to stay correct
-// for values outside the int range. For floating-point values it considers
+// interface. Like IsEven, integer types are checked in integer arithmetic so
+// the result stays correct past 2^53. For floating-point values it considers
 // only the integer part: if the value has a non-zero fractional part it is
 // neither even nor odd, so IsOdd returns false. If the optional argument f
 // is true, the fractional part is ignored and only the integer part's
@@ -430,6 +462,9 @@ func IsEven[T Numerable](v T, f ...bool) bool {
 //	g.IsOdd(7.7)      // Output: false
 //	g.IsOdd(7.7, true) // Output: true
 func IsOdd[T Numerable](v T, f ...bool) bool {
+	if !isFloat[T]() {
+		return uint64(v)%2 != 0
+	}
 	ip, frac := math.Modf(float64(v))
 	if frac != 0 && !All(f...) {
 		return false
@@ -497,22 +532,38 @@ func Random[T Numerable](v ...T) T {
 	}
 }
 
+// isFloat reports whether the numeric type T is a floating-point type. It works
+// for named types (type Celsius float32) too, unlike a type switch on the
+// dynamic type: only floats keep a fractional part under division.
+func isFloat[T Numerable]() bool {
+	return T(1)/T(2) != 0
+}
+
 // The randomValue function generates a random value of type T in the
-// half-open range [lo, hi). For an empty or invalid span it returns lo,
+// half-open range [lo, hi). For an empty span (lo == hi) it returns lo,
 // which keeps Random panic-free for degenerate inputs.
 func randomValue[T Numerable](lo, hi T) T {
-	switch any(lo).(type) {
-	case float32, float64:
-		return T(float64(lo) + rand.Float64()*float64(hi-lo))
-	}
-
-	// Compute the span in int64 — never as hi-lo in type T, which would
-	// overflow for wide ranges of narrow types (e.g. int8(127)-int8(-128)).
-	span := int64(hi) - int64(lo)
-	if span <= 0 {
+	// An empty or inverted span returns lo. The two-argument Random normalizes
+	// the order before calling; the one-argument form relies on this to return
+	// the zero value for Random(n) with n <= 0.
+	if hi <= lo {
 		return lo
 	}
-	return T(rand.Int64N(span) + int64(lo))
+
+	if isFloat[T]() {
+		// A convex combination avoids computing hi-lo, which overflows to +Inf
+		// for extreme bounds (and 0*Inf yields NaN), so the result stays within
+		// [lo, hi).
+		r := rand.Float64()
+		return T(float64(lo)*(1-r) + float64(hi)*r)
+	}
+
+	// Compute the width in uint64: the wraparound of unsigned subtraction gives
+	// the exact number of representable values in [lo, hi) even for the widest
+	// ranges (int64(MinInt64..MaxInt64), uint64(0..MaxUint64)), where an int64
+	// span would overflow and collapse the range to lo.
+	span := uint64(hi) - uint64(lo)
+	return T(uint64(lo) + rand.Uint64N(span))
 }
 
 // RandomList returns a random element from the given list.

@@ -1,13 +1,15 @@
 package g
 
 import (
-	"errors"
+	"math"
 	"strconv"
 )
 
 // StringToFloat converts a string to a float.
-// If the conversion fails and a default value is provided, it
-// returns the default value. Otherwise, it returns an error.
+// On failure it returns the supplied default value (or 0 if none) together
+// with a non-nil error: ErrEmptyString for an empty input, otherwise the
+// strconv error (matchable with errors.Is against strconv.ErrSyntax or
+// strconv.ErrRange).
 //
 // Example Usage:
 //
@@ -21,7 +23,7 @@ func StringToFloat(v string, def ...float64) (float64, error) {
 	}
 
 	if v == "" {
-		return d, errors.New("empty string and no default value")
+		return d, ErrEmptyString
 	}
 
 	f, err := strconv.ParseFloat(v, 64)
@@ -37,8 +39,14 @@ func StringToFloat(v string, def ...float64) (float64, error) {
 // using the shortest representation that round-trips for the value's width.
 func FloatToString[T ~float32 | ~float64](v T) string {
 	bitSize := 64
-	switch any(v).(type) {
-	case float32:
+	// A ~float32 type cannot hold math.MaxFloat64, so the conversion overflows
+	// to +Inf. This detects the type's width rather than the dynamic type, so
+	// a named ~float32 (type Celsius float32) is also formatted at 32-bit width
+	// - a type switch on any(v) would miss it and use 64-bit width. The bound
+	// goes through a variable so the conversion is a runtime overflow (to +Inf)
+	// rather than a compile-time constant-overflow error.
+	maxF64 := math.MaxFloat64
+	if math.IsInf(float64(T(maxF64)), 1) {
 		bitSize = 32
 	}
 	return strconv.FormatFloat(float64(v), 'g', -1, bitSize)

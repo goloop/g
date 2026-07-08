@@ -95,7 +95,10 @@ func Rank[T Verifiable](number T, array []T, ascending ...bool) int {
 func HLookup[T comparable, U any](v T, lookup []T, result []U, def U) U {
 	for i, item := range lookup {
 		if item == v {
-			return result[i]
+			if i < len(result) {
+				return result[i]
+			}
+			return def // match beyond the shorter result slice
 		}
 	}
 
@@ -126,7 +129,10 @@ func HLookup[T comparable, U any](v T, lookup []T, result []U, def U) U {
 func VLookup[T comparable, U any](v T, lookup []T, result []U, def U) U {
 	for i, item := range lookup {
 		if item == v {
-			return result[i]
+			if i < len(result) {
+				return result[i]
+			}
+			return def // match beyond the shorter result slice
 		}
 	}
 

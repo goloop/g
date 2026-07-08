@@ -246,10 +246,13 @@ func IsEmpty[T any](v T) bool {
 	return isZeroValue(v)
 }
 
-// isZeroValue reports whether v holds the zero value for its type. Common
-// scalar types are handled directly (no reflection); slices and arrays are
-// "zero" when empty; everything else falls back to reflect. The fast path
-// returns exactly what the reflect path would, so behaviour is uniform.
+// isZeroValue reports whether v is "empty". Common scalar types are handled
+// directly (no reflection). Dynamic containers - slice, map and channel - are
+// empty when their length is zero, so a non-nil but empty container counts as
+// empty. Every other type, arrays included, is empty when it equals its zero
+// value: an array is a value type, so a zero-filled array is empty just like a
+// zero scalar. The scalar fast path returns exactly what the reflect path
+// would.
 func isZeroValue[T any](v T) bool {
 	switch x := any(v).(type) {
 	case bool:
@@ -289,8 +292,10 @@ func isZeroValue[T any](v T) bool {
 		return true // untyped nil interface
 	}
 
-	// For slices and arrays we check if the length is zero.
-	if k := rv.Kind(); k == reflect.Slice || k == reflect.Array {
+	// For dynamic containers emptiness is a zero length; a non-nil but empty
+	// slice, map or channel is empty. Arrays are value types and fall through
+	// to IsZero below (a zero-filled array is empty).
+	if k := rv.Kind(); k == reflect.Slice || k == reflect.Map || k == reflect.Chan {
 		return rv.Len() == 0
 	}
 

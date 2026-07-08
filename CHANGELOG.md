@@ -4,6 +4,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0]
+
+Numeric correctness fixes, a new checked absolute value and honest conversion
+errors. Two small behaviour changes are noted below.
+
+### Added
+- `AbsOk` returns the absolute value and a bool reporting whether it is exact;
+  it is false only for the most negative value of a signed type.
+- `ErrEmptyString` and `ErrInvalidBool` sentinels, returned by the `StringTo*`
+  helpers and matchable with `errors.Is`.
+
+### Fixed
+- `Random` no longer collapses full-width integer ranges to the lower bound
+  (`Random[uint64](0, MaxUint64)`, `Random[int64](MinInt64, MaxInt64)`); the
+  span is computed in `uint64`.
+- `Random` on extreme floating-point bounds no longer returns `+Inf`/`NaN`;
+  the value is drawn as a convex combination of the bounds.
+- `Range`/`Rangef` no longer panic or return a wrong slice at extreme bounds
+  (`Range(-1, MaxInt)`, `Range(MinInt, MaxInt)`); the step count is computed in
+  `uint64` and out-of-range sizes return `nil`.
+- `IsEven`/`IsOdd` are correct for integers past 2^53 (computed in integer
+  arithmetic instead of `float64`).
+- `FloatToString` formats a named `~float32` type at 32-bit width instead of
+  64-bit.
+- `HLookup`/`VLookup` return the default value instead of panicking when the
+  match falls beyond a shorter `result` slice.
+
+### Changed
+- **Behaviour:** `IsEmpty` now treats a non-nil empty map (and channel) as
+  empty, like an empty slice, and treats a zero-filled array as empty by its
+  zero value. The three container kinds previously disagreed.
+- **Behaviour:** the `StringTo*` helpers return `ErrEmptyString` for empty input
+  instead of an `errors.New("empty string and no default value")` whose text was
+  wrong when a default was supplied. `StringToBool` returns `ErrInvalidBool` for
+  an unrecognised string.
+
 ## [2.0.0]
 
 The module path changes to `github.com/goloop/g/v2` and the minimum Go version

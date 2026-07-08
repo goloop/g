@@ -1,7 +1,6 @@
 package g
 
 import (
-	"math"
 	"math/rand/v2"
 	"slices"
 )
@@ -495,10 +494,8 @@ func Range(a int, opt ...int) []int {
 	}
 
 	// Calculate the number of steps and create the slice of this size.
-	steps := Abs(int(math.Ceil(float64(m-n) / float64(s))))
-
-	// Limit the size of the slice.
-	if steps >= MaxRangeSize {
+	steps, ok := rangeSteps(n, m, s)
+	if !ok {
 		return nil
 	}
 
@@ -508,6 +505,30 @@ func Range(a int, opt ...int) []int {
 	}
 
 	return result
+}
+
+// rangeSteps returns the number of elements in the sequence from n toward m
+// with step s, and whether that count is valid (non-zero and below
+// MaxRangeSize). Callers must already have rejected a zero step and a step
+// pointing the wrong way. The width and step are computed in uint64 so the
+// full int range (e.g. MinInt..MaxInt) neither overflows nor bypasses the
+// MaxRangeSize guard the way an int m-n subtraction did.
+func rangeSteps(n, m, s int) (int, bool) {
+	var width, step uint64
+	if s > 0 {
+		width, step = uint64(m)-uint64(n), uint64(s)
+	} else {
+		width, step = uint64(n)-uint64(m), -uint64(s)
+	}
+
+	steps := width / step
+	if width%step != 0 {
+		steps++ // ceil, overflow-free (unlike width+step-1)
+	}
+	if steps == 0 || steps >= MaxRangeSize {
+		return 0, false
+	}
+	return int(steps), true
 }
 
 // Rangef generates a slice of values based on the provided parameters
@@ -582,10 +603,8 @@ func Rangef[T any](fn func(int) T, a int, opt ...int) []T {
 	}
 
 	// Calculate the number of steps and create the slice of this size.
-	steps := Abs(int(math.Ceil(float64(m-n) / float64(s))))
-
-	// Limit the size of the slice (nil, consistent with Range).
-	if steps >= MaxRangeSize {
+	steps, ok := rangeSteps(n, m, s)
+	if !ok {
 		return nil
 	}
 
