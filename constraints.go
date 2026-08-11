@@ -60,6 +60,11 @@ type Numerable interface {
 // techniques for numeric types and strings. Functions can use this interface
 // as a constraint to operate on any of these types where numerical operations
 // or string operations are needed.
+//
+// Every member is approximate (~), as in Ordered, so a named type such as
+// `type Category string` satisfies the constraint the same way its underlying
+// type does. Domain code names its types, and helpers like Contains, In and
+// Rank exist for domain code.
 type Verifiable interface {
-	Integer | Float | string | rune
+	Integer | Float | ~string
 }

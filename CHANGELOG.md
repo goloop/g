@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0]
+
+Minor release: `Verifiable` accepts named types.
+
+### Changed
+- `Verifiable` is now `Integer | Float | ~string`, matching `Ordered` in the
+  same file. Previously `string` had no tilde, so a named type such as
+  `type Category string` compiled with `Ordered`-constrained helpers but not
+  with `Contains`, `In`, `Rank`, `Max`, `Min`, `Sort` or `Merge` - exactly the
+  helpers domain code, where named types are the norm, reaches for. Widening a
+  constraint is backward compatible: everything that satisfied it still does.
+- The explicit `rune` member is gone with no change in meaning: `rune` is an
+  alias for `int32`, and `Integer` already contains `~int32`, so it never
+  added anything. Plain runes and named rune types still satisfy the
+  constraint; a test now pins that.
+
 ## [2.2.0]
 
 Numeric correctness fixes, a new checked absolute value and honest conversion
