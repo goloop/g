@@ -46,7 +46,7 @@ func Ptr[T any](v ...T) *T {
 		return &r
 	}
 
-	r := any(v[0]).(T)
+	r := v[0]
 	return &r
 }
 

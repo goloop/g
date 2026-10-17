@@ -72,16 +72,12 @@ func Intersection[T comparable](a []T, b []T) []T {
 		setB[item] = struct{}{}
 	}
 
-	seen := make(map[T]struct{}, len(a))
 	result := make([]T, 0)
 	for _, item := range a {
 		if _, ok := setB[item]; !ok {
 			continue
 		}
-		if _, dup := seen[item]; dup {
-			continue
-		}
-		seen[item] = struct{}{}
+		delete(setB, item)
 		result = append(result, item)
 	}
 

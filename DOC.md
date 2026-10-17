@@ -411,3 +411,7 @@ on membership rather than on a specific value.
 
 **Clean user input.** Chain `Weed`/`Preserve`/`Trim` with the pattern constants
 to normalise phone numbers, codes and identifiers without a regexp.
+
+## Release v2.3.1
+
+Handle named floating-point overflow and nil pointers, and simplify intersection tracking.

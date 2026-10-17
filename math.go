@@ -364,8 +364,7 @@ func Clamp[T Ordered](v, lo, hi T) T {
 func SafeSum[T Numerable](v ...T) (T, error) {
 	var s T
 
-	switch any(s).(type) {
-	case float32, float64:
+	if isFloat[T]() {
 		for _, x := range v {
 			s += x
 		}
@@ -373,7 +372,7 @@ func SafeSum[T Numerable](v ...T) (T, error) {
 			return 0, fmt.Errorf("g: floating-point overflow: %w", ErrOverflow)
 		}
 		return s, nil
-	default:
+	} else {
 		// Integer types. On two's-complement wraparound the running sum
 		// crosses past the addend's direction: adding a positive value
 		// must not make the result smaller, adding a negative value must
