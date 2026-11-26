@@ -200,6 +200,8 @@ even-length inputs by averaging the two middle values.
 the concurrency-safe `math/rand/v2` source, so these are safe to call from
 several goroutines.
 
+Floating-point rounding preserves the exclusive upper bound for finite ranges.
+
 ```go
 n := g.Random(1, 10)              // int in [1, 10)
 pick := g.RandomList(options)     // one element

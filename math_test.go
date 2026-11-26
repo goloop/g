@@ -978,3 +978,19 @@ func TestNonFiniteParity(t *testing.T) {
 		}
 	}
 }
+
+func TestRandomAdjacentFloats(t *testing.T) {
+	type scalar32 float32
+	type scalar64 float64
+
+	lo32, hi32 := scalar32(1), scalar32(math.Nextafter32(1, 2))
+	lo64, hi64 := scalar64(-1), scalar64(math.Nextafter(-1, 0))
+	for range 128 {
+		if got := Random(lo32, hi32); got != lo32 {
+			t.Fatalf("float32: got %g, want %g", got, lo32)
+		}
+		if got := Random(hi64, lo64); got != lo64 {
+			t.Fatalf("float64: got %g, want %g", got, lo64)
+		}
+	}
+}

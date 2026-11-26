@@ -551,10 +551,19 @@ func randomValue[T Numerable](lo, hi T) T {
 
 	if isFloat[T]() {
 		// A convex combination avoids computing hi-lo, which overflows to +Inf
-		// for extreme bounds (and 0*Inf yields NaN), so the result stays within
-		// [lo, hi).
+		// for extreme bounds. Clamp rounding in the result's own precision.
 		r := rand.Float64()
-		return T(float64(lo)*(1-r) + float64(hi)*r)
+		value := T(float64(lo)*(1-r) + float64(hi)*r)
+		if value >= hi && !math.IsInf(float64(hi), 0) {
+			value = T(math.Nextafter(float64(hi), math.Inf(-1)))
+			if value == hi {
+				value = T(math.Nextafter32(float32(hi), float32(math.Inf(-1))))
+			}
+		}
+		if value < lo && !math.IsInf(float64(lo), 0) {
+			return lo
+		}
+		return value
 	}
 
 	// Compute the width in uint64: the wraparound of unsigned subtraction gives
