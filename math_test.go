@@ -970,3 +970,11 @@ func TestRandomMapPlural(t *testing.T) {
 		t.Errorf("Expected an empty slice, got %v", valuesZero)
 	}
 }
+
+func TestNonFiniteParity(t *testing.T) {
+	for _, n := range []float64{math.NaN(), math.Inf(1), math.Inf(-1)} {
+		if IsEven(n, true) || IsOdd(n, true) {
+			t.Errorf("unexpected parity for %v", n)
+		}
+	}
+}

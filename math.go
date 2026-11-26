@@ -468,7 +468,7 @@ func IsOdd[T Numerable](v T, f ...bool) bool {
 	if frac != 0 && !All(f...) {
 		return false
 	}
-	return math.Mod(ip, 2) != 0
+	return math.Abs(math.Mod(ip, 2)) == 1
 }
 
 // IsWhole checks if a value is a whole number.
